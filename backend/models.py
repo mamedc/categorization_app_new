@@ -1,23 +1,24 @@
 from app import db
 
-class Friend(db.Model):
+
+class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    role = db.Column(db.String(50), nullable=False)
+    value = db.Column(db.Float, nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
     description = db.Column(db.Text, nullable=False)
-    gender = db.Column(db.String(10), nullable=False)
-    img_url = db.Column(db.String(200), nullable=True)
+    children_flag = db.Column(db.Boolean, nullable=False, default=False)
+    doc_flag = db.Column(db.Boolean, nullable=False, default=False)
     
     # Function to convert the object to a JSON (for convenience)
     def to_json(self):
         return {
             'id': self.id,
-            'name': self.name,
-            'role': self.role,
+            'value': self.value,
+            'date': self.date,
             'description': self.description,
-            'gender': self.gender,
-            'imgUrl': self.img_url
+            'childrenFlag': self.children_flag,
+            'docFlag': self.doc_flag,
         }
-
+        
     def __repr__(self):
-        return f'<Friend {self.name}>'
+        return f'<Transaction {self.id}>'
