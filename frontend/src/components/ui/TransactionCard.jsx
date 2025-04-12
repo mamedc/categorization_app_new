@@ -1,24 +1,34 @@
 // TransactionCard.jsx
 
-import { Box, Flex, Text, HStack, Badge } from '@chakra-ui/react'
+import { Box, Flex, Text, HStack, Badge, Checkbox } from '@chakra-ui/react'
 
 const TransactionCard = ({ transaction, setTransactions }) => {
     return (
         <Box 
             bg="white" 
             borderRadius="lg" 
-            boxShadow="sm" 
             p={4} 
             borderLeft="4px solid" 
-            borderLeftColor="teal.400"
+            borderLeftColor="#d3e8e8"
             transition="all 0.2s"
             _hover={{ boxShadow: "md", transform: "translateY(-2px)" }}
         >
             <Flex direction="column" gap={3}>
                 <Flex justify="space-between" align="center">
-                    <Text fontSize="md" fontWeight="medium" color="gray.700">
-                        {transaction.description}
-                    </Text>
+                    <HStack spacing={3}>
+                        
+                        <Checkbox.Root variant="outline" size="sm" colorPalette="cyan">
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control />
+                            <Checkbox.Label>Accept terms and conditions</Checkbox.Label>
+                        </Checkbox.Root>
+
+
+
+                        <Text fontSize="md" fontWeight="medium" color="gray.700">
+                            {transaction.description}
+                        </Text>
+                    </HStack>
                     <Text 
                         fontSize="md" 
                         fontWeight="bold" 
