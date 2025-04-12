@@ -1,3 +1,5 @@
+// App.jsx
+
 import { Container, Stack, Text, Box } from "@chakra-ui/react"
 import Navbar from "./components/ui/Navbar"
 import TransactionGrid from "./components/ui/TransactionGrid"

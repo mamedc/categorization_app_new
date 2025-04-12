@@ -1,3 +1,5 @@
+// Navbar.jsx
+
 import { Box, Flex, Text } from "@chakra-ui/react"
 
 function Navbar({ setTransactions }) {
