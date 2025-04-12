@@ -1,87 +1,22 @@
-// TransactionCard.jsx
+import { Card, Flex, Text, HStack } from '@chakra-ui/react'
+import { Toaster } from "@/components/ui/toaster"
 
-import { Card, Flex, Avatar, Box, Heading, Text, IconButton, HStack } from '@chakra-ui/react'
-// import { BiTrash } from "react-icons/bi"
-import { Toaster, toaster } from "@/components/ui/toaster"
-//import EditModal from "./EditModal"
-//import { BASE_URL } from "../../App"
-
-const TransactionCard = ({ transaction, setTransactions }) => {
-    
-    // const handleDeleteUser = async () => {
-    //     try {
-    //         console.log("Delete user");
-    //         const res = await fetch(BASE_URL + "/friends/" + usuario.id, {
-    //             method: "DELETE",
-    //         });
-    //         const data = await res.json();
-    //         if(!res.ok) { 
-    //             throw new Error(data.error); 
-    //         };
-    //         setUsuarios((prevUsers) => prevUsers.filter((u) => u.id !== usuario.id));
-    //         toaster.create({
-    //             title: "Success!",
-    //             description: "Friend deleted.",
-    //             type: "success",
-    //             duration: 2000,
-    //             placement: "top-center",
-    //         })
-    //     } catch (error) {
-    //         console.error(error);
-    //         toaster.create({
-    //             title: "An error occurred.",
-    //             description: error.message,
-    //             status: "error",
-    //             duration: 4000,
-    //             placement: "top-center",
-    //         })
-    //     }
-    // };
-    
+const TransactionCard = ({ transaction }) => {
     return (
-        <Card.Root width="100%" bg="olive">
+        <Card.Root bg="olive.50" borderRadius="lg" boxShadow="base">
             <Toaster />
-            <Card.Body gap="2">
-                <Flex gap={"1"}>
-                    
-                    <HStack>
-                            <Text>{transaction.id}</Text>
-                            <Text>{transaction.date}</Text>
-                            <Text>{transaction.description}</Text>
-                            <Text>{transaction.value}</Text>
-                            <Text>{transaction.childrenFlag}</Text>
-                            <Text>{transaction.docFlag}</Text>
+            <Card.Body>
+                <Flex direction="column" gap={2}>
+                    <HStack spacing={4} wrap="wrap">
+                        <Text fontSize="sm" fontWeight="medium" color="olive.800">{transaction.id}</Text>
+                        <Text fontSize="sm" color="gray.700">{transaction.date}</Text>
+                        <Text fontSize="sm" color="gray.700">{transaction.description}</Text>
+                        <Text fontSize="sm" color="green.700">R${transaction.value}</Text>
+                        <Text fontSize="xs" color="gray.500">Child: {transaction.childrenFlag ? "Yes" : "No"}</Text>
+                        <Text fontSize="xs" color="gray.500">Doc: {transaction.docFlag ? "Yes" : "No"}</Text>
                     </HStack>
-
-
-                    {/* <Flex flex={"1"} gap={"4"} alignItems={"center"}> 
-                        <Box>
-                            <Heading size='sm'>{transaction.value}</Heading>
-                            <Text>{transaction.description}</Text>
-                        </Box>
-                    </Flex>
-                
-                    <Flex>
-                        <EditModal usuario={usuario} setUsuarios={setUsuarios} />
-
-                        <IconButton 
-                            variant='ghost' 
-                            colorPalette='red' 
-                            size='sm' 
-                            aria-label="See menu"
-                            onClick={handleDeleteUser}
-                        >
-                            <BiTrash />
-                        </IconButton>
-                    </Flex> */}
-
                 </Flex>
             </Card.Body>
-            
-            {/* <Card.Footer>
-                <Text textStyle="sm" fontWeight="light">{transaction.id}</Text>
-            </Card.Footer> */}
-
         </Card.Root>
     )
 }

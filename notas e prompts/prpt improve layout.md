@@ -232,6 +232,3 @@ Chakra UI is an accessible component system for building products with speed
 
 - The complete documentation includes all content from the official documentation
 - Package-specific documentation files contain only the content relevant to that package
-
-
-
