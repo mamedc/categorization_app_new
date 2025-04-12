@@ -1,5 +1,6 @@
-// 'rafce' to create react snippet (shortcut of ES7 Extension)
-import { Box, Container, Flex, Text } from "@chakra-ui/react"
+// Navbar.jsx
+
+import { Box, Flex, Text } from "@chakra-ui/react"
 //import CreateUserModal from "./CreateUserModal"
 
 

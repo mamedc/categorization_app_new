@@ -1,5 +1,7 @@
-import { Card, Flex, Avatar, Box, Heading, Text, IconButton } from '@chakra-ui/react'
-import { BiTrash } from "react-icons/bi"
+// TransactionCard.jsx
+
+import { Card, Flex, Avatar, Box, Heading, Text, IconButton, HStack } from '@chakra-ui/react'
+// import { BiTrash } from "react-icons/bi"
 import { Toaster, toaster } from "@/components/ui/toaster"
 //import EditModal from "./EditModal"
 //import { BASE_URL } from "../../App"
@@ -42,7 +44,17 @@ const TransactionCard = ({ transaction, setTransactions }) => {
             <Card.Body gap="2">
                 <Flex gap={"1"}>
                     
-                    <Flex flex={"1"} gap={"4"} alignItems={"center"}> 
+                    <HStack>
+                            <Text>{transaction.id}</Text>
+                            <Text>{transaction.date}</Text>
+                            <Text>{transaction.description}</Text>
+                            <Text>{transaction.value}</Text>
+                            <Text>{transaction.childrenFlag}</Text>
+                            <Text>{transaction.docFlag}</Text>
+                    </HStack>
+
+
+                    {/* <Flex flex={"1"} gap={"4"} alignItems={"center"}> 
                         <Box>
                             <Heading size='sm'>{transaction.value}</Heading>
                             <Text>{transaction.description}</Text>
@@ -50,9 +62,9 @@ const TransactionCard = ({ transaction, setTransactions }) => {
                     </Flex>
                 
                     <Flex>
-                        {/*<EditModal usuario={usuario} setUsuarios={setUsuarios} />*/}
+                        <EditModal usuario={usuario} setUsuarios={setUsuarios} />
 
-                        {/* <IconButton 
+                        <IconButton 
                             variant='ghost' 
                             colorPalette='red' 
                             size='sm' 
@@ -60,15 +72,15 @@ const TransactionCard = ({ transaction, setTransactions }) => {
                             onClick={handleDeleteUser}
                         >
                             <BiTrash />
-                        </IconButton> */}
-                    </Flex>
+                        </IconButton>
+                    </Flex> */}
 
                 </Flex>
             </Card.Body>
             
-            <Card.Footer>
+            {/* <Card.Footer>
                 <Text textStyle="sm" fontWeight="light">{transaction.id}</Text>
-            </Card.Footer>
+            </Card.Footer> */}
 
         </Card.Root>
     )

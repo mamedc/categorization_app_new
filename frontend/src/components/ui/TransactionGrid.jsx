@@ -1,8 +1,9 @@
+// TransactionGrid.jsx
+
 import { Grid, Flex, Spinner, Text, VStack } from "@chakra-ui/react";
-//import UserCard from "./UserCard";
 import TransactionCard from "./TransactionCard";
 import { useEffect, useState } from "react"; 
-import { BASE_URL } from "../../App"
+import { BASE_URL } from "../../App";
 
 // When we run this component, we would like to send a request. We can do this with the help of 'useEffect'
 // useEffect Hook for managing side effects (like data fetching) 
