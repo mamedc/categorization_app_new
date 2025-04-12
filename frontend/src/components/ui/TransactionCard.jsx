@@ -1,25 +1,48 @@
 // TransactionCard.jsx
 
-import { Card, Flex, Text, HStack } from '@chakra-ui/react'
-import { Toaster } from "@/components/ui/toaster"
+import { Box, Flex, Text, HStack, Badge } from '@chakra-ui/react'
 
-const TransactionCard = ({ transaction }) => {
+const TransactionCard = ({ transaction, setTransactions }) => {
     return (
-        <Card.Root bg="olive.50" borderRadius="lg" boxShadow="base">
-            <Toaster />
-            <Card.Body>
-                <Flex direction="column" gap={2}>
-                    <HStack spacing={4} wrap="wrap">
-                        <Text fontSize="sm" fontWeight="medium" color="olive.800">{transaction.id}</Text>
-                        <Text fontSize="sm" color="gray.700">{transaction.date}</Text>
-                        <Text fontSize="sm" color="gray.700">{transaction.description}</Text>
-                        <Text fontSize="sm" color="green.700">R${transaction.value}</Text>
-                        <Text fontSize="xs" color="gray.500">Child: {transaction.childrenFlag ? "Yes" : "No"}</Text>
-                        <Text fontSize="xs" color="gray.500">Doc: {transaction.docFlag ? "Yes" : "No"}</Text>
-                    </HStack>
+        <Box 
+            bg="white" 
+            borderRadius="lg" 
+            boxShadow="sm" 
+            p={4} 
+            borderLeft="4px solid" 
+            borderLeftColor="teal.400"
+            transition="all 0.2s"
+            _hover={{ boxShadow: "md", transform: "translateY(-2px)" }}
+        >
+            <Flex direction="column" gap={3}>
+                <Flex justify="space-between" align="center">
+                    <Text fontSize="md" fontWeight="medium" color="gray.700">
+                        {transaction.description}
+                    </Text>
+                    <Text 
+                        fontSize="md" 
+                        fontWeight="bold" 
+                        color={Number(transaction.value) >= 0 ? "green.600" : "red.600"}
+                    >
+                        R$ {transaction.value}
+                    </Text>
                 </Flex>
-            </Card.Body>
-        </Card.Root>
+                
+                <HStack spacing={4} wrap="wrap">
+                    <Text fontSize="sm" color="gray.500">ID: {transaction.id}</Text>
+                    <Text fontSize="sm" color="gray.500">{transaction.date}</Text>
+                    
+                    <HStack spacing={2}>
+                        {transaction.childrenFlag && (
+                            <Badge colorScheme="blue" variant="subtle" fontSize="xs">Child</Badge>
+                        )}
+                        {transaction.docFlag && (
+                            <Badge colorScheme="purple" variant="subtle" fontSize="xs">Doc</Badge>
+                        )}
+                    </HStack>
+                </HStack>
+            </Flex>
+        </Box>
     )
 }
 

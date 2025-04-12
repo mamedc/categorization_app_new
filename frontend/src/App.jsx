@@ -1,6 +1,6 @@
 // App.jsx
 
-import { Container, Stack, Text, Box } from "@chakra-ui/react"
+import { Container, Stack, Text } from "@chakra-ui/react"
 import Navbar from "./components/ui/Navbar"
 import TransactionGrid from "./components/ui/TransactionGrid"
 import { useState } from "react"
@@ -11,9 +11,9 @@ function App() {
     const [transactions, setTransactions] = useState([])
 
     return (
-        <Stack minH="100vh" bg="#fefcf9" spacing={0}>
+        <Stack minH="100vh" bg="gray.50" spacing={0}>
             <Navbar setTransactions={setTransactions} />
-            <Container maxW="container.lg" pt={4}>
+            <Container maxW="container.lg" pt={6} pb={8}>
                 <Text 
                     fontSize="2xl"
                     fontWeight="semibold"

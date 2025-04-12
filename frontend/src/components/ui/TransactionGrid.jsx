@@ -33,13 +33,13 @@ const TransactionGrid = ({ transactions, setTransactions }) => {
             </VStack>
 
             {isLoading && (
-                <Flex justify="center" mt={4}>
-                    <Spinner size="lg" color="olive.500" />
+                <Flex justify="center" mt={8}>
+                    <Spinner size="lg" color="teal.500" thickness="3px" />
                 </Flex>
             )}
 
             {!isLoading && transactions.length === 0 && (
-                <Flex justify="center" mt={4}>
+                <Flex justify="center" mt={8} p={6} bg="gray.50" borderRadius="md">
                     <Text fontSize="sm" color="gray.500">No transactions found</Text>
                 </Flex>
             )}
