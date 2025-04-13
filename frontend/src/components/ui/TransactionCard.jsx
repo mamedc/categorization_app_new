@@ -21,7 +21,7 @@ const TransactionCard = ({ transaction, setTransactions }) => {
             borderRadius="lg"
             p={4}
             borderLeftWidth={4}
-            borderLeftColor="#d3e8e8"
+            borderLeftColor="#bcdbdb"
             transition="all 0.2s"
             _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
         >
@@ -44,7 +44,8 @@ const TransactionCard = ({ transaction, setTransactions }) => {
                             {transaction.id}
                         </Text>
                         <Text fontSize="sm" color="gray.500">
-                            {transaction.date}
+                            {/* {transaction.date} */}
+                            {new Date(transaction.date).toISOString().split('T')[0]}
                         </Text>
                     </HStack>
                     <Text

@@ -11,7 +11,7 @@ function App() {
     const [transactions, setTransactions] = useState([])
 
     return (
-        <Stack minH="100vh" bg="gray.50" spacing={0}>
+        <Stack minH="100vh" bg="#f9f9f4" spacing={0}>
             <Navbar setTransactions={setTransactions} />
             <Container maxW="container.lg" pt={6} pb={8}>
                 <Text 

@@ -4,7 +4,7 @@ import { Box, Flex, Text } from "@chakra-ui/react"
 
 function Navbar({ setTransactions }) {
     return (
-        <Box bg="#e8e8d3" px={4} py={2}>
+        <Box bg="white" px={4} py={2}>
             <Flex h="16" alignItems="center" justifyContent="space-between">
                 
                 <Flex align="center" gap={6} display={{ base: "none", sm: "flex" }}>
