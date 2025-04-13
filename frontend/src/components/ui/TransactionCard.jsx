@@ -1,56 +1,88 @@
 // TransactionCard.jsx
 
-import { Box, Flex, Text, HStack, Badge, Checkbox } from '@chakra-ui/react'
+import {
+    Box,
+    Flex,
+    Text,
+    HStack,
+    Badge,
+    Checkbox,
+    VStack,
+    Spacer,
+} from '@chakra-ui/react'
 
 const TransactionCard = ({ transaction, setTransactions }) => {
+
+    console.log(transaction)
+
     return (
-        <Box 
-            bg="white" 
-            borderRadius="lg" 
-            p={4} 
-            borderLeft="4px solid" 
+        <Box
+            bg="white"
+            borderRadius="lg"
+            p={4}
+            borderLeftWidth={4}
             borderLeftColor="#d3e8e8"
             transition="all 0.2s"
-            _hover={{ boxShadow: "md", transform: "translateY(-2px)" }}
+            _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
         >
-            <Flex direction="row" gap={4} align="center">
-
+            <Flex
+                direction={{ base: 'column', md: 'row' }}
+                align={{ base: 'start', md: 'center' }}
+                gap={4}
+                wrap="wrap"
+            >
                 {/*Checkbox*/}
-                <Checkbox.Root variant="outline" size="sm" colorPalette="cyan">
+                <Checkbox.Root variant="outline" size="sm" colorPalette="cyan" mt={{ base: 1, md: 0 }}>
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />
                 </Checkbox.Root>
-                
-                {/*ID*/}
-                <Text fontSize="sm" color="gray.500">{transaction.id}</Text>
-                
-                {/*Date*/}
-                <Text fontSize="sm" color="gray.500">{transaction.date}</Text>
 
-                {/*Description*/}
-                <Text fontSize="md" fontWeight="medium" color="gray.700">{transaction.description}</Text>
+                {/* Left: Details */}
+                <VStack align="start" spacing={1} flex="1">
+                    <HStack spacing={3} wrap="wrap">
+                        <Text fontSize="sm" color="gray.500">
+                            {transaction.id}
+                        </Text>
+                        <Text fontSize="sm" color="gray.500">
+                            {transaction.date}
+                        </Text>
+                    </HStack>
+                    <Text
+                        fontSize="md"
+                        fontWeight="medium"
+                        color="gray.700"
+                        noOfLines={2}
+                    >
+                        {transaction.description}
+                    </Text>
+                </VStack>
 
-                {/*Value*/}
-                <Text 
-                    fontSize="md" 
-                    fontWeight="bold" 
-                    color={Number(transaction.value) >= 0 ? "green.600" : "red.600"}
-                >
-                    R$ {transaction.value}
-                </Text>
-                               
-                {/*Flags*/}
-                <HStack gap={4} wrap="wrap">
-                    <HStack spacing={2}>
+                {/* Spacer pushes the value to the end in horizontal layouts */}
+                <Spacer display={{ base: 'none', md: 'block' }} />
+
+                {/* Right: Value + Flags */}
+                <VStack align="end" spacing={1}>
+                    <Text
+                        fontSize="md"
+                        fontWeight="bold"
+                        color={Number(transaction.value) >= 0 ? 'green.600' : 'red.600'}
+                    >
+                        R$ {transaction.value}
+                    </Text>
+
+                    <HStack spacing={2} wrap="wrap" justify="end">
                         {transaction.childrenFlag && (
-                            <Badge colorScheme="blue" variant="subtle" fontSize="xs">Child</Badge>
+                            <Badge colorScheme="blue" variant="subtle" fontSize="xs">
+                                Child
+                            </Badge>
                         )}
                         {transaction.docFlag && (
-                            <Badge colorScheme="purple" variant="subtle" fontSize="xs">Doc</Badge>
+                            <Badge colorScheme="purple" variant="subtle" fontSize="xs">
+                                Doc
+                            </Badge>
                         )}
                     </HStack>
-                </HStack>
-
+                </VStack>
             </Flex>
         </Box>
     )
