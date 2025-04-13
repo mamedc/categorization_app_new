@@ -1,45 +1,46 @@
 // TransactionGrid.jsx
-// We need to manage the selection state here.
 
-import { VStack, Spinner, Text, Flex } from "@chakra-ui/react"
-import TransactionCard from "./TransactionCard"
-import { useEffect, useState } from "react"
-import { BASE_URL } from "../../App"
+import { VStack, Spinner, Text, Flex } from "@chakra-ui/react";
+import TransactionCard from "./TransactionCard";
+import { useEffect, useState } from "react"; // Keep useState for isLoading
+import { BASE_URL } from "../../App";
 
-const TransactionGrid = ({ transactions, setTransactions }) => {
-    const [isLoading, setIsLoading] = useState(true)
-    // State to track the ID of the currently selected transaction
-    // Initialize with null, meaning no transaction is selected initially.
-    const [selectedTransactionId, setSelectedTransactionId] = useState(null)
+// Remove TypeScript interface and React.FC type annotation
+const TransactionGrid = ({
+    transactions,
+    setTransactions,
+    selectedTransactionId, // Receive from props
+    setSelectedTransactionId, // Receive from props
+}) => {
+    const [isLoading, setIsLoading] = useState(true);
+    // REMOVE local state for selectedTransactionId, as it's now managed by App
 
     useEffect(() => {
         const getTransactions = async () => {
             try {
-                setIsLoading(true) // Set loading true at the start of fetch
-                const res = await fetch(BASE_URL + "/transactions")
-                const data = await res.json()
-                if (!res.ok) throw new Error(data.error)
-                setTransactions(data)
-                setSelectedTransactionId(null); // Reset selection when new data is fetched
+                setIsLoading(true); // Set loading true at the start of fetch
+                const res = await fetch(BASE_URL + "/transactions");
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                setTransactions(data);
+                setSelectedTransactionId(null); // Use the passed setter to reset selection
             } catch (error) {
-                console.error(error)
+                console.error(error);
             } finally {
-                setIsLoading(false)
+                setIsLoading(false);
             }
-        }
-        getTransactions()
-    }, [setTransactions]) // Dependency array remains the same
+        };
+        getTransactions();
+        // Add setSelectedTransactionId to dependency array as it's now an external function
+    }, [setTransactions, setSelectedTransactionId]);
 
-    // Handler function to update the selected transaction ID
+    // Handler function uses the setSelectedTransactionId passed via props
+    // Remove TypeScript type annotation : string
     const handleSelectTransaction = (transactionId) => {
-        // Check if the clicked transaction is the one currently selected
-        setSelectedTransactionId(prevSelectedId =>
-            // If the previous selected ID is the same as the clicked ID, set to null (deselect)
-            // Otherwise, set to the clicked ID (select)
+        setSelectedTransactionId((prevSelectedId) =>
             prevSelectedId === transactionId ? null : transactionId
         );
-    }
-
+    };
 
     return (
         <>
@@ -50,8 +51,10 @@ const TransactionGrid = ({ transactions, setTransactions }) => {
                         key={transaction.id}
                         transaction={transaction}
                         setTransactions={setTransactions} // Keep existing props
-                        isSelected={transaction.id === selectedTransactionId} // Check if this card is the selected one
-                        onSelect={() => handleSelectTransaction(transaction.id)} // Pass handler to update selection
+                        // Use selectedTransactionId from props to determine if this card is selected
+                        isSelected={transaction.id === selectedTransactionId}
+                        // Pass the handler which now uses the setter from props
+                        onSelect={() => handleSelectTransaction(transaction.id)}
                     />
                 ))}
             </VStack>
@@ -64,11 +67,13 @@ const TransactionGrid = ({ transactions, setTransactions }) => {
 
             {!isLoading && transactions.length === 0 && (
                 <Flex justify="center" mt={8} p={6} bg="gray.50" borderRadius="md">
-                    <Text fontSize="sm" color="gray.500">No transactions found</Text>
+                    <Text fontSize="sm" color="gray.500">
+                        No transactions found
+                    </Text>
                 </Flex>
             )}
         </>
-    )
-}
+    );
+};
 
-export default TransactionGrid
+export default TransactionGrid;
