@@ -6,98 +6,66 @@ Please check the error in the attached image.
 # Improve prompt
 
 The prompt below, delimited by by triple quotes, will be submited to a LLM.
-The LLM task will be to improve the React component layout.
+The LLM task will be to add new functioonality to the React application.
 Please improve the prompt so I can go on with the component improvement.
 
-\"\"\"
-# 1. Instructions
 
-Your task is to improve the layout of the given React component using Chakra UI version 3.
-The layout should be simple and minimalistic and follow the structure and behavior presented in the file "TransactionCard.jsx". The file code is presented below delimited by triple backticks.
+"""
+# 1. Context
 
-Attention must be given to the Chakra UI v3 Documentation for LLMs also presente below.
+I am developing a React application using Chakra UI v3 to display and manage financial transactions.\
+Each transaction is rendered in its own visual container (`Box`), and users can select \
+**one transaction at a time** using a `Checkbox` displayed inside each transaction's card.\
 
-# 2. File:
+The selection state is managed using React Context to ensure only one transaction can be selected \
+at any given time.
 
-```
-// TransactionCard.jsx
+---
 
-import { Box, Flex, Text, HStack, Badge, Checkbox } from '@chakra-ui/react'
+# 2. Objective
 
-const TransactionCard = ({ transaction, setTransactions }) => {
-    return (
-        <Box 
-            bg="white" 
-            borderRadius="lg" 
-            p={4} 
-            borderLeft="4px solid" 
-            borderLeftColor="#d3e8e8"
-            transition="all 0.2s"
-            _hover={{ boxShadow: "md", transform: "translateY(-2px)" }}
-        >
-            <Flex direction="row" gap={4} align="center">
+Your task is to modify the provided React component(s) in order to add a sorting functionality \
+for the existing transactions. The user will be able to choose one of the two options:
+- to display the transactions in ascending order by date.
+- to display the transactions in descending order by date.
 
-                {/*Checkbox*/}
-                <Checkbox.Root variant="outline" size="sm" colorPalette="cyan">
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control />
-                </Checkbox.Root>
-                
-                {/*ID*/}
-                <Text fontSize="sm" color="gray.500">{transaction.id}</Text>
-                
-                {/*Date*/}
-                <Text fontSize="sm" color="gray.500">{transaction.date}</Text>
+---
 
-                {/*Description*/}
-                <Text fontSize="md" fontWeight="medium" color="gray.700">{transaction.description}</Text>
+# 3. Requirements
 
-                {/*Value*/}
-                <Text 
-                    fontSize="md" 
-                    fontWeight="bold" 
-                    color={Number(transaction.value) >= 0 ? "green.600" : "red.600"}
-                >
-                    R$ {transaction.value}
-                </Text>
-                               
-                {/*Flags*/}
-                <HStack gap={4} wrap="wrap">
-                    <HStack spacing={2}>
-                        {transaction.childrenFlag && (
-                            <Badge colorScheme="blue" variant="subtle" fontSize="xs">Child</Badge>
-                        )}
-                        {transaction.docFlag && (
-                            <Badge colorScheme="purple" variant="subtle" fontSize="xs">Doc</Badge>
-                        )}
-                    </HStack>
-                </HStack>
+- The sorting component must be placed at the left side of the **Actions Bar**, witch is the same \
+component where the **Add**, **Edit** and **Delete** buttons are placed.
+- The solution should maintain compatibility with Chakra UI v3 and follow React best practices.
 
-            </Flex>
-        </Box>
-    )
-}
+---
 
-export default TransactionCard
+# 4. Input Files
 
-```
+The React component files are provided below (delimited by triple backticks):
 
-# 3. Chakra UI v3 Documentation for LLMs
+{files_presented}
 
-Adicionaly, attention must be given to the Chakra UI v3 Documentation for LLMs available into the links presented below (delimited by triple quotes).
+---
 
-"""Chakra UI is an accessible component system for building products with speed.
-## Documentation Sets
+# 5. Chakra UI v3 Documentation
 
-- [Complete documentation](chakra-v3-docs-borr8e9xb-chakra-ui.vercel.app/llms-full.txt): The complete Chakra UI v3 documentation including all components, styling and theming
-- [Components](chakra-v3-docs-borr8e9xb-chakra-ui.vercel.app/llms-components.txt): Documentation for all components in Chakra UI v3.
-- [Charts](chakra-v3-docs-borr8e9xb-chakra-ui.vercel.app/llms-charts.txt): Documentation for the charts in Chakra UI v3.
-- [Styling](chakra-v3-docs-borr8e9xb-chakra-ui.vercel.app/llms-styling.txt): Documentation for the styling system in Chakra UI v3.
-- [Theming](chakra-v3-docs-borr8e9xb-chakra-ui.vercel.app/llms-theming.txt): Documentation for theming Chakra UI v3.
-- [Migrating to v3](chakra-v3-docs-borr8e9xb-chakra-ui.vercel.app/llms-v3-migration.txt): Documentation for migrating to Chakra UI v3.
+Refer to the Chakra UI v3 documentation provided below for any styling or component usage \
+(especially `Checkbox`, `Flex`, `Button`, etc.):
 
-## Notes
+{docs_presented}
 
-- The complete documentation includes all content from the official documentation
-- Package-specific documentation files contain only the content relevant to that package"""
-\"\"\"
+---
+
+# 6. Expected Behavior
+
+- All current logics should be maintained.
+
+---
+
+# 7. Additional Notes
+
+- Preserve the visual structure and styling already implemented in the app.
+- Ensure minimal re-renders by using memoization or context selectors as appropriate.
+- Format the output using 4-space indentation.
+- Keep your code clean, readable, and idiomatic to modern React standards.
+"""

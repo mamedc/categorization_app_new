@@ -13,8 +13,7 @@ const TransactionGrid = ({
     setSelectedTransactionId, // Receive from props
 }) => {
     const [isLoading, setIsLoading] = useState(true);
-    // REMOVE local state for selectedTransactionId, as it's now managed by App
-
+    
     useEffect(() => {
         const getTransactions = async () => {
             try {
@@ -66,9 +65,9 @@ const TransactionGrid = ({
             )}
 
             {!isLoading && transactions.length === 0 && (
-                <Flex justify="center" mt={8} p={6} bg="gray.50" borderRadius="md">
+                <Flex justify="center" mt={8} p={6} bg="#f9f9f4" borderRadius="md">
                     <Text fontSize="sm" color="gray.500">
-                        No transactions found
+                        No transactions found.
                     </Text>
                 </Flex>
             )}

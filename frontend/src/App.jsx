@@ -3,9 +3,9 @@
 import { Container, Stack, Text, Flex, Button, Spacer } from "@chakra-ui/react";
 import Navbar from "./components/ui/Navbar";
 import TransactionGrid from "./components/ui/TransactionGrid";
-import { useState } from "react"; // Keep useState
 import CreateTransactionModal from "./components/ui/CreateTransactionModal"
 import DeleteTransactionModal from "./components/ui/DeleteTransactionModal"
+import { useState } from "react"; // Keep useState
 
 export const BASE_URL = "http://127.0.0.1:5000/api";
 
@@ -13,11 +13,16 @@ function App() {
     const [transactions, setTransactions] = useState([]);
     const [selectedTransactionId, setSelectedTransactionId] = useState(null);
 
+    // console.log('------');
+    // console.log(selectedTransactionId);
+    // console.log(setSelectedTransactionId);
+
     return (
         <Stack minH="100vh" bg="#f9f9f4" spacing={0}>
             <Navbar setTransactions={setTransactions} />
             <Container maxW="container.lg" pt={6} pb={8}>
                 
+                {/*Actions Bar*/}
                 <Flex
                     direction={{ base: 'column', md: 'row' }}
                     align={{ base: 'start', md: 'center' }}
@@ -31,13 +36,14 @@ function App() {
                     p={4} // Add some padding
                     borderRadius="md" // Add rounded corners
                     //boxShadow="sm" // Add a subtle shadow
-                    
                 >
-                    
                     {/* Spacer pushes the value to the end in horizontal layouts */}
                     <Spacer display={{ base: 'none', md: 'block' }} />
                     
-                    <CreateTransactionModal selectedTransactionId={selectedTransactionId} setTransactions={setTransactions} />
+                    <CreateTransactionModal 
+                        selectedTransactionId={selectedTransactionId} 
+                        setTransactions={setTransactions} 
+                    />
 
                     <Button 
                         size="sm" 
@@ -48,7 +54,10 @@ function App() {
                             Edit
                     </Button>
 
-                    <DeleteTransactionModal selectedTransactionId={selectedTransactionId} setTransactions={setTransactions} />
+                    <DeleteTransactionModal 
+                        selectedTransactionId={selectedTransactionId} 
+                        setTransactions={setTransactions} 
+                    />
                     
                 </Flex>
 
