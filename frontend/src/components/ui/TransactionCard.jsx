@@ -1,4 +1,5 @@
 // TransactionCard.jsx
+// We need to use the passed props to control the Checkbox state.
 
 import {
     Box,
@@ -11,9 +12,8 @@ import {
     Spacer,
 } from '@chakra-ui/react'
 
-const TransactionCard = ({ transaction, setTransactions }) => {
-
-    console.log(transaction)
+// Receive isSelected and onSelect props
+const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect }) => {
 
     return (
         <Box
@@ -21,9 +21,15 @@ const TransactionCard = ({ transaction, setTransactions }) => {
             borderRadius="lg"
             p={4}
             borderLeftWidth={4}
-            borderLeftColor="#bcdbdb"
-            transition="all 0.2s"
-            _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
+            // Optionally change style based on selection
+            borderLeftColor={isSelected ? "teal.500" : "#bcdbdb"} // Example: change border color when selected
+            // transition="all 0.1s"
+            // _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
+            _hover={{ outline: '1px solid', outlineColor: '#bcdbdb' }}
+            // Optionally add more visual feedback for selection
+            // boxShadow={isSelected ? 'outline' : 'sm'} // Example: add outline shadow when selected
+            outline={isSelected ? '1px solid' : 'none'}
+            outlineColor={isSelected ? 'teal.500' : 'transparent'}
         >
             <Flex
                 direction={{ base: 'column', md: 'row' }}
@@ -32,7 +38,15 @@ const TransactionCard = ({ transaction, setTransactions }) => {
                 wrap="wrap"
             >
                 {/*Checkbox*/}
-                <Checkbox.Root variant="outline" size="sm" colorPalette="cyan" mt={{ base: 1, md: 0 }}>
+                {/* Control the checked state and handle changes */}
+                <Checkbox.Root
+                    variant="outline"
+                    size="sm"
+                    colorPalette="cyan"
+                    mt={{ base: 1, md: 0 }}
+                    checked={isSelected} // Set checked based on isSelected prop
+                    onCheckedChange={onSelect} // Call the onSelect handler passed from parent on change
+                >
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />
                 </Checkbox.Root>
@@ -44,7 +58,6 @@ const TransactionCard = ({ transaction, setTransactions }) => {
                             {transaction.id}
                         </Text>
                         <Text fontSize="sm" color="gray.500">
-                            {/* {transaction.date} */}
                             {new Date(transaction.date).toISOString().split('T')[0]}
                         </Text>
                     </HStack>
