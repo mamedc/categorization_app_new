@@ -1,27 +1,21 @@
 import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { useState } from "react";
-import { BiAddToQueue } from "react-icons/bi"
 import { BASE_URL } from "../../App"
 
-const CreateUserModal = ({ setUsers }) => {
+const CreateUserModal = ({ selectedTransactionId, setTransactions }) => {
     const [open, setOpen] = useState(false);
-
     const initialFormState = {
-        name: '',
-        role: '',
+        value: '',
+        date: '',
         description: '',
-        gender: '',
     };
-    const gender_items = [{ label: "Male", value: "male" }, { label: "Female", value: "female" },];
     const [formData, setFormData] = useState(initialFormState);
-
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
     const [saveStatus, setSaveStatus] = useState(false);
     
-    const log_flag = false; // Ligar para ver o log no HTML
-
+    const log_flag = true; // Ligar para ver o log no HTML
     
     const handleOpen = () => {
         setOpen(true);
@@ -33,14 +27,9 @@ const CreateUserModal = ({ setUsers }) => {
         setFormData(initialFormState);
         setOpen(false);
     };
-    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
-    };
-
-    const handleRadioChange = (value) => {
-        setFormData({ ...formData, gender: value.value });
     };
 
     const handleSave = async () => { 
@@ -55,7 +44,7 @@ const CreateUserModal = ({ setUsers }) => {
             // Simulate an asynchronous API call
             // In a real application, you would make an API call here
             // await yourApiService.saveData({ name: nameText });
-            const res = await fetch(BASE_URL + "/friends", {
+            const res = await fetch(BASE_URL + "/transactions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", },
                 body: JSON.stringify(formData),
@@ -68,7 +57,7 @@ const CreateUserModal = ({ setUsers }) => {
 
             toaster.create({
                 title: "Success!",
-                description: "New friend added.",
+                description: "New transaction added.",
                 type: "success",
                 duration: 2000,
                 placement: "top-center",
@@ -83,7 +72,7 @@ const CreateUserModal = ({ setUsers }) => {
             setOpen(false); // Close dialog
             // Ao salvar os dados, atualiza a lista de amigos sem precisar recarregar a página
             // Mantém os usuarios antigos e adiciona o novo
-            setUsers((prevUsers) => [...prevUsers, data]);
+            setTransactions((prevTransactions) => [...prevTransactions, data]);
         
         } catch (error) {
             toaster.create({
@@ -110,8 +99,15 @@ const CreateUserModal = ({ setUsers }) => {
         <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
             
             <Dialog.Trigger asChild>
-                <Button variant="outline" size="sm" onClick={handleOpen}>
-                    <BiAddToQueue size={20} />
+                <Button 
+                    size="sm" 
+                    colorPalette="cyan" 
+                    rounded="sm" 
+                    width={20} 
+                    onClick={handleOpen}
+                    disabled={selectedTransactionId !== null}
+                >
+                    Add
                 </Button>
             </Dialog.Trigger>
 
@@ -120,32 +116,32 @@ const CreateUserModal = ({ setUsers }) => {
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
                 <Dialog.Content>
-                    <Dialog.Header><Dialog.Title>My New BFF</Dialog.Title></Dialog.Header>
+                    <Dialog.Header><Dialog.Title>New Transaction</Dialog.Title></Dialog.Header>
                     <Dialog.Body>
-                        {/*<Flex alignItems={"center"} gap="4" direction="column">*/}
                         <Stack direction="column" gap="6">
-                            
-                            {/*<Flex alignItems={"center"} gap="4" direction="row">*/}
                             <Stack direction={{ base: "column", md: "row" }} gap="4" width="100%">
-                                {/*Left: Name*/}
+                                
+                                {/*Left: Date*/}
                                 <Field.Root>
-                                    <Field.Label>Full Name:</Field.Label>
-                                    <Input placeholder="Enter full name"
-                                        name="name"
-                                        type="text"
-                                        value={formData.name}
+                                    <Field.Label>Date:</Field.Label>
+                                    <Input
+                                        name="date"
+                                        type="date"
+                                        value={formData.date}
                                         onChange={handleChange}
                                         disabled={isSaving} // Disable input during saving
                                     />
                                 </Field.Root>  
 
-                                {/*Right: Role*/}
+                                {/*Right: Value*/}
                                 <Field.Root>
-                                    <Field.Label>Role:</Field.Label>
-                                    <Input placeholder="Enter role"
-                                        name="role"
-                                        type="text"
-                                        value={formData.role}
+                                    <Field.Label>Value:</Field.Label>
+                                    <Input 
+                                        placeholder="R$ 0.00"
+                                        name="value"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.value}
                                         onChange={handleChange}
                                         disabled={isSaving}
                                     />
@@ -168,30 +164,9 @@ const CreateUserModal = ({ setUsers }) => {
                                 />
                             </Field.Root> 
 
-                            {/*Gender*/}
-                            <Field.Root>
-                                <Field.Label>Gender:</Field.Label>
-                                    <RadioGroup.Root 
-                                        mt={4} 
-                                        size={"sm"}
-                                        name="gender"
-                                        value={formData.gender}
-                                        onValueChange={handleRadioChange}
-                                    >
-                                        <HStack gap="4">   
-                                            {gender_items.map((item) => (
-                                                <RadioGroup.Item key={item.value} value={item.value} disabled={isSaving}>
-                                                    <RadioGroup.ItemHiddenInput />
-                                                    <RadioGroup.ItemIndicator />
-                                                    <RadioGroup.ItemText>{item.label}</RadioGroup.ItemText>
-                                                </RadioGroup.Item>
-                                            ))}
-                                        </HStack>
-                                    </RadioGroup.Root>
-                            </Field.Root>
                             
                             {/* LOG */}
-                            {log_flag && (
+                            {/* {log_flag && (
                                 <div style={{ border: '1px solid red', padding: '10px', backgroundColor: '#191970' }}>
                                     <h1>LOG:</h1>
                                     <p>Open: {open.toString()}</p>
@@ -203,7 +178,7 @@ const CreateUserModal = ({ setUsers }) => {
                                     <p>saveError: {saveError.toString()}</p>
                                     <p>saveStatus: {saveStatus.toString()}</p>
                                 </div>
-                            )}
+                            )} */}
                         {/*</Flex>*/}
                         </Stack>
                         {saveError && <Text color="red.500">{saveError}</Text>}
