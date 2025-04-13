@@ -3,7 +3,7 @@ import { Toaster, toaster } from "@/components/ui/toaster"
 import { useState } from "react";
 import { BASE_URL } from "../../App"
 
-const CreateUserModal = ({ selectedTransactionId, setTransactions }) => {
+const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
     const [open, setOpen] = useState(false);
     const initialFormState = {
         value: '',
@@ -212,4 +212,4 @@ const CreateUserModal = ({ selectedTransactionId, setTransactions }) => {
     );
 };
 
-export default CreateUserModal
+export default CreateTransactionModal

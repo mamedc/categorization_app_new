@@ -5,6 +5,7 @@ import Navbar from "./components/ui/Navbar";
 import TransactionGrid from "./components/ui/TransactionGrid";
 import { useState } from "react"; // Keep useState
 import CreateTransactionModal from "./components/ui/CreateTransactionModal"
+import DeleteTransactionModal from "./components/ui/DeleteTransactionModal"
 
 export const BASE_URL = "http://127.0.0.1:5000/api";
 
@@ -32,26 +33,10 @@ function App() {
                     //boxShadow="sm" // Add a subtle shadow
                     
                 >
-                    {/* <Text
-                        fontSize="xl" // Adjusted font size for better visibility
-                        fontWeight="semibold"
-                        color="gray.700"
-                        textAlign="center" // Ensure text is centered if it wraps
-                    >
-                        Selected Transaction: {selectedTransactionId ? selectedTransactionId : "None"}
-                    </Text> */}
-
+                    
                     {/* Spacer pushes the value to the end in horizontal layouts */}
                     <Spacer display={{ base: 'none', md: 'block' }} />
-
-                    {/* <Button 
-                        size="sm" 
-                        colorPalette="cyan" 
-                        rounded="sm" 
-                        width={20} 
-                        disabled={selectedTransactionId !== null}>
-                            Add
-                    </Button> */}
+                    
                     <CreateTransactionModal selectedTransactionId={selectedTransactionId} setTransactions={setTransactions} />
 
                     <Button 
@@ -63,15 +48,8 @@ function App() {
                             Edit
                     </Button>
 
-                    <Button 
-                    size="sm" 
-                    colorPalette="red" 
-                    rounded="sm" 
-                    width={20} 
-                    disabled={selectedTransactionId === null}>
-                        Delete
-                    </Button>
-
+                    <DeleteTransactionModal selectedTransactionId={selectedTransactionId} setTransactions={setTransactions} />
+                    
                 </Flex>
 
                 <TransactionGrid
