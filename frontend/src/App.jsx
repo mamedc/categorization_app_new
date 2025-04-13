@@ -1,6 +1,6 @@
 // App.jsx
 
-import { Container, Stack, Text } from "@chakra-ui/react"
+import { Container, Stack, Text, Flex, Box } from "@chakra-ui/react"
 import Navbar from "./components/ui/Navbar"
 import TransactionGrid from "./components/ui/TransactionGrid"
 import { useState } from "react"
@@ -14,15 +14,20 @@ function App() {
         <Stack minH="100vh" bg="#f9f9f4" spacing={0}>
             <Navbar setTransactions={setTransactions} />
             <Container maxW="container.lg" pt={6} pb={8}>
-                <Text 
-                    fontSize="2xl"
-                    fontWeight="semibold"
-                    textAlign="center"
-                    mb={6}
-                    color="gray.700"
-                >
-                    Selected Records
-                </Text>
+                
+                {/* Transaction Actions Here */}
+                <Flex background="#D1E2C4">
+                    <Text 
+                        fontSize="2xl"
+                        fontWeight="semibold"
+                        textAlign="center"
+                        mb={6}
+                        color="gray.700"
+                    >
+                        Transaction Actions Here
+                    </Text>
+                </Flex>
+
                 <TransactionGrid transactions={transactions} setTransactions={setTransactions} />
             </Container>
         </Stack>
