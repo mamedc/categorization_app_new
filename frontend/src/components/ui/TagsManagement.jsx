@@ -1,11 +1,11 @@
-// src/components/ui/TagsPlaceholder.jsx
+// src/components/ui/TagsManagement.jsx
 
 import { Box, Center, Text } from "@chakra-ui/react";
 
 /**
  * Placeholder component for the Tags screen.
  */
-function TagsPlaceholder() {
+function TagsManagement() {
     return (
         <Center h="calc(100vh - 160px)"> {/* Adjust height based on Navbar and padding */}
             <Box
@@ -27,4 +27,4 @@ function TagsPlaceholder() {
     );
 }
 
-export default TagsPlaceholder;
+export default TagsManagement;

@@ -5,7 +5,7 @@ import Navbar from "./components/ui/Navbar";
 import TransactionGrid from "./components/ui/TransactionGrid";
 import CreateTransactionModal from "./components/ui/CreateTransactionModal";
 import DeleteTransactionModal from "./components/ui/DeleteTransactionModal";
-import TagsPlaceholder from "./components/ui/TagsPlaceholder"; // Import the new placeholder
+import TagsManagement from "./components/ui/TagsManagement"; // Import the new placeholder
 import { useState, useCallback } from "react";
 import { LuArrowDown, LuArrowUp } from "react-icons/lu";
 
@@ -107,7 +107,7 @@ function App() {
             {/* Render Tags Placeholder when activeView is 'tags' */}
             {activeView === 'tags' && (
                  <Container maxW="container.lg" pt={6} pb={8}>
-                    <TagsPlaceholder />
+                    <TagsManagement />
                  </Container>
             )}
         </Stack>
