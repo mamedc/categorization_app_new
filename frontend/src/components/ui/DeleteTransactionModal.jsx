@@ -40,6 +40,7 @@ const DeleteTransactionModal = ({ selectedTransactionId, setTransactions }) => {
                 throw new Error(data.error); 
             };
             setOpen(false); // Close dialog
+            //setSelectedTransactionId(null);
             setTransactions((prevTrans) => prevTrans.filter((u) => u.id !== selectedTransactionId));
             toaster.create({
                 title: "Success!",
