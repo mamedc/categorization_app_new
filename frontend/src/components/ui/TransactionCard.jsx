@@ -79,9 +79,9 @@ const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect })
                     <Text
                         fontSize="md"
                         fontWeight="bold"
-                        color={Number(transaction.value) >= 0 ? 'green.600' : 'red.600'}
+                        color={Number(transaction.amount) >= 0 ? 'green.600' : 'red.600'}
                     >
-                        R$ {transaction.value}
+                        R$ {transaction.amount}
                     </Text>
 
                     <HStack spacing={2} wrap="wrap" justify="end">

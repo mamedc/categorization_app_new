@@ -6,7 +6,7 @@ import { BASE_URL } from "../../App"
 const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
     const [open, setOpen] = useState(false);
     const initialFormState = {
-        value: '',
+        amount: '',
         date: '',
         description: '',
     };
@@ -44,7 +44,7 @@ const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
             // Simulate an asynchronous API call
             // In a real application, you would make an API call here
             // await yourApiService.saveData({ name: nameText });
-            const res = await fetch(BASE_URL + "/transactions", {
+            const res = await fetch(BASE_URL + "/transactions/new", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", },
                 body: JSON.stringify(formData),
@@ -135,13 +135,13 @@ const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
 
                                 {/*Right: Value*/}
                                 <Field.Root>
-                                    <Field.Label>Value:</Field.Label>
+                                    <Field.Label>Amount:</Field.Label>
                                     <Input 
                                         placeholder="R$ 0.00"
-                                        name="value"
+                                        name="amount"
                                         type="number"
                                         step="0.01"
-                                        value={formData.value}
+                                        value={formData.amount}
                                         onChange={handleChange}
                                         disabled={isSaving}
                                     />

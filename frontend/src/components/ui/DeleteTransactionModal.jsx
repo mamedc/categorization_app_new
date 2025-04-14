@@ -4,7 +4,7 @@ import { useState } from "react";
 import { BASE_URL } from "../../App"
 import { FiAlertTriangle } from 'react-icons/fi';
 
-const DeleteTransactionModal = ({ selectedTransactionId, setTransactions }) => {
+const DeleteTransactionModal = ({ selectedTransactionId, setTransactions, setSelectedTransactionId }) => {
     const [open, setOpen] = useState(false);
     // const initialFormState = {
     //     value: '',
@@ -32,7 +32,7 @@ const DeleteTransactionModal = ({ selectedTransactionId, setTransactions }) => {
     const handleDeleteTransaction = async () => {
         try {
             console.log("Delete transaction?");
-            const res = await fetch(BASE_URL + "/transactions/" + selectedTransactionId, {
+            const res = await fetch(BASE_URL + "/transactions/delete/" + selectedTransactionId, {
                 method: "DELETE",
             });
             const data = await res.json();
@@ -40,7 +40,7 @@ const DeleteTransactionModal = ({ selectedTransactionId, setTransactions }) => {
                 throw new Error(data.error); 
             };
             setOpen(false); // Close dialog
-            //setSelectedTransactionId(null);
+            setSelectedTransactionId(null);
             setTransactions((prevTrans) => prevTrans.filter((u) => u.id !== selectedTransactionId));
             toaster.create({
                 title: "Success!",

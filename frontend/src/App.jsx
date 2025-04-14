@@ -86,7 +86,8 @@ function App() {
 
                     <DeleteTransactionModal 
                         selectedTransactionId={selectedTransactionId} 
-                        setTransactions={setTransactions} 
+                        setTransactions={setTransactions}
+                        setSelectedTransactionId={setSelectedTransactionId} 
                     />
                     
                 </Flex>

@@ -12,7 +12,7 @@ function Navbar({ setTransactions }) {
                         Transactions
                     </Text>
                     <Text fontSize="md" fontWeight="medium" color="gray.800" _hover={{ color: "teal.600", cursor: "pointer" }}>
-                        Categories
+                        Tags
                     </Text>
                 </Flex>
                 
