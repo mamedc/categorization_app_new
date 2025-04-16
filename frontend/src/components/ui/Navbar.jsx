@@ -2,13 +2,13 @@
 
 import { Box, Flex, Text } from "@chakra-ui/react"
 
-// Accept activeView and setActiveView props
-function Navbar({ activeView, setActiveView, setTransactions }) {
+export default function Navbar({ activeView, setActiveView }) {
     return (
-        <Box bg="white" px={4} py={2} shadow="sm"> {/* Added subtle shadow */}
+        <Box bg="white" px={4} py={2}>
             <Flex h="16" alignItems="center" justifyContent="space-between">
 
                 <Flex align="center" gap={6} display={{ base: "none", sm: "flex" }}>
+  
                     {/* Transactions Navigation Item */}
                     <Text
                         fontSize="md"
@@ -46,7 +46,5 @@ function Navbar({ activeView, setActiveView, setTransactions }) {
 
             </Flex>
         </Box>
-    )
-}
-
-export default Navbar
+    );
+};

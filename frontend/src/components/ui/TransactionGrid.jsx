@@ -1,15 +1,12 @@
 // TransactionGrid.jsx
-// Refactored to group transactions by date
 
+import { useEffect, useState, useMemo, Fragment } from "react";
+import { BASE_URL } from "../../App";
 import { VStack, Spinner, Text, Flex, StackSeparator } from "@chakra-ui/react";
 import TransactionCard from "./TransactionCard";
-import { useEffect, useState, useMemo, Fragment } from "react"; // Added Fragment
-import { BASE_URL } from "../../App";
 
 // Helper function to format date string into a user-friendly format
 const formatDateHeader = (dateString) => {
-    // Ensure the date string is parsed correctly regardless of timezone
-    // Appending 'T00:00:00' assumes the date string is YYYY-MM-DD and treats it as local time start of day
     const date = new Date(dateString + 'T00:00:00');
     if (isNaN(date.getTime())) {
         return "Invalid Date"; // Fallback for invalid dates
@@ -22,15 +19,21 @@ const formatDateHeader = (dateString) => {
     }).format(date);
 };
 
-const TransactionGrid = ({
+function TransactionGrid ({
     transactions,
     setTransactions,
     selectedTransactionId,
     setSelectedTransactionId,
-    sortOrder,
-}) => {
+    sortOrder }) {
+    
     const [isLoading, setIsLoading] = useState(true);
 
+    // useEffect(() => { ... }, [setTransactions, setSelectedTransactionId]);
+    // () => { ... }: This is the effect function. The code inside this function will run after 
+    // every render of the component (by default) or when the dependencies specified in the 
+    // dependency array change.
+    // [setTransactions, setSelectedTransactionId]: This is the dependency array. React will 
+    // only re-run the effect function if any of the values in this array have changed since the last render.
     useEffect(() => {
         const getTransactions = async () => {
             try {
@@ -53,7 +56,7 @@ const TransactionGrid = ({
             }
         };
         getTransactions();
-    }, [setTransactions, setSelectedTransactionId]);
+    }, []);
 
     const handleSelectTransaction = (transactionId) => {
         setSelectedTransactionId((prevSelectedId) =>
@@ -71,7 +74,6 @@ const TransactionGrid = ({
             const dateB = new Date(b.date);
             const timeA = !isNaN(dateA.getTime()) ? dateA.getTime() : 0;
             const timeB = !isNaN(dateB.getTime()) ? dateB.getTime() : 0;
-
             return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
         });
         return sorted;
@@ -80,7 +82,6 @@ const TransactionGrid = ({
     // Memoize the grouped transactions
     const groupedTransactions = useMemo(() => {
         const groups = new Map(); // Using Map for potentially better performance and order preservation
-
         sortedTransactions.forEach((transaction) => {
             // Ensure date exists and is valid before processing
             if (!transaction.date) {
@@ -100,14 +101,12 @@ const TransactionGrid = ({
                 // Optionally group invalid dates under a specific key like 'Invalid Date'
             }
         });
-
         // Convert Map to array structure [{ date: string, transactions: Transaction[] }]
         // The order will depend on the insertion order, which follows sortedTransactions
         return Array.from(groups.entries()).map(([date, transactions]) => ({
             date,
             transactions,
         }));
-
     }, [sortedTransactions]); // Re-group only when sortedTransactions changes
 
     return (
@@ -134,7 +133,6 @@ const TransactionGrid = ({
                                 fontSize="md"
                                 fontWeight="semibold"
                                 color="gray.600"
-                                //mt={index > 0 ? 6 : 0} // Add top margin to separate date groups, except the first one
                                 pb={2} // Add some padding below the header
                                 pt={2} // Add some padding below the header
                                 borderBottomWidth="1px"
@@ -147,8 +145,6 @@ const TransactionGrid = ({
                                     <TransactionCard
                                         key={transaction.id}
                                         transaction={transaction}
-                                        // setTransactions prop might not be needed in Card if Delete/Edit is handled elsewhere, but keeping for now
-                                        setTransactions={setTransactions}
                                         isSelected={transaction.id === selectedTransactionId}
                                         onSelect={() => handleSelectTransaction(transaction.id)}
                                     />

@@ -1,29 +1,17 @@
 // TransactionCard.jsx
-// We need to use the passed props to control the Checkbox state.
 
-import {
-    Box,
-    Flex,
-    Text,
-    HStack,
-    Badge,
-    Checkbox,
-    VStack,
-    Spacer,
-} from '@chakra-ui/react'
+import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer } from '@chakra-ui/react'
 
-// Receive isSelected and onSelect props
-const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect }) => {
 
+export default function TransactionCard ({ transaction, isSelected, onSelect }) {
     return (
         <Box
             bg="white"
             borderRadius="lg"
             p={4}
             borderLeftWidth={4}
-            // Optionally change style based on selection
             borderLeftColor={isSelected ? "teal.500" : "#bcdbdb"} // Example: change border color when selected
-            // transition="all 0.1s"
+            //transition="all 0.1s"
             // _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
             _hover={{ outline: '1px solid', outlineColor: '#bcdbdb' }}
             // Optionally add more visual feedback for selection
@@ -38,14 +26,13 @@ const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect })
                 wrap="wrap"
             >
                 {/*Checkbox*/}
-                {/* Control the checked state and handle changes */}
                 <Checkbox.Root
                     variant="outline"
                     size="sm"
                     colorPalette="cyan"
                     mt={{ base: 1, md: 0 }}
-                    checked={isSelected} // Set checked based on isSelected prop
-                    onCheckedChange={onSelect} // Call the onSelect handler passed from parent on change
+                    checked={isSelected}
+                    onCheckedChange={onSelect}
                 >
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />
@@ -99,7 +86,5 @@ const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect })
                 </VStack>
             </Flex>
         </Box>
-    )
-}
-
-export default TransactionCard
+    );
+};

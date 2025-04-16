@@ -1,29 +1,86 @@
 // src/components/ui/TagsManagement.jsx
 
-import { Box, Center, Text } from "@chakra-ui/react";
+import { Container, Flex, IconButton, Spacer, Tooltip, Portal } from "@chakra-ui/react";
+import { LuArrowUp } from "react-icons/lu";
 
-/**
- * Placeholder component for the Tags screen.
- */
+
 function TagsManagement() {
+
+    const sortIcon = <LuArrowUp />;
+
     return (
-        <Center h="calc(100vh - 160px)"> {/* Adjust height based on Navbar and padding */}
-            <Box
-                p={8}
-                borderWidth="1px"
-                borderRadius="lg"
-                bg="white"
-                shadow="base"
-                textAlign="center"
+        <Container>
+        
+            {/* Actions Bar */}
+            <Flex
+                direction={{ base: 'column', md: 'row' }}
+                align={{ base: 'start', md: 'center' }}
+                gap={4}
+                wrap="wrap"
+                minH="60px"
+                bg="#bcdbdb"
+                mb={6}
+                p={4}
+                borderRadius="md"
             >
-                <Text fontSize="xl" color="gray.600" fontWeight="medium">
-                    🏷️ Tags Screen Coming Soon!
-                </Text>
-                <Text mt={2} color="gray.500" fontSize="md">
-                    This section will allow managing transaction tags.
-                </Text>
-            </Box>
-        </Center>
+                {/* Sorting Control */}
+                <Tooltip.Root positioning={{ placement: "bottom" }} openDelay={200} closeDelay={100}>
+                    <Tooltip.Trigger asChild>
+                        <IconButton
+                            size="sm"
+                            aria-label="Toggle sort order by date"
+                            //onClick={toggleSortOrder}
+                            variant="outline"
+                            colorPalette="teal" // Changed from teal.500
+                            _hover={{ bg: "teal.500", color: "white" }} // Added color on hover
+                        >
+                            {sortIcon}
+                        </IconButton>
+                    </Tooltip.Trigger>
+                    <Portal> {/* Ensure Tooltip content renders in the body */}
+                        <Tooltip.Positioner>
+                            <Tooltip.Content>Aaaaaaaaaa</Tooltip.Content>
+                        </Tooltip.Positioner>
+                    </Portal>
+                </Tooltip.Root>
+
+                <Spacer />
+
+                {/* Existing Action Buttons */}
+                {/* <CreateTransactionModal
+                    selectedTransactionId={selectedTransactionId}
+                    setTransactions={setTransactions}
+                /> */}
+                
+                {/* Edit Button */}
+                {/* <Button
+                    size="sm"
+                    colorPalette="blue"
+                    rounded="sm"
+                    width={20}
+                    disabled={selectedTransactionId === null}
+                >
+                    Edit
+                </Button> */}
+                
+                {/* Delete Button */}
+                {/* <DeleteTransactionModal
+                    selectedTransactionId={selectedTransactionId}
+                    setTransactions={setTransactions}
+                    setSelectedTransactionId={setSelectedTransactionId}
+                /> */}
+            </Flex>
+
+            {/* Transaction Grid */}
+            {/* <TagsGroupsGrid
+                transactions={transactions}
+                setTransactions={setTransactions}
+                selectedTransactionId={selectedTransactionId}
+                setSelectedTransactionId={setSelectedTransactionId}
+                sortOrder={sortOrder}
+            /> */}
+
+        </Container>
     );
 }
 

@@ -21,7 +21,7 @@ const formatDateHeader = (dateString) => {
     }).format(date);
 };
 
-const TransactionGrid = ({
+const TagsGroupsGrid = ({
     transactions,
     setTransactions,
     selectedTransactionId,
@@ -161,4 +161,4 @@ const TransactionGrid = ({
     );
 };
 
-export default TransactionGrid;
+export default TagsGroupsGrid;

@@ -1,20 +1,26 @@
 // src/components/ui/TransactionsManagement.jsx
 
-import { Container, Flex, Button, Spacer, IconButton, Tooltip, Portal } from "@chakra-ui/react";
 import { useState, useCallback } from "react";
+import { Container, Flex, Button, Spacer, IconButton, Tooltip, Portal } from "@chakra-ui/react";
+import { LuArrowDown, LuArrowUp } from "react-icons/lu";
 import TransactionGrid from "./TransactionGrid";
 import CreateTransactionModal from "./CreateTransactionModal";
 import DeleteTransactionModal from "./DeleteTransactionModal";
-import { LuArrowDown, LuArrowUp } from "react-icons/lu";
 
-function TransactionsManagement({ transactions, setTransactions, selectedTransactionId, setSelectedTransactionId }) {
+
+export default function TransactionsManagement({ 
+    transactions, 
+    setTransactions, 
+    selectedTransactionId, 
+    setSelectedTransactionId }) {
+
     const [sortOrder, setSortOrder] = useState('desc');
-    const toggleSortOrder = useCallback(() => {
+    const toggleSortOrder = () => { //  Flips the sorting state between 'asc' and 'desc'
         setSortOrder(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
         setSelectedTransactionId(null);
-    }, []);
-    const sortIcon = sortOrder === 'asc' ? <LuArrowUp /> : <LuArrowDown />;
-    const sortTooltipLabel = sortOrder === 'asc' ? "Sort Descending (Newest First)" : "Sort Ascending (Oldest First)";
+    };
+    const sortIcon = sortOrder === 'desc' ? <LuArrowUp /> : <LuArrowDown />;
+    const sortTooltipLabel = sortOrder === 'desc' ? "Sort Descending (Newest First)" : "Sort Ascending (Oldest First)";
 
     return (
         <Container maxW="container.lg" pt={6} pb={8}>
@@ -52,10 +58,10 @@ function TransactionsManagement({ transactions, setTransactions, selectedTransac
 
                 <Spacer />
 
-                {/* Existing Action Buttons */}
+                {/* Add Button */}
                 <CreateTransactionModal
-                    selectedTransactionId={selectedTransactionId}
-                    setTransactions={setTransactions}
+                    setTransactions={setTransactions} // To include the new transaction to "transactions"
+                    selectedTransactionId={selectedTransactionId} // To enable/disable the 'Add' button
                 />
                 
                 {/* Edit Button */}
@@ -88,6 +94,4 @@ function TransactionsManagement({ transactions, setTransactions, selectedTransac
         
         </Container>        
     );
-}
-
-export default TransactionsManagement;
+};

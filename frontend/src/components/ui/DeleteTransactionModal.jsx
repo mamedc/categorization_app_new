@@ -1,35 +1,29 @@
-import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, Icon, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
-import { Toaster, toaster } from "@/components/ui/toaster"
 import { useState } from "react";
 import { BASE_URL } from "../../App"
+import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, Icon, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
+import { Toaster, toaster } from "@/components/ui/toaster"
 import { FiAlertTriangle } from 'react-icons/fi';
 
-const DeleteTransactionModal = ({ selectedTransactionId, setTransactions, setSelectedTransactionId }) => {
+
+export default function DeleteTransactionModal ({ 
+    selectedTransactionId, 
+    setTransactions, 
+    setSelectedTransactionId }) {
+
     const [open, setOpen] = useState(false);
-    // const initialFormState = {
-    //     value: '',
-    //     date: '',
-    //     description: '',
-    // };
-    //const [formData, setFormData] = useState(initialFormState);
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
-    const [saveStatus, setSaveStatus] = useState(false);
-    
-    const log_flag = true; // Ligar para ver o log no HTML
-    
+        
     const handleOpen = () => {
         setOpen(true);
-        //setFormData(initialFormState);
         setSaveError(''); // Clear any previous error
-        setSaveStatus(false); // Reset when opening
     };
     const handleClose = () => {
-        //setFormData(initialFormState);
         setOpen(false);
     };
 
     const handleDeleteTransaction = async () => {
+        setIsSaving(true); // Start loading
         try {
             console.log("Delete transaction?");
             const res = await fetch(BASE_URL + "/transactions/delete/" + selectedTransactionId, {
@@ -39,6 +33,7 @@ const DeleteTransactionModal = ({ selectedTransactionId, setTransactions, setSel
             if(!res.ok) { 
                 throw new Error(data.error); 
             };
+            setSaveError(''); // Clear any previous error
             setOpen(false); // Close dialog
             setSelectedTransactionId(null);
             setTransactions((prevTrans) => prevTrans.filter((u) => u.id !== selectedTransactionId));
@@ -58,9 +53,10 @@ const DeleteTransactionModal = ({ selectedTransactionId, setTransactions, setSel
                 duration: 4000,
                 placement: "top-center",
             })
+        } finally {
+            setIsSaving(false);
         }
     };
-
 
     return (
         <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
@@ -92,6 +88,7 @@ const DeleteTransactionModal = ({ selectedTransactionId, setTransactions, setSel
                             <Icon as={FiAlertTriangle} color="red.500" boxSize={5} />
                             <Text color="red.500" textAlign="center" fontSize="lg">Delete this transaction?</Text>
                         </HStack>
+                        {saveError && <Text color="red.500">{saveError}</Text>}
                     </Dialog.Body>
                     
                     {/* Cancel and Save buttons */}
@@ -122,5 +119,3 @@ const DeleteTransactionModal = ({ selectedTransactionId, setTransactions, setSel
     </Dialog.Root>
     );
 };
-
-export default DeleteTransactionModal

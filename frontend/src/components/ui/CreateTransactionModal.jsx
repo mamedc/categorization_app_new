@@ -1,27 +1,22 @@
-import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
-import { Toaster, toaster } from "@/components/ui/toaster"
 import { useState } from "react";
 import { BASE_URL } from "../../App"
+import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
+import { Toaster, toaster } from "@/components/ui/toaster"
 
-const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
+export default function CreateTransactionModal ({ 
+    setTransactions, 
+    selectedTransactionId }) {
+    
     const [open, setOpen] = useState(false);
-    const initialFormState = {
-        amount: '',
-        date: '',
-        description: '',
-    };
+    const initialFormState = {amount: '', date: '',description: ''};
     const [formData, setFormData] = useState(initialFormState);
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
-    const [saveStatus, setSaveStatus] = useState(false);
-    
-    const log_flag = true; // Ligar para ver o log no HTML
     
     const handleOpen = () => {
         setOpen(true);
         setFormData(initialFormState);
         setSaveError(''); // Clear any previous error
-        setSaveStatus(false); // Reset when opening
     };
     const handleClose = () => {
         setFormData(initialFormState);
@@ -33,17 +28,8 @@ const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
     };
 
     const handleSave = async () => { 
-        
         setIsSaving(true); // Start loading
-        // e.preventDefault();
-        // É usado para que a página nao seja recarregada ao submeter um formulário
-        // No nosso caso não sei se teria esse comportamento, pois não estamos usando um formulário.
-        // Fica no radar para quando precisarmos.
-
         try {
-            // Simulate an asynchronous API call
-            // In a real application, you would make an API call here
-            // await yourApiService.saveData({ name: nameText });
             const res = await fetch(BASE_URL + "/transactions/new", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", },
@@ -53,8 +39,6 @@ const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
             if(!res.ok) { 
                 throw new Error(data.error); 
             };
-            // await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 2 seconds
-
             toaster.create({
                 title: "Success!",
                 description: "New transaction added.",
@@ -62,18 +46,10 @@ const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
                 duration: 2000,
                 placement: "top-center",
             })
-            
             console.log(formData);
-
-            // setFormData(initialFormState);
-            // setIsSaving(false); // Stop loading
-            // setSaveStatus(true)
             setSaveError(''); // Clear any previous error
             setOpen(false); // Close dialog
-            // Ao salvar os dados, atualiza a lista de amigos sem precisar recarregar a página
-            // Mantém os usuarios antigos e adiciona o novo
-            setTransactions((prevTransactions) => [...prevTransactions, data]);
-        
+            setTransactions((prevTransactions) => [...prevTransactions, data]); // Add new transaction to Transactions without new rendering
         } catch (error) {
             toaster.create({
                 title: "An error occurred.",
@@ -83,17 +59,10 @@ const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
                 placement: "top-center",
             })
             console.error('Error saving name:', error);
-            // setIsSaving(false); // Stop loading even on error
-            //setSaveError("Failed to save. Please try again."); // Set error message
-            // Optionally, you might want to keep the dialog open to show the error
-        
         } finally {
             setIsSaving(false);
-            //setFormData(initialFormState);
-            setSaveStatus(true)
         }
-    }
-
+    };
 
     return (
         <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
@@ -163,23 +132,6 @@ const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
                                     disabled={isSaving}
                                 />
                             </Field.Root> 
-
-                            
-                            {/* LOG */}
-                            {/* {log_flag && (
-                                <div style={{ border: '1px solid red', padding: '10px', backgroundColor: '#191970' }}>
-                                    <h1>LOG:</h1>
-                                    <p>Open: {open.toString()}</p>
-                                    <p>name: {formData.name.toString()}</p>
-                                    <p>role: {formData.role.toString()}</p>
-                                    <p>description: {formData.description}</p>
-                                    <p>gender: {formData.gender.toString()}</p>
-                                    <p>isSaving: {isSaving.toString()}</p>
-                                    <p>saveError: {saveError.toString()}</p>
-                                    <p>saveStatus: {saveStatus.toString()}</p>
-                                </div>
-                            )} */}
-                        {/*</Flex>*/}
                         </Stack>
                         {saveError && <Text color="red.500">{saveError}</Text>}
                     </Dialog.Body>
@@ -203,13 +155,10 @@ const CreateTransactionModal = ({ selectedTransactionId, setTransactions }) => {
                     
                     <Dialog.CloseTrigger asChild>
                         <CloseButton size="sm" onClick={handleClose} disabled={isSaving} />
-                    </Dialog.CloseTrigger>
-                    
+                    </Dialog.CloseTrigger>  
                 </Dialog.Content>
                 </Dialog.Positioner>
             </Portal>
     </Dialog.Root>
     );
 };
-
-export default CreateTransactionModal

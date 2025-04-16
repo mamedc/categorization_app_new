@@ -1,25 +1,25 @@
 // App.jsx
 
+import { useState } from "react";
 import { Container, Stack } from "@chakra-ui/react";
 import Navbar from "./components/ui/Navbar";
 import TransactionsManagement from "./components/ui/TransactionsManagement";
 import TagsManagement from "./components/ui/TagsManagement"; // Import the new placeholder
-import { useState } from "react";
 
 export const BASE_URL = "http://127.0.0.1:5000/api";
 
-function App() {
-    const [activeView, setActiveView] = useState('transactions'); // State for active view
+export default function App() {
+    const [activeView, setActiveView] = useState('transactions');  // 'transactions' or 'tags'
     const [transactions, setTransactions] = useState([]);
     const [selectedTransactionId, setSelectedTransactionId] = useState(null);
     
     return (
         <Stack minH="100vh" bg="#f9f9f4" spacing={0}>
-            {/* Pass activeView and setActiveView to Navbar */}
+            
+            {/* 'activeView' and 'setActiveView' props to control Navbar style and set current activeView*/}
             <Navbar
                 activeView={activeView}
                 setActiveView={setActiveView}
-                setTransactions={setTransactions}
             />
 
             {/* Conditional Rendering based on activeView */}
@@ -31,8 +31,6 @@ function App() {
                     setSelectedTransactionId={setSelectedTransactionId}
                 />
             )}
-            
-            {/* Render Tags Placeholder when activeView is 'tags' */}
             {activeView === 'tags' && (
                  <Container maxW="container.lg" pt={6} pb={8}>
                     <TagsManagement />
@@ -40,6 +38,4 @@ function App() {
             )}
         </Stack>
     );
-}
-
-export default App;
+};
