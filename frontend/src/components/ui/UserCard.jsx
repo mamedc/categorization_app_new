@@ -1,7 +1,7 @@
 import { Card, Flex, Avatar, Box, Heading, Text, IconButton } from '@chakra-ui/react'
 import { BiTrash } from "react-icons/bi"
 import { Toaster, toaster } from "@/components/ui/toaster"
-import EditModal from "./EditModal"
+import EditModal from "./EditTransactionModal"
 import { BASE_URL } from "../../App"
 
 const UserCard = ({ usuario, setUsuarios }) => {

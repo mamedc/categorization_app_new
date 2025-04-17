@@ -6,6 +6,7 @@ import { LuArrowUp } from "react-icons/lu";
 import TagsGroupsGrid from "./TagsGroupsGrid";
 import CreateTagsGroupModal from "./CreateTagsGroupModal";
 import DeleteTagsGroupsModal from "./DeleteTagsGroupsModal";
+import EditTagGroupModal from "./EditTagGroupModal";
 
 
 export default function TagsManagement ({
@@ -65,15 +66,12 @@ export default function TagsManagement ({
                 />
                 
                 {/* Edit Button */}
-                {/* <Button
-                    size="sm"
-                    colorPalette="blue"
-                    rounded="sm"
-                    width={20}
-                    disabled={selectedTransactionId === null}
+                <EditTagGroupModal
+                    selectedTagGroupId={selectedTagGroupId}
+                    setSelectedTagGroupId={setSelectedTagGroupId}
                 >
                     Edit
-                </Button> */}
+                </EditTagGroupModal>
                 
                 {/* Delete Button */}
                 <DeleteTagsGroupsModal
@@ -91,12 +89,6 @@ export default function TagsManagement ({
                 setSelectedTagGroupId={setSelectedTagGroupId}
                 selectedTagId={selectedTagId}
                 setSelectedTagId={setSelectedTagId}
-                
-                //transactions={transactions}
-                //setTransactions={setTransactions}
-                //selectedTransactionId={selectedTransactionId}
-                //setSelectedTransactionId={setSelectedTransactionId}
-                //sortOrder={sortOrder}
             />
 
         </Container>
