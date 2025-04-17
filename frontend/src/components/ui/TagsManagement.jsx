@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Container, Flex, IconButton, Spacer, Tooltip, Portal } from "@chakra-ui/react";
 import { LuArrowUp } from "react-icons/lu";
 import TagsGroupsGrid from "./TagsGroupsGrid";
+import CreateTagsGroupModal from "./CreateTagsGroupModal";
 
 
 export default function TagsManagement ({
@@ -57,10 +58,10 @@ export default function TagsManagement ({
                 <Spacer />
 
                 {/* Existing Action Buttons */}
-                {/* <CreateTransactionModal
-                    selectedTransactionId={selectedTransactionId}
-                    setTransactions={setTransactions}
-                /> */}
+                <CreateTagsGroupModal
+                    selectedTagGroupId={selectedTagGroupId}
+                    setTagGroups={setTagGroups}
+                />
                 
                 {/* Edit Button */}
                 {/* <Button

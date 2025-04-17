@@ -72,15 +72,6 @@ export default function TagsGroupsGrid ({
             {!isLoading && groupTags.length > 0 && (
                 <VStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
                     {groupTags.map((tag) => (
-                        // <TagGroupCard
-                        //     key={tGroup.id}
-                        //     tGroup={tGroup}
-                        //     isSelected={tGroup.id === selectedTagGroupId}
-                        //     onSelect={() => handleSelectTagGroup(tGroup.id)}
-                        // />
-                        // <Text fontSize="sm" color="gray.500">
-                        //     {tag.name}
-                        // </Text>
                         <TagCard 
                             key={tag.id}
                             tag={tag}

@@ -61,14 +61,7 @@ export default function TagGroupCard ({
                             {tGroup.name}
                         </Text>
                     </HStack>
-                    <Text
-                        fontSize="md"
-                        fontWeight="medium"
-                        color="gray.700"
-                        noOfLines={2}
-                    >
-                        QWERT
-                    </Text>
+                    
                 </VStack>
 
                 {/* Spacer pushes the value to the end in horizontal layouts */}
