@@ -1,3 +1,5 @@
+// frontend/src/components/ui/EditTagGroupModal.jsx
+
 import { useState } from "react";
 import { BASE_URL } from "../../App"
 import { Button, Dialog, Field, ColorSwatch , Portal, Flex, Checkbox, CloseButton, Spinner, VStack, HStack, Text } from "@chakra-ui/react"
@@ -40,14 +42,6 @@ export default function EditTagGroupModal ({
                 //tags: data.tags 
                 tags: [...data.tags].sort((a, b) => a.name.localeCompare(b.name)),
             });
-            // setTagGroups((prevGroup) => prevGroup.filter((u) => u.id !== selectedTagGroupId));
-            // toaster.create({
-            //     title: "Success!",
-            //     description: "Tag Group loaded.",
-            //     type: "success",
-            //     duration: 2000,
-            //     placement: "top-center",
-            // })
         } catch (error) {
             console.error(error);
             toaster.create({
@@ -75,56 +69,7 @@ export default function EditTagGroupModal ({
         setFormData({ name: '', tags: [] });
         
     };
-
-
-
-    // const handleChange = (e) => {
-    //     const { name, value } = e.target;
-    //     setInputs({ ...inputs, [name]: value });
-    // };
-
-    // const handleEditUser = async (e) => {
-    //     // e.preventDefault();
-        
-    //     try {
-    //         console.log(inputs);
-    //         console.log(JSON.stringify(inputs));
-    //         const res = await fetch(BASE_URL + "/friends/" + usuario.id, {
-    //             method: "PATCH",
-    //             headers: { "Content-Type": "application/json", },
-    //             body: JSON.stringify(inputs),
-    //         });
-    //         const data = await res.json();
-    //         if(!res.ok) { 
-    //             throw new Error(data.error);
-    //         };
-    //         setUsuarios((prevUsers) => prevUsers.map((u) => u.id === usuario.id ? data : u)); // Update the user profile
-            
-    //         toaster.create({
-    //             title: "Success!",
-    //             description: "Friend edited!",
-    //             type: "success",
-    //             duration: 2000,
-    //             placement: "top-center",
-    //         })
-
-    //         setOpen(false);
-        
-    //     } catch (error) {
-    //         toaster.create({
-    //             title: "An error occurred.",
-    //             description: error.message,
-    //             type: "error",
-    //             duration: 4000,
-    //             placement: "top-center",
-    //         })
-    //         console.error('Error saving name:', error);
-                    
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // }
-    
+   
     return (
         <>
             <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
@@ -215,12 +160,6 @@ export default function EditTagGroupModal ({
                                     </Button>
                                 </Dialog.ActionTrigger>
                                 
-                                {/* <Button
-                                    onClick={handleEditUser} 
-                                    disabled={isLoading}
-                                >
-                                    Update
-                                </Button> */}
                             </Dialog.Footer>
 
                             <Dialog.CloseTrigger asChild>
