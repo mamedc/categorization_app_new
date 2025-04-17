@@ -9,10 +9,6 @@ export default function TagGroupCard ({
     tGroup,
     isSelectedTagGroup,
     onSelectTagGroup,
-    selectedTagId,
-    setSelectedTagId,
-    //isSelectedTag,
-    //onSelectTag
     }) {
 
     return (

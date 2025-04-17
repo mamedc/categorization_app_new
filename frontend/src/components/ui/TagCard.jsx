@@ -5,8 +5,6 @@ import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer, ColorSwatch }
 
 export default function TagGroupCard ({ 
     tag,
-    //isSelectedTag,
-    //onSelectTag
 }) {
     return (
         <Flex

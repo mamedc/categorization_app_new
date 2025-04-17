@@ -14,8 +14,7 @@ export default function App() {
     const [selectedTransactionId, setSelectedTransactionId] = useState(null);
     const [tagGroups, setTagGroups] = useState([]);
     const [selectedTagGroupId, setSelectedTagGroupId] = useState(null);
-    const [selectedTagId, setSelectedTagId] = useState(null);
-    
+        
     return (
         <Stack minH="100vh" bg="#f9f9f4" spacing={0}>
             
@@ -41,8 +40,6 @@ export default function App() {
                         setTagGroups={setTagGroups}
                         selectedTagGroupId={selectedTagGroupId}
                         setSelectedTagGroupId={setSelectedTagGroupId}
-                        selectedTagId={selectedTagId}
-                        setSelectedTagId={setSelectedTagId}
                     />
                  </Container>
             )}

@@ -8,12 +8,6 @@ import TagCard from "./TagCard";
 
 export default function TagsGroupsGrid ({
     tGroupId,
-    //isSelectedTag,
-    //onSelectTag
-    // tagGroups,
-    // setTagGroups,
-    // selectedTagGroupId,
-    // setSelectedTagGroupId 
     }) {
     
     const [isLoading, setIsLoading] = useState(true);

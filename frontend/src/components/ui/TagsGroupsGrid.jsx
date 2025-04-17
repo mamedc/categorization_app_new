@@ -11,8 +11,6 @@ export default function TagsGroupsGrid ({
     setTagGroups,
     selectedTagGroupId,
     setSelectedTagGroupId,
-    selectedTagId,
-    setSelectedTagId 
 }) {
     
     const [isLoading, setIsLoading] = useState(true);
@@ -72,8 +70,6 @@ export default function TagsGroupsGrid ({
                             tGroup={tGroup}
                             isSelectedTagGroup={tGroup.id === selectedTagGroupId}
                             onSelectTagGroup={() => handleSelectTagGroup(tGroup.id)}
-                            selectedTagId={selectedTagId}
-                            setSelectedTagId={setSelectedTagId}
                         />
                     ))}
                 </VStack>
