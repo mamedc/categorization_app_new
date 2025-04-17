@@ -5,6 +5,7 @@ import { Container, Flex, IconButton, Spacer, Tooltip, Portal } from "@chakra-ui
 import { LuArrowUp } from "react-icons/lu";
 import TagsGroupsGrid from "./TagsGroupsGrid";
 import CreateTagsGroupModal from "./CreateTagsGroupModal";
+import DeleteTagsGroupsModal from "./DeleteTagsGroupsModal";
 
 
 export default function TagsManagement ({
@@ -75,11 +76,11 @@ export default function TagsManagement ({
                 </Button> */}
                 
                 {/* Delete Button */}
-                {/* <DeleteTransactionModal
-                    selectedTransactionId={selectedTransactionId}
-                    setTransactions={setTransactions}
-                    setSelectedTransactionId={setSelectedTransactionId}
-                /> */}
+                <DeleteTagsGroupsModal
+                    selectedTagGroupId={selectedTagGroupId}
+                    setTagGroups={setTagGroups}
+                    setSelectedTagGroupId={setSelectedTagGroupId}
+                />
             </Flex>
 
             {/* Transaction Grid */}

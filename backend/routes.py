@@ -4,6 +4,17 @@ from models import Transaction, Tag, TagGroup
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 import decimal
+from werkzeug.exceptions import HTTPException
+
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(e):
+    response = e.get_response()
+    response.data = jsonify({
+        "error": e.description
+    }).data
+    response.content_type = "application/json"
+    return response
 
 
 # --- Transaction Routes ---
@@ -152,6 +163,7 @@ def update_transaction(transaction_id):
 # Create a new TagGroup
 @app.route('/api/tag-groups', methods=['POST'])
 def create_tag_group():
+    # TODO: deal with duplicated names - handle upper/lowercase
     data = request.get_json()
     if not data or not data.get('name'):
         abort(400, description="Missing 'name' in request body.")
