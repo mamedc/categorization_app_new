@@ -1,18 +1,17 @@
-// TagsGroupsCard.jsx
+// TagGroupCard.jsx
 
-import {
-    Box,
-    Flex,
-    Text,
-    HStack,
-    Badge,
-    Checkbox,
-    VStack,
-    Spacer,
-} from '@chakra-ui/react'
+import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer } from '@chakra-ui/react'
+import TagsGrid from "./TagsGrid";
 
-// Receive isSelected and onSelect props
-const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect }) => {
+
+// Receive isSelectedTagGroup and onSelectTagGroup props
+export default function TagGroupCard ({ 
+    tGroup,
+    isSelectedTagGroup,
+    onSelectTagGroup,
+    //selectedTagId,
+    //setSelectedTagId 
+}) {
 
     return (
         <Box
@@ -21,14 +20,14 @@ const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect })
             p={4}
             borderLeftWidth={4}
             // Optionally change style based on selection
-            borderLeftColor={isSelected ? "teal.500" : "#bcdbdb"} // Example: change border color when selected
+            borderLeftColor={isSelectedTagGroup ? "teal.500" : "#bcdbdb"} // Example: change border color when selected
             // transition="all 0.1s"
             // _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
             _hover={{ outline: '1px solid', outlineColor: '#bcdbdb' }}
             // Optionally add more visual feedback for selection
-            // boxShadow={isSelected ? 'outline' : 'sm'} // Example: add outline shadow when selected
-            outline={isSelected ? '1px solid' : 'none'}
-            outlineColor={isSelected ? 'teal.500' : 'transparent'}
+            // boxShadow={isSelectedTagGroup ? 'outline' : 'sm'} // Example: add outline shadow when selected
+            outline={isSelectedTagGroup ? '1px solid' : 'none'}
+            outlineColor={isSelectedTagGroup ? 'teal.500' : 'transparent'}
         >
             <Flex
                 direction={{ base: 'column', md: 'row' }}
@@ -43,8 +42,8 @@ const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect })
                     size="sm"
                     colorPalette="cyan"
                     mt={{ base: 1, md: 0 }}
-                    checked={isSelected} // Set checked based on isSelected prop
-                    onCheckedChange={onSelect} // Call the onSelect handler passed from parent on change
+                    checked={isSelectedTagGroup} // Set checked based on isSelectedTagGroup prop
+                    onCheckedChange={onSelectTagGroup} // Call the onSelectTagGroup handler passed from parent on change
                 >
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />
@@ -54,10 +53,10 @@ const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect })
                 <VStack align="start" spacing={1} flex="1">
                     <HStack spacing={3} wrap="wrap">
                         <Text fontSize="sm" color="gray.500">
-                            {transaction.id}
+                            {tGroup.id}
                         </Text>
                         <Text fontSize="sm" color="gray.500">
-                            {new Date(transaction.date).toISOString().split('T')[0]}
+                            {tGroup.name}
                         </Text>
                     </HStack>
                     <Text
@@ -66,7 +65,7 @@ const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect })
                         color="gray.700"
                         noOfLines={2}
                     >
-                        {transaction.description}
+                        QWERT
                     </Text>
                 </VStack>
 
@@ -75,30 +74,11 @@ const TransactionCard = ({ transaction, setTransactions, isSelected, onSelect })
 
                 {/* Right: Value + Flags */}
                 <VStack align="end" spacing={1}>
-                    <Text
-                        fontSize="md"
-                        fontWeight="bold"
-                        color={Number(transaction.amount) >= 0 ? 'green.600' : 'red.600'}
-                    >
-                        R$ {transaction.amount}
-                    </Text>
-
-                    <HStack spacing={2} wrap="wrap" justify="end">
-                        {transaction.childrenFlag && (
-                            <Badge colorScheme="blue" variant="subtle" fontSize="xs">
-                                Child
-                            </Badge>
-                        )}
-                        {transaction.docFlag && (
-                            <Badge colorScheme="purple" variant="subtle" fontSize="xs">
-                                Doc
-                            </Badge>
-                        )}
-                    </HStack>
+                    <TagsGrid 
+                        tGroupId={tGroup.id}
+                    />
                 </VStack>
             </Flex>
         </Box>
-    )
-}
-
-export default TransactionCard
+    );
+};

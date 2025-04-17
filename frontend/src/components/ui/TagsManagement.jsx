@@ -1,11 +1,21 @@
-// src/components/ui/TagsManagement.jsx
+// TagsManagement.jsx
 
+import { useState } from "react";
 import { Container, Flex, IconButton, Spacer, Tooltip, Portal } from "@chakra-ui/react";
 import { LuArrowUp } from "react-icons/lu";
+import TagsGroupsGrid from "./TagsGroupsGrid";
 
 
-function TagsManagement() {
+export default function TagsManagement ({
+    tagGroups,
+    setTagGroups,
+    selectedTagGroupId,
+    setSelectedTagGroupId,
+    //selectedTagId,
+    //setSelectedTagId 
+}) {
 
+    //const [selectedTagGroupId, setSelectedTagGroupId] = useState(null);
     const sortIcon = <LuArrowUp />;
 
     return (
@@ -72,16 +82,21 @@ function TagsManagement() {
             </Flex>
 
             {/* Transaction Grid */}
-            {/* <TagsGroupsGrid
-                transactions={transactions}
-                setTransactions={setTransactions}
-                selectedTransactionId={selectedTransactionId}
-                setSelectedTransactionId={setSelectedTransactionId}
-                sortOrder={sortOrder}
-            /> */}
+            <TagsGroupsGrid
+                tagGroups={tagGroups}
+                setTagGroups={setTagGroups}
+                selectedTagGroupId={selectedTagGroupId}
+                setSelectedTagGroupId={setSelectedTagGroupId}
+                //selectedTagId={selectedTagId}
+                //setSelectedTagId={setSelectedTagId}
+                
+                //transactions={transactions}
+                //setTransactions={setTransactions}
+                //selectedTransactionId={selectedTransactionId}
+                //setSelectedTransactionId={setSelectedTransactionId}
+                //sortOrder={sortOrder}
+            />
 
         </Container>
     );
-}
-
-export default TagsManagement;
+};

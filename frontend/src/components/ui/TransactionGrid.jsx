@@ -19,7 +19,7 @@ const formatDateHeader = (dateString) => {
     }).format(date);
 };
 
-function TransactionGrid ({
+export default function TransactionGrid ({
     transactions,
     setTransactions,
     selectedTransactionId,
@@ -157,5 +157,3 @@ function TransactionGrid ({
         </>
     );
 };
-
-export default TransactionGrid;
