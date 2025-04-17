@@ -8,6 +8,8 @@ import TagCard from "./TagCard";
 
 export default function TagsGroupsGrid ({
     tGroupId,
+    //isSelectedTag,
+    //onSelectTag
     // tagGroups,
     // setTagGroups,
     // selectedTagGroupId,
@@ -45,11 +47,11 @@ export default function TagsGroupsGrid ({
         getGroupTags();
     }, []);
 
-    const handleSelectTagGroup = (groupId) => {
-        setSelectedTagGroupId((prevSelectedId) =>
-            prevSelectedId === groupId ? null : groupId
-        );
-    };
+    // const handleSelectTagGroup = (groupId) => {
+    //     setSelectedTagGroupId((prevSelectedId) =>
+    //         prevSelectedId === groupId ? null : groupId
+    //     );
+    // };
 
     return (
         <>
@@ -82,6 +84,8 @@ export default function TagsGroupsGrid ({
                         <TagCard 
                             key={tag.id}
                             tag={tag}
+                            //isSelectedTag={isSelectedTag}
+                            //onSelectTag={onSelectTag}
                         />
                     ))}
                 </VStack>

@@ -4,9 +4,9 @@ import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer, ColorSwatch }
 
 
 export default function TagGroupCard ({ 
-    tag
-    //isSelected,
-    //onSelect 
+    tag,
+    //isSelectedTag,
+    //onSelectTag
 }) {
 
     return (
@@ -33,17 +33,17 @@ export default function TagGroupCard ({
             >
                 {/*Checkbox*/}
                 {/* Control the checked state and handle changes */}
-                <Checkbox.Root
+                {/* <Checkbox.Root
                     variant="outline"
                     size="sm"
                     colorPalette="cyan"
                     mt={{ base: 1, md: 0 }}
-                    //checked={isSelected} // Set checked based on isSelected prop
-                    //onCheckedChange={onSelect} // Call the onSelect handler passed from parent on change
+                    checked={isSelectedTag} // Set checked based on isSelected prop
+                    onCheckedChange={onSelectTag} // Call the onSelect handler passed from parent on change
                 >
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />
-                </Checkbox.Root>
+                </Checkbox.Root> */}
 
                 {/* Left: Details */}
                 <VStack align="start" spacing={1} flex="1">

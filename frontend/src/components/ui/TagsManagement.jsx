@@ -11,8 +11,8 @@ export default function TagsManagement ({
     setTagGroups,
     selectedTagGroupId,
     setSelectedTagGroupId,
-    //selectedTagId,
-    //setSelectedTagId 
+    selectedTagId,
+    setSelectedTagId 
 }) {
 
     //const [selectedTagGroupId, setSelectedTagGroupId] = useState(null);
@@ -87,8 +87,8 @@ export default function TagsManagement ({
                 setTagGroups={setTagGroups}
                 selectedTagGroupId={selectedTagGroupId}
                 setSelectedTagGroupId={setSelectedTagGroupId}
-                //selectedTagId={selectedTagId}
-                //setSelectedTagId={setSelectedTagId}
+                selectedTagId={selectedTagId}
+                setSelectedTagId={setSelectedTagId}
                 
                 //transactions={transactions}
                 //setTransactions={setTransactions}

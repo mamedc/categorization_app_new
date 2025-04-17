@@ -9,9 +9,11 @@ export default function TagGroupCard ({
     tGroup,
     isSelectedTagGroup,
     onSelectTagGroup,
-    //selectedTagId,
-    //setSelectedTagId 
-}) {
+    selectedTagId,
+    setSelectedTagId,
+    //isSelectedTag,
+    //onSelectTag
+    }) {
 
     return (
         <Box
@@ -76,6 +78,8 @@ export default function TagGroupCard ({
                 <VStack align="end" spacing={1}>
                     <TagsGrid 
                         tGroupId={tGroup.id}
+                        //isSelectedTag={isSelectedTag}
+                        //onSelectTag={onSelectTag}
                     />
                 </VStack>
             </Flex>
