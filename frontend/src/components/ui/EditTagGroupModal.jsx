@@ -4,16 +4,19 @@ import { useState } from "react";
 import { BASE_URL } from "../../App"
 import { Button, Dialog, Field, ColorSwatch , Portal, Flex, Checkbox, CloseButton, Spinner, VStack, HStack, Text } from "@chakra-ui/react"
 import { Toaster, toaster } from "@/components/ui/toaster"
+import CreateTagModal from "./CreateTagModal";
 
 
 export default function EditTagGroupModal ({ 
+    groupsData,
+    setGroupsData,
     selectedTagGroupId,
     setSelectedTagGroupId
 }) {
     const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [loadError, setLoadError] = useState('');
-    const [formData, setFormData] = useState({ name: '', tags: [] });
+    const [tagGroupData, setTagGroupData] = useState({ name: '', tags: [] });
     const [isSelectedTag, setIsSelectedTag] = useState(false);
     const [selectedTagId, setSelectedTagId] = useState(null);
     
@@ -23,50 +26,34 @@ export default function EditTagGroupModal ({
         );
     };
 
+    // Load Tag Group Data
     const handleInitialTagGroupState = async () => {
-        setIsLoading(true); // Start loading
-        try {
-            // Load Group infos
-            const res = await fetch(BASE_URL + "/tag-groups/" + selectedTagGroupId, { 
-                method: "GET",
-            });
-            const data = await res.json();
-            if(!res.ok) { 
-                throw new Error(data.error); 
-            };
-            setLoadError(''); // Clear any previous error
-            setOpen(true); // Close dialog
-            setSelectedTagGroupId(null);
-            setFormData({ 
-                name: data.name, 
-                //tags: data.tags 
-                tags: [...data.tags].sort((a, b) => a.name.localeCompare(b.name)),
-            });
-        } catch (error) {
-            console.error(error);
-            toaster.create({
-                title: "Load tagGroup: An error occurred.",
-                description: error.message,
-                status: "error",
-                duration: 4000,
-                placement: "top-center",
-            })
-        } finally {
-            setIsLoading(false);
-        }
+        if (!Array.isArray(groupsData)) return;
+        const group = groupsData.find(group => group.id === selectedTagGroupId);
+        if (!group) return;
+        const sortedTags = [...group.tags].sort((a, b) => a.name - b.name); // Sort the tags by their `name`
+        const sortedGroup = { // Create a new group object with sorted tags
+            ...group,
+            tags: sortedTags
+        };
+        setTagGroupData(sortedGroup);
     };
-    
+        
     const handleOpen = () => {
+        console.log('groupsData')
+        console.log(groupsData)
+        console.log('selectedTagGroupId')
+        console.log(selectedTagGroupId)
         setOpen(true);
+        handleInitialTagGroupState();
         setIsSelectedTag(false);
         setSelectedTagId(null);
-        handleInitialTagGroupState();
     };
     const handleClose = () => {
         setOpen(false);
         setIsSelectedTag(false);
         setSelectedTagId(null);
-        setFormData({ name: '', tags: [] });
+        setTagGroupData({ name: '', tags: [] });
         
     };
    
@@ -88,7 +75,7 @@ export default function EditTagGroupModal ({
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header><Dialog.Title>{formData.name} group</Dialog.Title></Dialog.Header>
+                            <Dialog.Header><Dialog.Title>{tagGroupData.name} group</Dialog.Title></Dialog.Header>
                             <Dialog.Body pb="4">
                                 {isLoading && (
                                     <Flex justify="center" mt={8}>
@@ -96,7 +83,7 @@ export default function EditTagGroupModal ({
                                     </Flex>
                                 )}
 
-                                {!isLoading && formData.tags.length === 0 && (
+                                {!isLoading && tagGroupData.tags.length === 0 && (
                                     <Flex justify="center" mt={8} p={6} bg="#f9f9f4" borderRadius="md">
                                         <Text fontSize="sm" color="gray.500">
                                             No tags found.
@@ -104,9 +91,9 @@ export default function EditTagGroupModal ({
                                     </Flex>
                                 )}
 
-                                {!isLoading && formData.tags.length > 0 && (
+                                {!isLoading && tagGroupData.tags.length > 0 && (
                                     <VStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
-                                        {formData.tags.map((tag) => (
+                                        {tagGroupData.tags.map((tag) => (
                                             <Flex
                                                 key={tag.id}
                                                 direction={'row'}
@@ -150,13 +137,29 @@ export default function EditTagGroupModal ({
                             </Dialog.Body>
                             
                             <Dialog.Footer>                          
+                                
+
+
+                                {/* Add Button */}
+                                <CreateTagModal
+                                    groupsData={groupsData}
+                                    setGroupsData={setGroupsData}
+                                    selectedTagGroupId={selectedTagGroupId}
+                                    selectedTagId={selectedTagId} // Enable/disable button
+                                    tagGroupData={tagGroupData} // Name and Tags from the current group
+                                    setTagGroupData={setTagGroupData}
+                                />
+                                
+
+
+                                
                                 <Dialog.ActionTrigger asChild>
                                     <Button 
                                         variant="surface" 
                                         onClick={handleClose} 
                                         disabled={isLoading}
                                     >
-                                        Cancel
+                                        Close
                                     </Button>
                                 </Dialog.ActionTrigger>
                                 

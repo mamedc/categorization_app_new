@@ -7,38 +7,44 @@ import TagGroupCard from "./TagGroupCard";
 
 
 export default function TagsGroupsGrid ({
+    groupsData,
+    setGroupsData,
+    isLoading,
     tagGroups,
     setTagGroups,
     selectedTagGroupId,
     setSelectedTagGroupId,
 }) {
     
-    const [isLoading, setIsLoading] = useState(true);
+    // const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const getTagGroups = async () => {
-            try {
-                setIsLoading(true);
-                const res = await fetch(BASE_URL + "/tag-groups");
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error);
-                if (Array.isArray(data)) {
-                    const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
-                    setTagGroups(sorted);
-                } else {
-                    console.error("Fetched data is not an array:", data);
-                    setTagGroups([]);
-                }
-                setSelectedTagGroupId(null);
-            } catch (error) {
-                console.error(error);
-                setTagGroups([]);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        getTagGroups();
-    }, []);
+    console.log('groupsData')
+    console.log(groupsData)
+
+    // useEffect(() => {
+    //     const getTagGroups = async () => {
+    //         try {
+    //             setIsLoading(true);
+    //             const res = await fetch(BASE_URL + "/tag-groups");
+    //             const data = await res.json();
+    //             if (!res.ok) throw new Error(data.error);
+    //             if (Array.isArray(data)) {
+    //                 const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
+    //                 setTagGroups(sorted);
+    //             } else {
+    //                 console.error("Fetched data is not an array:", data);
+    //                 setTagGroups([]);
+    //             }
+    //             setSelectedTagGroupId(null);
+    //         } catch (error) {
+    //             console.error(error);
+    //             setTagGroups([]);
+    //         } finally {
+    //             setIsLoading(false);
+    //         }
+    //     };
+    //     getTagGroups();
+    // }, []);
 
     const handleSelectTagGroup = (groupId) => {
         setSelectedTagGroupId((prevSelectedId) =>
@@ -54,7 +60,7 @@ export default function TagsGroupsGrid ({
                 </Flex>
             )}
 
-            {!isLoading && tagGroups.length === 0 && (
+            {!isLoading && groupsData.length === 0 && (
                 <Flex justify="center" mt={8} p={6} bg="#f9f9f4" borderRadius="md">
                     <Text fontSize="sm" color="gray.500">
                         No transactions found.
@@ -62,14 +68,25 @@ export default function TagsGroupsGrid ({
                 </Flex>
             )}
 
-            {!isLoading && tagGroups.length > 0 && (
+            {!isLoading && groupsData.length > 0 && (
+                // <VStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
+                //     {tagGroups.map((tGroup) => (
+                //         <TagGroupCard
+                //             key={tGroup.id}
+                //             tGroup={tGroup}
+                //             isSelectedTagGroup={tGroup.id === selectedTagGroupId}
+                //             onSelectTagGroup={() => handleSelectTagGroup(tGroup.id)}
+                //         />
+                //     ))}
+                // </VStack>
                 <VStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
-                    {tagGroups.map((tGroup) => (
+                    {groupsData.map((tGroup) => (
                         <TagGroupCard
                             key={tGroup.id}
                             tGroup={tGroup}
                             isSelectedTagGroup={tGroup.id === selectedTagGroupId}
                             onSelectTagGroup={() => handleSelectTagGroup(tGroup.id)}
+                            setGroupsData={setGroupsData}
                         />
                     ))}
                 </VStack>
