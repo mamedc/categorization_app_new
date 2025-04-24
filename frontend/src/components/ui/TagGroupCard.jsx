@@ -31,8 +31,10 @@ export default function TagGroupCard ({
             // boxShadow={isSelectedTagGroup ? 'outline' : 'sm'} // Example: add outline shadow when selected
         >
             <Flex
-                direction={{ base: 'column', md: 'row' }}
-                align={{ base: 'start', md: 'center' }}
+                //direction={{ base: 'column', md: 'row' }}
+                direction={'row'}
+                //align={{ base: 'start', md: 'center' }}
+                align={'start'}
                 gap={4}
                 wrap="wrap"
             >

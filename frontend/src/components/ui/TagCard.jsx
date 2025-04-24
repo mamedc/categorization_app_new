@@ -8,7 +8,7 @@ export default function TagGroupCard ({
 }) {
     return (
         <Flex
-            direction={{ base: 'column', md: 'row' }}
+            direction={'row'}
             align={{ base: 'start', md: 'center' }}
             gap={4}
             wrap="wrap"

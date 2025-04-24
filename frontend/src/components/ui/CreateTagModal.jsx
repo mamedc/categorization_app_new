@@ -8,13 +8,14 @@ import { useAtom, useSetAtom } from "jotai";
 import { ldbTagGroupsAtom, selectedTagGroupId, selectedTagId, refreshTagGroupsAtom } from "../../context/atoms";
 
 function rgbaToHex(rgbaString) {
+    if (!rgbaString) return '#000000'; // Default or handle null/undefined input
     const match = rgbaString.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (!match) return null;
-  
+    if (!match) return '#000000'; // Return default if regex fails
+
     const r = parseInt(match[1], 10);
     const g = parseInt(match[2], 10);
     const b = parseInt(match[3], 10);
-  
+
     return (
       "#" +
       [r, g, b]
@@ -25,7 +26,6 @@ function rgbaToHex(rgbaString) {
         .join("")
     );
 };
-
 
 export default function CreateTagModal ({}) {
     
@@ -38,11 +38,20 @@ export default function CreateTagModal ({}) {
 
     const initialTagState = {name: '', color: '', tag_group_id: selectedTagGroupId};
     const [tagData, setTagData] = useState(initialTagState); // new tag to be created
+    
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
-    const [color, setColor] = useState('')
+    //const [color, setColor] = useState('')
     
-    const tagGroupData = groupsData.data.find(group => group.id === selectedGroup);
+    // const tagGroupData = groupsData.data.find(group => group.id === selectedGroup);
+    const getTagGroupData = () => {
+        if (groupsData.state === 'hasData' && Array.isArray(groupsData.data)) {
+            return groupsData.data.find(group => group.id === selectedGroup);
+        }
+        return undefined;
+    };
+
+
 
     const handleOpen = () => {
         setOpen(true);
@@ -57,6 +66,7 @@ export default function CreateTagModal ({}) {
     };
     const handleClose = () => {
         setTagData(initialTagState);
+        //setColor('');
         setOpen(false);
     };
     const handleNameChange = (e) => {
@@ -64,28 +74,28 @@ export default function CreateTagModal ({}) {
         setTagData({ ...tagData, [name]: value });
         //console.log(tagData)
     };
+
+
+    // --- New Color Change Handler ---
+    const handleColorChange = (details) => {
+        // Assuming details.valueAsString gives an rgba or similar string
+        // Or if details.value provides a hex string directly, use that.
+        // Let's stick with your rgbaToHex based on original code
+        const hexColor = rgbaToHex(details.valueAsString);
+        setTagData(prevData => ({ ...prevData, color: hexColor }));
+        // console.log("Updated Tag Data with Color:", { ...tagData, color: hexColor }); // For debugging
+    };
+
+
+
     const handleSave = async () => { 
         setIsSaving(true); // Start loading
-        
-        console.log('-----1-------')
-        console.log(tagData)
-        
-        console.log('-----color css-------')
-        const color_str = rgbaToHex(color.valueAsString)
-        console.log(color_str)
-        const dataToSend = { ...tagData, [color]: color_str}; // combine color into payload
-        
-        console.log('-----color type-------')
-        console.log(typeof myVariable); // e.g., "string", "number", "object", etc.
-
-        console.log('-----2-------')
-        console.log(dataToSend)
-
+        setSaveError(''); // Clear any previous error
+        const tagGroupData = getTagGroupData();
+        const dataToSend = { ...tagData };
+        //const color_str = rgbaToHex(color.valueAsString)
         dataToSend.tag_group_id = tagGroupData.id
-        console.log('-----3-------')
-        console.log(tagGroupData.id)
-        console.log(dataToSend)
-
+        
         try {
             const res = await fetch(BASE_URL + "/tags", {
                 method: "POST",
@@ -105,35 +115,9 @@ export default function CreateTagModal ({}) {
             })
             console.log(dataToSend);
             setSaveError(''); // Clear any previous error
-            setOpen(false); // Close dialog
-            
-            // setTagGroupData((prevData) => ({
-            //     ...prevData,
-            //     tags: [...prevData.tags, tagData],
-            //   })); 
-
-            //setTagGroupData
+            handleClose();
             refreshTagGroups((prev) => prev + 1); // This triggers a refresh
 
-            // const addNewTagToGroup = (newTag) => {
-            //     setGroupsData(prevGroups =>
-            //       prevGroups.map(group => {
-            //         if (group.id === selectedTagGroupId) {
-            //           return {
-            //             ...group,
-            //             tags: [...group.tags, newTag]
-            //           };
-            //         }
-            //         return group;
-            //       })
-            //     );
-            // };
-            // addNewTagToGroup({
-            //     tagData
-            // });
-            
-              // Add new tag without new rendering
-        
         } catch (error) {
             toaster.create({
                 title: "An error occurred.",
@@ -190,7 +174,7 @@ export default function CreateTagModal ({}) {
                                 <ColorPicker.Root 
                                     open 
                                     name="color"
-                                    onValueChange={(e) => setColor(e)}
+                                    onValueChange={handleColorChange}
                                 >
                                     <ColorPicker.HiddenInput />
                                     <ColorPicker.Content animation="none" shadow="none" padding="0">

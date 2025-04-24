@@ -1,77 +1,70 @@
 // frontend/src/components/ui/EditTagGroupModal.jsx
 
-import { useState } from "react";
+import { useState, useMemo } from "react"; // Import useMemo
 import { BASE_URL } from "../../App"
 import { Button, Dialog, Field, ColorSwatch , Portal, Flex, Checkbox, CloseButton, Spinner, VStack, HStack, Text } from "@chakra-ui/react"
 import { Toaster, toaster } from "@/components/ui/toaster"
 import CreateTagModal from "./CreateTagModal";
+import DeleteTagModal from "./DeleteTagModal";
 import { useAtom } from "jotai";
 import { ldbTagGroupsAtom, selectedTagGroupId, selectedTagId } from "../../context/atoms";
 
 
-export default function EditTagGroupModal ({ 
-    //groupsData,
-    //setGroupsData,
-    //electedTagGroupId,
-    //setSelectedTagGroupId
-}) {
+export default function EditTagGroupModal ({}) {
     const [groupsData] = useAtom(ldbTagGroupsAtom);
     const [selectedTag, setSelectedTag] = useAtom(selectedTagId);
     const [selectedGroup, setSelectedTagGroupId] = useAtom(selectedTagGroupId);
 
     const [open, setOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [loadError, setLoadError] = useState('');
-    const [tagGroupData, setTagGroupData] = useState({ name: '', tags: [] });
-    const [isSelectedTag, setIsSelectedTag] = useState(false);
     
     const handleSelectTag = (tagId) => {
         const newSel = tagId === selectedTag ? null : tagId;
         setSelectedTag(newSel);
     };
 
-    // Load Tag Group Data
-    const handleInitialTagGroupState = async () => {
-        if (!Array.isArray(groupsData.data)) return;
-        const group = groupsData.data.find(group => group.id === selectedGroup);
-        if (!group) return;
-        const sortedTags = [...group.tags].sort((a, b) => a.name - b.name); // Sort the tags by their `name`
-        const sortedGroup = { // Create a new group object with sorted tags
-            ...group,
-            tags: sortedTags
-        };
-        setTagGroupData(sortedGroup);
-    };
-        
+    // Derive the selected group data directly from the atom using useMemo
+    const selectedGroupData = useMemo(() => {
+        if (groupsData.state === 'hasData' && Array.isArray(groupsData.data) && selectedGroup) {
+            const group = groupsData.data.find(g => g.id === selectedGroup);
+            if (group) {
+                // Sort tags immutably when deriving the data
+                const sortedTags = [...group.tags].sort((a, b) => a.name.localeCompare(b.name)); // Use localeCompare for strings
+                return { ...group, tags: sortedTags };
+            }
+        }
+        return null; // Return null if group not found, or data is loading/error
+    }, [groupsData, selectedGroup]); // Recompute only when groupsData or selectedGroup changes
+
     const handleOpen = () => {
-        // console.log('groupsData')
-        // console.log(groupsData)
-        // console.log('selectedTagGroupId')
-        // console.log(selectedTagGroupId)
         setOpen(true);
-        handleInitialTagGroupState();
-        setIsSelectedTag(false);
-        setSelectedTag(null);
+        setSelectedTag(null); // Reset selected tag when opening
+        // No need to manually load/set tagGroupData state anymore
     };
+
     const handleClose = () => {
         setOpen(false);
-        setIsSelectedTag(false);
-        setSelectedTag(null);
-        setTagGroupData({ name: '', tags: [] });
-        
+        setSelectedTag(null); // Reset selected tag on close
+        setSelectedTagGroupId(null);
+        // No need to reset tagGroupData state
     };
-   
+
+    // Determine loading/error state directly from the atom
+    const isLoading = groupsData.state === 'loading';
+    const hasError = groupsData.state === 'hasError';
+    const noTagsFound = !isLoading && !hasError && (!selectedGroupData || selectedGroupData.tags.length === 0);
+    const tagsToShow = selectedGroupData?.tags || []; // Safely access tags
+
     return (
         <>
             <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
                 <Toaster />
-                <Button 
-                    size="sm" 
-                    colorPalette="blue" 
-                    rounded="sm" 
-                    width={20} 
+                <Button
+                    size="sm"
+                    colorPalette="blue"
+                    rounded="sm"
+                    width={20}
                     onClick={handleOpen}
-                    disabled={selectedGroup === null}
+                    disabled={selectedGroup === null} // Keep disabled if no group is selected initially
                 >
                     Edit
                 </Button>
@@ -79,25 +72,33 @@ export default function EditTagGroupModal ({
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
-                            <Dialog.Header><Dialog.Title>{tagGroupData.name} group</Dialog.Title></Dialog.Header>
+                             {/* Use selectedGroupData safely for the title */}
+                            <Dialog.Header><Dialog.Title>{selectedGroupData?.name || 'Edit Group'} group</Dialog.Title></Dialog.Header>
                             <Dialog.Body pb="4">
                                 {isLoading && (
                                     <Flex justify="center" mt={8}>
                                         <Spinner size="lg" color="teal.500" thickness="3px" />
                                     </Flex>
                                 )}
-
-                                {!isLoading && tagGroupData.tags.length === 0 && (
+                                {hasError && (
+                                     <Flex justify="center" mt={8} p={6} bg="red.50" borderRadius="md">
+                                         <Text fontSize="sm" color="red.700">
+                                             Error loading tag group data.
+                                         </Text>
+                                     </Flex>
+                                )}
+                                {noTagsFound && !hasError && (
                                     <Flex justify="center" mt={8} p={6} bg="#f9f9f4" borderRadius="md">
                                         <Text fontSize="sm" color="gray.500">
-                                            No tags found.
+                                           {selectedGroupData ? 'No tags found.' : 'Select a group to edit.'}
                                         </Text>
                                     </Flex>
                                 )}
 
-                                {!isLoading && tagGroupData.tags.length > 0 && (
-                                    <VStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
-                                        {tagGroupData.tags.map((tag) => (
+                                {/* Render tags only if loading is done, no error, and group data exists */}
+                                {!isLoading && !hasError && selectedGroupData && tagsToShow.length > 0 && (
+                                    <VStack spacing={6} align="stretch" >
+                                        {tagsToShow.map((tag) => (
                                             <Flex
                                                 key={tag.id}
                                                 direction={'row'}
@@ -106,7 +107,6 @@ export default function EditTagGroupModal ({
                                                 wrap="wrap"
                                             >
                                                 {/*Checkbox*/}
-                                                {/* Control the checked state and handle changes */}
                                                 <Checkbox.Root
                                                     variant="outline"
                                                     size="sm"
@@ -134,40 +134,39 @@ export default function EditTagGroupModal ({
                                                 </VStack>
 
                                             </Flex>
-
                                         ))}
                                     </VStack>
-                                )}  
+                                )}
                             </Dialog.Body>
-                            
-                            <Dialog.Footer>                          
+
+                            <Dialog.Footer>
                                 
-
-
-                                {/* Add Button */}
                                 <CreateTagModal />
-                                                                
+
+                                <DeleteTagModal />
+
                                 <Dialog.ActionTrigger asChild>
-                                    <Button 
-                                        variant="surface" 
-                                        onClick={handleClose} 
-                                        disabled={isLoading}
+                                    <Button
+                                        variant="surface"
+                                        onClick={handleClose}
+                                        // Disable close if loading to prevent state issues? Optional.
+                                        // disabled={isLoading}
                                     >
                                         Close
                                     </Button>
                                 </Dialog.ActionTrigger>
-                                
+
                             </Dialog.Footer>
 
                             <Dialog.CloseTrigger asChild>
-                                <CloseButton size="sm" onClick={handleClose} disabled={isLoading} />
+                                {/* Disable close if loading? Optional. */}
+                                <CloseButton size="sm" onClick={handleClose} /* disabled={isLoading} */ />
                             </Dialog.CloseTrigger>
 
                         </Dialog.Content>
                     </Dialog.Positioner>
                 </Portal>
             </Dialog.Root>
-
         </>
     );
 };
