@@ -9,6 +9,9 @@ import CreateTagsGroupModal from "./CreateTagsGroupModal";
 import DeleteTagsGroupsModal from "./DeleteTagsGroupsModal";
 import EditTagGroupModal from "./EditTagGroupModal";
 
+import { useAtom } from "jotai";
+import { ldbTagGroupsAtom } from "../../context/atoms";
+
 
 export default function TagsManagement ({
     tagGroups,
@@ -17,40 +20,10 @@ export default function TagsManagement ({
     setSelectedTagGroupId,
 }) {
 
+    const [groupsData] = useAtom(ldbTagGroupsAtom);
     const [isLoading, setIsLoading] = useState(true);
-    const [groupsData, setGroupsData] = useState([]);
     const sortIcon = <LuArrowUp />;
-    // Get tagGroups and respective tags
-    useEffect(() => {
-        const getGroupsData = async () => {
-            try {
-                setIsLoading(true);
-                const res = await fetch(BASE_URL + "/tag-groups", { method: "GET" });
-                const data = await res.json();
-    
-                if (!res.ok) {
-                    throw new Error(data.error || "Failed to fetch tag groups");
-                }
-    
-                if (!Array.isArray(data)) {
-                    console.error("Fetched data is not an array:", data);
-                    setGroupsData([]); // Use setGroupsData, not getGroupsData
-                    return;
-                }
-    
-                const sortedData = [...data].sort((a, b) => a.name.localeCompare(b.name));
-                setGroupsData(sortedData);
-    
-            } catch (error) {
-                console.error("Error fetching tag groups:", error);
-                setGroupsData([]); // fallback
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        getGroupsData();
-    }, []);
-    
+        
     return (
         <Container>
         
@@ -97,10 +70,10 @@ export default function TagsManagement ({
                 
                 {/* Edit Button */}
                 <EditTagGroupModal
-                    groupsData={groupsData}
-                    setGroupsData={setGroupsData}
+                    //groupsData={groupsData}
+                    //setGroupsData={setGroupsData}
                     selectedTagGroupId={selectedTagGroupId}
-                    setSelectedTagGroupId={setSelectedTagGroupId}
+                    //setSelectedTagGroupId={setSelectedTagGroupId}
                 >
                     Edit
                 </EditTagGroupModal>
@@ -109,20 +82,12 @@ export default function TagsManagement ({
                 <DeleteTagsGroupsModal
                     selectedTagGroupId={selectedTagGroupId}
                     setTagGroups={setTagGroups}
-                    setSelectedTagGroupId={setSelectedTagGroupId}
+                    //setSelectedTagGroupId={setSelectedTagGroupId}
                 />
             </Flex>
 
             {/* Transaction Grid */}
-            <TagsGroupsGrid
-                groupsData={groupsData}
-                setGroupsData={groupsData}
-                isLoading={isLoading}
-                tagGroups={tagGroups}
-                setTagGroups={setTagGroups}
-                selectedTagGroupId={selectedTagGroupId}
-                setSelectedTagGroupId={setSelectedTagGroupId}
-            />
+            <TagsGroupsGrid />
 
         </Container>
     );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BASE_URL } from "../../App"
+import { BASE_URL } from "../../App";
 import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, Icon, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { FiAlertTriangle } from 'react-icons/fi';

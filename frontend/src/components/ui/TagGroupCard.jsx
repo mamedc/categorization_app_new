@@ -3,14 +3,18 @@
 import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer } from '@chakra-ui/react'
 import TagsGrid from "./TagsGrid";
 
+import { useAtom } from "jotai";
+import { selectedTagGroupId, isSelectedTagGroup } from "../../context/atoms";
+
 
 // Receive isSelectedTagGroup and onSelectTagGroup props
 export default function TagGroupCard ({ 
     tGroup,
-    isSelectedTagGroup,
     onSelectTagGroup,
-    setGroupsData,
     }) {
+
+    const [isSelected] = useAtom(isSelectedTagGroup);
+    const [selectedGroup, _] = useAtom(selectedTagGroupId);
 
     return (
         <Box
@@ -18,15 +22,13 @@ export default function TagGroupCard ({
             borderRadius="lg"
             p={4}
             borderLeftWidth={4}
-            // Optionally change style based on selection
-            borderLeftColor={isSelectedTagGroup ? "teal.500" : "#bcdbdb"} // Example: change border color when selected
+            borderLeftColor={selectedGroup === tGroup.id ? "teal.500" : "#bcdbdb"} // Example: change border color when selected
+            _hover={{ outline: '1px solid', outlineColor: '#bcdbdb' }}
+            outline={selectedGroup === tGroup.id ? '1px solid' : 'none'}
+            outlineColor={selectedGroup === tGroup.id ? 'teal.500' : 'transparent'}
             // transition="all 0.1s"
             // _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
-            _hover={{ outline: '1px solid', outlineColor: '#bcdbdb' }}
-            // Optionally add more visual feedback for selection
             // boxShadow={isSelectedTagGroup ? 'outline' : 'sm'} // Example: add outline shadow when selected
-            outline={isSelectedTagGroup ? '1px solid' : 'none'}
-            outlineColor={isSelectedTagGroup ? 'teal.500' : 'transparent'}
         >
             <Flex
                 direction={{ base: 'column', md: 'row' }}
@@ -41,8 +43,8 @@ export default function TagGroupCard ({
                     size="sm"
                     colorPalette="cyan"
                     mt={{ base: 1, md: 0 }}
-                    checked={isSelectedTagGroup} // Set checked based on isSelectedTagGroup prop
-                    onCheckedChange={onSelectTagGroup} // Call the onSelectTagGroup handler passed from parent on change
+                    checked={selectedGroup === tGroup.id}
+                    onCheckedChange={onSelectTagGroup}
                 >
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />
@@ -51,12 +53,8 @@ export default function TagGroupCard ({
                 {/* Left: Details */}
                 <VStack align="start" spacing={1} flex="1">
                     <HStack spacing={3} wrap="wrap">
-                        <Text fontSize="sm" color="gray.500">
-                            {tGroup.id}
-                        </Text>
-                        <Text fontSize="sm" color="gray.500">
-                            {tGroup.name}
-                        </Text>
+                        <Text fontSize="sm" color="gray.500">{tGroup.id}</Text>
+                        <Text fontSize="sm" color="gray.500">{tGroup.name}</Text>
                     </HStack>
                     
                 </VStack>
@@ -66,11 +64,7 @@ export default function TagGroupCard ({
 
                 {/* Right: Value + Flags */}
                 <VStack align="end" spacing={1}>
-                    <TagsGrid 
-                        tGroupId={tGroup.id}
-                        //isSelectedTag={isSelectedTag}
-                        //onSelectTag={onSelectTag}
-                    />
+                    <TagsGrid tGroupId={tGroup.id} />
                 </VStack>
             </Flex>
         </Box>

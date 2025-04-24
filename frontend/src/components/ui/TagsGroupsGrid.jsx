@@ -1,55 +1,19 @@
 // TagsGroupsGrid.jsx
 
-import { useEffect, useState, useMemo, Fragment } from "react"; // Added Fragment
-import { BASE_URL } from "../../App";
-import { VStack, Spinner, Text, Flex, StackSeparator } from "@chakra-ui/react";
+import { useAtom } from "jotai";
+import { ldbTagGroupsAtom, selectedTagGroupId, isSelectedTagGroup } from "../../context/atoms";
+import { VStack, Spinner, Text, Flex } from "@chakra-ui/react";
 import TagGroupCard from "./TagGroupCard";
 
-
-export default function TagsGroupsGrid ({
-    groupsData,
-    setGroupsData,
-    isLoading,
-    tagGroups,
-    setTagGroups,
-    selectedTagGroupId,
-    setSelectedTagGroupId,
-}) {
+export default function TagsGroupsGrid ({}) {
     
-    // const [isLoading, setIsLoading] = useState(true);
-
-    console.log('groupsData')
-    console.log(groupsData)
-
-    // useEffect(() => {
-    //     const getTagGroups = async () => {
-    //         try {
-    //             setIsLoading(true);
-    //             const res = await fetch(BASE_URL + "/tag-groups");
-    //             const data = await res.json();
-    //             if (!res.ok) throw new Error(data.error);
-    //             if (Array.isArray(data)) {
-    //                 const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
-    //                 setTagGroups(sorted);
-    //             } else {
-    //                 console.error("Fetched data is not an array:", data);
-    //                 setTagGroups([]);
-    //             }
-    //             setSelectedTagGroupId(null);
-    //         } catch (error) {
-    //             console.error(error);
-    //             setTagGroups([]);
-    //         } finally {
-    //             setIsLoading(false);
-    //         }
-    //     };
-    //     getTagGroups();
-    // }, []);
+    const [groupsData] = useAtom(ldbTagGroupsAtom);
+    const [selectedGroup, setSelectedTagGroupId] = useAtom(selectedTagGroupId);
+    const isLoading = groupsData.state === 'loading'
 
     const handleSelectTagGroup = (groupId) => {
-        setSelectedTagGroupId((prevSelectedId) =>
-            prevSelectedId === groupId ? null : groupId
-        );
+        const newSel = groupId === selectedGroup ? null : groupId;
+        setSelectedTagGroupId(newSel);
     };
 
     return (
@@ -60,7 +24,7 @@ export default function TagsGroupsGrid ({
                 </Flex>
             )}
 
-            {!isLoading && groupsData.length === 0 && (
+            {!isLoading && groupsData.data.length === 0 && (
                 <Flex justify="center" mt={8} p={6} bg="#f9f9f4" borderRadius="md">
                     <Text fontSize="sm" color="gray.500">
                         No transactions found.
@@ -68,25 +32,13 @@ export default function TagsGroupsGrid ({
                 </Flex>
             )}
 
-            {!isLoading && groupsData.length > 0 && (
-                // <VStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
-                //     {tagGroups.map((tGroup) => (
-                //         <TagGroupCard
-                //             key={tGroup.id}
-                //             tGroup={tGroup}
-                //             isSelectedTagGroup={tGroup.id === selectedTagGroupId}
-                //             onSelectTagGroup={() => handleSelectTagGroup(tGroup.id)}
-                //         />
-                //     ))}
-                // </VStack>
+            {!isLoading && groupsData.data.length > 0 && (
                 <VStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
-                    {groupsData.map((tGroup) => (
+                    {groupsData.data.map((tGroup) => (
                         <TagGroupCard
                             key={tGroup.id}
                             tGroup={tGroup}
-                            isSelectedTagGroup={tGroup.id === selectedTagGroupId}
                             onSelectTagGroup={() => handleSelectTagGroup(tGroup.id)}
-                            setGroupsData={setGroupsData}
                         />
                     ))}
                 </VStack>
