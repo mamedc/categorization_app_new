@@ -14,10 +14,10 @@ import { ldbTagGroupsAtom } from "../../context/atoms";
 
 
 export default function TagsManagement ({
-    tagGroups,
-    setTagGroups,
+    //tagGroups,
+    //setTagGroups,
     selectedTagGroupId,
-    setSelectedTagGroupId,
+    //setSelectedTagGroupId,
 }) {
 
     const [groupsData] = useAtom(ldbTagGroupsAtom);
@@ -63,27 +63,20 @@ export default function TagsManagement ({
                 <Spacer />
 
                 {/* Existing Action Buttons */}
-                <CreateTagsGroupModal
-                    selectedTagGroupId={selectedTagGroupId} // enable/disable
-                    setTagGroups={setTagGroups}
-                />
+                <CreateTagsGroupModal />
                 
                 {/* Edit Button */}
                 <EditTagGroupModal
                     //groupsData={groupsData}
                     //setGroupsData={setGroupsData}
-                    selectedTagGroupId={selectedTagGroupId}
+                    //selectedTagGroupId={selectedTagGroupId}
                     //setSelectedTagGroupId={setSelectedTagGroupId}
                 >
                     Edit
                 </EditTagGroupModal>
                 
                 {/* Delete Button */}
-                <DeleteTagsGroupsModal
-                    selectedTagGroupId={selectedTagGroupId}
-                    setTagGroups={setTagGroups}
-                    //setSelectedTagGroupId={setSelectedTagGroupId}
-                />
+                <DeleteTagsGroupsModal />
             </Flex>
 
             {/* Transaction Grid */}

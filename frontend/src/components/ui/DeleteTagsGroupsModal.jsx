@@ -3,15 +3,15 @@ import { BASE_URL } from "../../App"
 import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, Icon, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { FiAlertTriangle } from 'react-icons/fi';
+import { useAtom, useSetAtom } from "jotai";
+import { ldbTagGroupsAtom, selectedTagGroupId, refreshTagGroupsAtom } from "../../context/atoms";
 
 
 export default function DeleteTagsGroupsModal ({ 
-    selectedTagGroupId,
-    setTagGroups,
-    setSelectedTagGroupId
-
 }) {
 
+    const refreshTagGroups = useSetAtom(refreshTagGroupsAtom);
+    const [selectedGroup, setSelectedTagGroupId] = useAtom(selectedTagGroupId);
     const [open, setOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
@@ -28,7 +28,7 @@ export default function DeleteTagsGroupsModal ({
         setIsSaving(true); // Start loading
         try {
             console.log("Delete Tag Group?");
-            const res = await fetch(BASE_URL + "/tag-groups/" + selectedTagGroupId, { 
+            const res = await fetch(BASE_URL + "/tag-groups/" + selectedGroup, { 
                 method: "DELETE",
             });
             const data = await res.json();
@@ -38,7 +38,8 @@ export default function DeleteTagsGroupsModal ({
             setSaveError(''); // Clear any previous error
             setOpen(false); // Close dialog
             setSelectedTagGroupId(null);
-            setTagGroups((prevGroup) => prevGroup.filter((u) => u.id !== selectedTagGroupId));
+            //setTagGroups((prevGroup) => prevGroup.filter((u) => u.id !== selectedTagGroupId));
+            refreshTagGroups((prev) => prev + 1); // This triggers a refresh
             toaster.create({
                 title: "Success!",
                 description: "Tag Group deleted.",
@@ -70,7 +71,7 @@ export default function DeleteTagsGroupsModal ({
                     rounded="sm" 
                     width={20} 
                     onClick={handleOpen}
-                    disabled={selectedTagGroupId === null}
+                    disabled={selectedGroup === null}
                 >
                     Delete
                 </Button>

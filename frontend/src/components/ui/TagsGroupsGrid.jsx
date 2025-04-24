@@ -1,7 +1,7 @@
 // TagsGroupsGrid.jsx
 
 import { useAtom } from "jotai";
-import { ldbTagGroupsAtom, selectedTagGroupId, isSelectedTagGroup } from "../../context/atoms";
+import { ldbTagGroupsAtom, selectedTagGroupId } from "../../context/atoms";
 import { VStack, Spinner, Text, Flex } from "@chakra-ui/react";
 import TagGroupCard from "./TagGroupCard";
 

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { BASE_URL } from "../../App"
 import { Button, CloseButton, Dialog, Portal, Text, HStack, Stack,Field, Input, ColorPicker } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
-
+import { useAtom, useSetAtom } from "jotai";
+import { ldbTagGroupsAtom, selectedTagGroupId, selectedTagId, refreshTagGroupsAtom } from "../../context/atoms";
 
 function rgbaToHex(rgbaString) {
     const match = rgbaString.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
@@ -26,21 +27,23 @@ function rgbaToHex(rgbaString) {
 };
 
 
-export default function CreateTagModal ({ 
-    groupsData,
-    setGroupsData,
-    selectedTagGroupId,
-    selectedTagId,
-    tagGroupData,
-    setTagGroupData }) {
+export default function CreateTagModal ({}) {
     
     const [open, setOpen] = useState(false);
-    const initialTagState = {name: '', color: '', tag_group_id: tagGroupData.id};
+    
+    const refreshTagGroups = useSetAtom(refreshTagGroupsAtom);
+    const [groupsData] = useAtom(ldbTagGroupsAtom);
+    const [selectedGroup, setSelectedTagGroupId] = useAtom(selectedTagGroupId);
+    const [selectedTag, setSelectedTag] = useAtom(selectedTagId);
+
+    const initialTagState = {name: '', color: '', tag_group_id: selectedTagGroupId};
     const [tagData, setTagData] = useState(initialTagState); // new tag to be created
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
     const [color, setColor] = useState('')
     
+    const tagGroupData = groupsData.data.find(group => group.id === selectedGroup);
+
     const handleOpen = () => {
         setOpen(true);
         setTagData(initialTagState);
@@ -110,26 +113,24 @@ export default function CreateTagModal ({
             //   })); 
 
             //setTagGroupData
+            refreshTagGroups((prev) => prev + 1); // This triggers a refresh
 
-            const addNewTagToGroup = (newTag) => {
-                setGroupsData(prevGroups =>
-                  prevGroups.map(group => {
-                    if (group.id === selectedTagGroupId) {
-                      return {
-                        ...group,
-                        tags: [...group.tags, newTag]
-                      };
-                    }
-                    return group;
-                  })
-                );
-            };
-            addNewTagToGroup({
-                tagData
-            });
-              
-            
-            
+            // const addNewTagToGroup = (newTag) => {
+            //     setGroupsData(prevGroups =>
+            //       prevGroups.map(group => {
+            //         if (group.id === selectedTagGroupId) {
+            //           return {
+            //             ...group,
+            //             tags: [...group.tags, newTag]
+            //           };
+            //         }
+            //         return group;
+            //       })
+            //     );
+            // };
+            // addNewTagToGroup({
+            //     tagData
+            // });
             
               // Add new tag without new rendering
         
@@ -158,7 +159,7 @@ export default function CreateTagModal ({
                     width={20} 
                     onClick={handleOpen}
                     //disabled={selectedTagId !== null}
-                    disabled={selectedTagId}
+                    disabled={selectedTag !== null}
                 >
                     Add
                 </Button>

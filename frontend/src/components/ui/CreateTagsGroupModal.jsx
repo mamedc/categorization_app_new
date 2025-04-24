@@ -2,10 +2,17 @@ import { useState } from "react";
 import { BASE_URL } from "../../App"
 import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
+import { useAtom, useSetAtom } from "jotai";
+import { ldbTagGroupsAtom, selectedTagGroupId, refreshTagGroupsAtom } from "../../context/atoms";
+
 
 export default function CreateTagsGroupModal ({ 
-    selectedTagGroupId,
-    setTagGroups }) {
+    //selectedTagGroupId,
+    //setTagGroups 
+}) {
+    
+    const refreshTagGroups = useSetAtom(refreshTagGroupsAtom);
+    const [selectedGroup, setSelectedTagGroupId] = useAtom(selectedTagGroupId);
     
     const [open, setOpen] = useState(false);
     const initialFormState = {name: ''};
@@ -49,9 +56,10 @@ export default function CreateTagsGroupModal ({
             console.log(formData);
             setSaveError(''); // Clear any previous error
             setOpen(false); // Close dialog
-            setTagGroups((prevGroups) => 
-                [...prevGroups, data].sort((a, b) => a.name.localeCompare(b.name))
-              );
+            // setTagGroups((prevGroups) => 
+            //     [...prevGroups, data].sort((a, b) => a.name.localeCompare(b.name))
+            //   );
+            refreshTagGroups((prev) => prev + 1); // This triggers a refresh
         } catch (error) {
             toaster.create({
                 title: "An error occurred.",
@@ -76,7 +84,7 @@ export default function CreateTagsGroupModal ({
                     rounded="sm" 
                     width={20} 
                     onClick={handleOpen}
-                    disabled={selectedTagGroupId !== null}
+                    disabled={selectedGroup !== null}
                 >
                     Add
                 </Button>
@@ -102,10 +110,7 @@ export default function CreateTagsGroupModal ({
                                         onChange={handleChange}
                                         disabled={isSaving} // Disable input during saving
                                     />
-                                </Field.Root>  
-
-                                
-                            {/*</Flex>*/}
+                                </Field.Root>    
                             </Stack>
 
                         </Stack>

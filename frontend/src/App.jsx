@@ -44,7 +44,7 @@ export default function App() {
                  <Container maxW="container.lg" pt={6} pb={8}>
                     <TagsManagement 
                         //tagGroups={tagGroups}
-                        setTagGroups={setTagGroups}
+                        //setTagGroups={setTagGroups}
                         selectedTagGroupId={selectedTagGroupId}
                         //setSelectedTagGroupId={setSelectedTagGroupId}
                     />

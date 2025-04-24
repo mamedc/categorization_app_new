@@ -1,3 +1,5 @@
+// atoms.js
+
 import { atom, useAtom } from "jotai";
 import { loadable } from "jotai/utils";
 import { BASE_URL } from "../App";
@@ -21,8 +23,11 @@ export const loadableUserAtom = loadable(asyncUserAtom);
 
 
 // Fetch Tag Groups
-export const tagGroupsAtom = atom(async () => {
+export const refreshTagGroupsAtom = atom(0);
+
+export const tagGroupsAtom = atom(async (get) => {
     //const [_, setIsLoadTagGroups] = useAtom(isLoadTagGroups);
+    get(refreshTagGroupsAtom); // Now dependent on the refresh trigger
     try {
         const res = await fetch(BASE_URL + "/tag-groups", { method: "GET" });
         const data = await res.json();
@@ -41,9 +46,18 @@ export const tagGroupsAtom = atom(async () => {
         return [];
     };
 });
+
 export const ldbTagGroupsAtom = loadable(tagGroupsAtom);
+
 
 
 // Setected Tag Group
 export const selectedTagGroupId = atom(null);
 export const isSelectedTagGroup = atom((get) => get(selectedTagGroupId) !== null);
+
+// Setected Tag from Group
+export const selectedTagId = atom(null);
+export const isSelectedTag = atom((get) => get(selectedTagId) !== null);
+
+//const group = groupsData.data.find(group => group.id === selectedTagGroupId);
+//export const isSelectedTagGroup = atom((get) => get(selectedTagGroupId) !== null);

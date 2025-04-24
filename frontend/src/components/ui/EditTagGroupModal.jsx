@@ -5,31 +5,35 @@ import { BASE_URL } from "../../App"
 import { Button, Dialog, Field, ColorSwatch , Portal, Flex, Checkbox, CloseButton, Spinner, VStack, HStack, Text } from "@chakra-ui/react"
 import { Toaster, toaster } from "@/components/ui/toaster"
 import CreateTagModal from "./CreateTagModal";
+import { useAtom } from "jotai";
+import { ldbTagGroupsAtom, selectedTagGroupId, selectedTagId } from "../../context/atoms";
 
 
 export default function EditTagGroupModal ({ 
-    groupsData,
-    setGroupsData,
-    selectedTagGroupId,
-    setSelectedTagGroupId
+    //groupsData,
+    //setGroupsData,
+    //electedTagGroupId,
+    //setSelectedTagGroupId
 }) {
+    const [groupsData] = useAtom(ldbTagGroupsAtom);
+    const [selectedTag, setSelectedTag] = useAtom(selectedTagId);
+    const [selectedGroup, setSelectedTagGroupId] = useAtom(selectedTagGroupId);
+
     const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [loadError, setLoadError] = useState('');
     const [tagGroupData, setTagGroupData] = useState({ name: '', tags: [] });
     const [isSelectedTag, setIsSelectedTag] = useState(false);
-    const [selectedTagId, setSelectedTagId] = useState(null);
     
     const handleSelectTag = (tagId) => {
-        setSelectedTagId((prevSelectedId) =>
-            prevSelectedId === tagId ? null : tagId
-        );
+        const newSel = tagId === selectedTag ? null : tagId;
+        setSelectedTag(newSel);
     };
 
     // Load Tag Group Data
     const handleInitialTagGroupState = async () => {
-        if (!Array.isArray(groupsData)) return;
-        const group = groupsData.find(group => group.id === selectedTagGroupId);
+        if (!Array.isArray(groupsData.data)) return;
+        const group = groupsData.data.find(group => group.id === selectedGroup);
         if (!group) return;
         const sortedTags = [...group.tags].sort((a, b) => a.name - b.name); // Sort the tags by their `name`
         const sortedGroup = { // Create a new group object with sorted tags
@@ -40,19 +44,19 @@ export default function EditTagGroupModal ({
     };
         
     const handleOpen = () => {
-        console.log('groupsData')
-        console.log(groupsData)
-        console.log('selectedTagGroupId')
-        console.log(selectedTagGroupId)
+        // console.log('groupsData')
+        // console.log(groupsData)
+        // console.log('selectedTagGroupId')
+        // console.log(selectedTagGroupId)
         setOpen(true);
         handleInitialTagGroupState();
         setIsSelectedTag(false);
-        setSelectedTagId(null);
+        setSelectedTag(null);
     };
     const handleClose = () => {
         setOpen(false);
         setIsSelectedTag(false);
-        setSelectedTagId(null);
+        setSelectedTag(null);
         setTagGroupData({ name: '', tags: [] });
         
     };
@@ -67,7 +71,7 @@ export default function EditTagGroupModal ({
                     rounded="sm" 
                     width={20} 
                     onClick={handleOpen}
-                    disabled={selectedTagGroupId == null}
+                    disabled={selectedGroup === null}
                 >
                     Edit
                 </Button>
@@ -108,7 +112,7 @@ export default function EditTagGroupModal ({
                                                     size="sm"
                                                     colorPalette="cyan"
                                                     mt={{ base: 1, md: 0 }}
-                                                    checked={tag.id === selectedTagId}
+                                                    checked={tag.id === selectedTag}
                                                     onCheckedChange={() => handleSelectTag(tag.id)}
                                                 >
                                                     <Checkbox.HiddenInput />
@@ -141,18 +145,8 @@ export default function EditTagGroupModal ({
 
 
                                 {/* Add Button */}
-                                <CreateTagModal
-                                    groupsData={groupsData}
-                                    setGroupsData={setGroupsData}
-                                    selectedTagGroupId={selectedTagGroupId}
-                                    selectedTagId={selectedTagId} // Enable/disable button
-                                    tagGroupData={tagGroupData} // Name and Tags from the current group
-                                    setTagGroupData={setTagGroupData}
-                                />
-                                
-
-
-                                
+                                <CreateTagModal />
+                                                                
                                 <Dialog.ActionTrigger asChild>
                                     <Button 
                                         variant="surface" 
