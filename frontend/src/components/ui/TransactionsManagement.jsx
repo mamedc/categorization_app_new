@@ -60,8 +60,8 @@ export default function TransactionsManagement({
 
                 {/* Add Button */}
                 <CreateTransactionModal
-                    setTransactions={setTransactions} // To include the new transaction to "transactions"
-                    selectedTransactionId={selectedTransactionId} // To enable/disable the 'Add' button
+                    //setTransactions={setTransactions} // To include the new transaction to "transactions"
+                    //selectedTransactionId={selectedTransactionId} // To enable/disable the 'Add' button
                 />
                 
                 {/* Edit Button */}
@@ -77,18 +77,18 @@ export default function TransactionsManagement({
                 
                 {/* Delete Button */}
                 <DeleteTransactionModal
-                    selectedTransactionId={selectedTransactionId}
-                    setTransactions={setTransactions}
-                    setSelectedTransactionId={setSelectedTransactionId}
+                    //selectedTransactionId={selectedTransactionId}
+                    //setTransactions={setTransactions}
+                    //setSelectedTransactionId={setSelectedTransactionId}
                 />
             </Flex>
 
             {/* Transaction Grid */}
             <TransactionGrid
-                transactions={transactions}
-                setTransactions={setTransactions}
-                selectedTransactionId={selectedTransactionId}
-                setSelectedTransactionId={setSelectedTransactionId}
+                //transactions={transactions}
+                //setTransactions={setTransactions}
+                //selectedTransactionId={selectedTransactionId}
+                //setSelectedTransactionId={setSelectedTransactionId}
                 sortOrder={sortOrder}
             />
         

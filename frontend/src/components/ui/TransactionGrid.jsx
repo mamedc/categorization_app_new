@@ -1,5 +1,7 @@
 // TransactionGrid.jsx
 
+import { useAtom } from "jotai";
+import { ldbTransactionsAtom, selectedTransaction } from "../../context/atoms";
 import { useEffect, useState, useMemo, Fragment } from "react";
 import { BASE_URL } from "../../App";
 import { VStack, Spinner, Text, Flex, StackSeparator } from "@chakra-ui/react";
@@ -20,13 +22,17 @@ const formatDateHeader = (dateString) => {
 };
 
 export default function TransactionGrid ({
-    transactions,
-    setTransactions,
-    selectedTransactionId,
-    setSelectedTransactionId,
-    sortOrder }) {
+    //transactions,
+    //setTransactions,
+    //selectedTransactionId,
+    //setSelectedTransactionId,
+    sortOrder 
+}) {
     
-    const [isLoading, setIsLoading] = useState(true);
+    // const [isLoading, setIsLoading] = useState(true);
+    const [transactions] = useAtom(ldbTransactionsAtom);
+    const [selectedTransac, setSelectedTransac] = useAtom(selectedTransaction);
+    const isLoading = transactions.state === 'loading'
 
     // useEffect(() => { ... }, [setTransactions, setSelectedTransactionId]);
     // () => { ... }: This is the effect function. The code inside this function will run after 
@@ -34,42 +40,42 @@ export default function TransactionGrid ({
     // dependency array change.
     // [setTransactions, setSelectedTransactionId]: This is the dependency array. React will 
     // only re-run the effect function if any of the values in this array have changed since the last render.
-    useEffect(() => {
-        const getTransactions = async () => {
-            try {
-                setIsLoading(true);
-                const res = await fetch(BASE_URL + "/transactions");
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error);
-                if (Array.isArray(data)) {
-                    setTransactions(data);
-                } else {
-                    console.error("Fetched data is not an array:", data);
-                    setTransactions([]);
-                }
-                setSelectedTransactionId(null);
-            } catch (error) {
-                console.error(error);
-                setTransactions([]);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        getTransactions();
-    }, []);
+    // useEffect(() => {
+    //     const getTransactions = async () => {
+    //         try {
+    //             setIsLoading(true);
+    //             const res = await fetch(BASE_URL + "/transactions");
+    //             const data = await res.json();
+    //             if (!res.ok) throw new Error(data.error);
+    //             if (Array.isArray(data)) {
+    //                 setTransactions(data);
+    //             } else {
+    //                 console.error("Fetched data is not an array:", data);
+    //                 setTransactions([]);
+    //             }
+    //             setSelectedTransactionId(null);
+    //         } catch (error) {
+    //             console.error(error);
+    //             setTransactions([]);
+    //         } finally {
+    //             setIsLoading(false);
+    //         }
+    //     };
+    //     getTransactions();
+    // }, []);
 
     const handleSelectTransaction = (transactionId) => {
-        setSelectedTransactionId((prevSelectedId) =>
+        setSelectedTransac((prevSelectedId) =>
             prevSelectedId === transactionId ? null : transactionId
         );
     };
 
     // Memoize the sorted transactions array
     const sortedTransactions = useMemo(() => {
-        if (!Array.isArray(transactions)) {
+        if (!Array.isArray(transactions.data)) {
             return [];
         }
-        const sorted = [...transactions].sort((a, b) => {
+        const sorted = [...transactions.data].sort((a, b) => {
             const dateA = new Date(a.date);
             const dateB = new Date(b.date);
             const timeA = !isNaN(dateA.getTime()) ? dateA.getTime() : 0;
@@ -77,7 +83,7 @@ export default function TransactionGrid ({
             return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
         });
         return sorted;
-    }, [transactions, sortOrder]);
+    }, [transactions.data, sortOrder]);
 
     // Memoize the grouped transactions
     const groupedTransactions = useMemo(() => {
@@ -145,7 +151,7 @@ export default function TransactionGrid ({
                                     <TransactionCard
                                         key={transaction.id}
                                         transaction={transaction}
-                                        isSelected={transaction.id === selectedTransactionId}
+                                        isSelected={transaction.id === selectedTransac}
                                         onSelect={() => handleSelectTransaction(transaction.id)}
                                     />
                                 ))}

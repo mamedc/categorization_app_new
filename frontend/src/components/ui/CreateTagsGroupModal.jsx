@@ -3,7 +3,7 @@ import { BASE_URL } from "../../App"
 import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { useAtom, useSetAtom } from "jotai";
-import { ldbTagGroupsAtom, selectedTagGroupId, refreshTagGroupsAtom } from "../../context/atoms";
+import { selectedTagGroupId, refreshTagGroupsAtom } from "../../context/atoms";
 
 
 export default function CreateTagsGroupModal ({ 

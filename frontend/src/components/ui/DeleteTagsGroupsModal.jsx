@@ -4,7 +4,7 @@ import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, Ic
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { FiAlertTriangle } from 'react-icons/fi';
 import { useAtom, useSetAtom } from "jotai";
-import { ldbTagGroupsAtom, selectedTagGroupId, refreshTagGroupsAtom } from "../../context/atoms";
+import { selectedTagGroupId, refreshTagGroupsAtom } from "../../context/atoms";
 
 
 export default function DeleteTagsGroupsModal ({ 

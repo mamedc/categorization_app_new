@@ -3,13 +3,18 @@ import { BASE_URL } from "../../App";
 import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, Icon, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { FiAlertTriangle } from 'react-icons/fi';
+import { useAtom, useSetAtom } from "jotai";
+import { selectedTransaction, refreshTransactionsAtom } from "../../context/atoms";
 
 
 export default function DeleteTransactionModal ({ 
-    selectedTransactionId, 
-    setTransactions, 
-    setSelectedTransactionId }) {
+    //selectedTransactionId, 
+    //setTransactions, 
+    //setSelectedTransactionId 
+}) {
 
+    const refreshTransactions = useSetAtom(refreshTransactionsAtom);
+    const [selectedTransac, setSelectedTransac] = useAtom(selectedTransaction);
     const [open, setOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
@@ -26,7 +31,7 @@ export default function DeleteTransactionModal ({
         setIsSaving(true); // Start loading
         try {
             console.log("Delete transaction?");
-            const res = await fetch(BASE_URL + "/transactions/delete/" + selectedTransactionId, {
+            const res = await fetch(BASE_URL + "/transactions/delete/" + selectedTransac, {
                 method: "DELETE",
             });
             const data = await res.json();
@@ -35,8 +40,9 @@ export default function DeleteTransactionModal ({
             };
             setSaveError(''); // Clear any previous error
             setOpen(false); // Close dialog
-            setSelectedTransactionId(null);
-            setTransactions((prevTrans) => prevTrans.filter((u) => u.id !== selectedTransactionId));
+            setSelectedTransac(null);
+            //setTransactions((prevTrans) => prevTrans.filter((u) => u.id !== selectedTransactionId));
+            refreshTransactions((prev) => prev + 1); // This triggers a refresh
             toaster.create({
                 title: "Success!",
                 description: "Transaction deleted.",
@@ -68,7 +74,7 @@ export default function DeleteTransactionModal ({
                     rounded="sm" 
                     width={20} 
                     onClick={handleOpen}
-                    disabled={selectedTransactionId === null}
+                    disabled={selectedTransac === null}
                 >
                     Delete
                 </Button>

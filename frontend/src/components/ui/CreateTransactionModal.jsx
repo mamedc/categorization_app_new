@@ -2,11 +2,18 @@ import { useState } from "react";
 import { BASE_URL } from "../../App"
 import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
+import { useAtom, useSetAtom } from "jotai";
+import { selectedTransaction, refreshTransactionsAtom } from "../../context/atoms";
+
 
 export default function CreateTransactionModal ({ 
-    setTransactions, 
-    selectedTransactionId }) {
+    //setTransactions, 
+    //selectedTransactionId 
+}) {
     
+    const refreshTransactions = useSetAtom(refreshTransactionsAtom);
+    const [selectedTransac, setSelectedTransac] = useAtom(selectedTransaction);
+
     const [open, setOpen] = useState(false);
     const initialFormState = {amount: '', date: '',description: ''};
     const [formData, setFormData] = useState(initialFormState);
@@ -49,7 +56,8 @@ export default function CreateTransactionModal ({
             console.log(formData);
             setSaveError(''); // Clear any previous error
             setOpen(false); // Close dialog
-            setTransactions((prevTransactions) => [...prevTransactions, data]); // Add new transaction to Transactions without new rendering
+            //setTransactions((prevTransactions) => [...prevTransactions, data]); // Add new transaction to Transactions without new rendering
+            refreshTransactions((prev) => prev + 1); // This triggers a refresh
         } catch (error) {
             toaster.create({
                 title: "An error occurred.",
@@ -74,7 +82,7 @@ export default function CreateTransactionModal ({
                     rounded="sm" 
                     width={20} 
                     onClick={handleOpen}
-                    disabled={selectedTransactionId !== null}
+                    disabled={selectedTransac !== null}
                 >
                     Add
                 </Button>

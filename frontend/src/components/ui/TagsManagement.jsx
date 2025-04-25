@@ -14,10 +14,6 @@ import { ldbTagGroupsAtom } from "../../context/atoms";
 
 
 export default function TagsManagement ({
-    //tagGroups,
-    //setTagGroups,
-    selectedTagGroupId,
-    //setSelectedTagGroupId,
 }) {
 
     const [groupsData] = useAtom(ldbTagGroupsAtom);
@@ -45,7 +41,6 @@ export default function TagsManagement ({
                         <IconButton
                             size="sm"
                             aria-label="Toggle sort order by date"
-                            //onClick={toggleSortOrder}
                             variant="outline"
                             colorPalette="teal" // Changed from teal.500
                             _hover={{ bg: "teal.500", color: "white" }} // Added color on hover
@@ -66,14 +61,7 @@ export default function TagsManagement ({
                 <CreateTagsGroupModal />
                 
                 {/* Edit Button */}
-                <EditTagGroupModal
-                    //groupsData={groupsData}
-                    //setGroupsData={setGroupsData}
-                    //selectedTagGroupId={selectedTagGroupId}
-                    //setSelectedTagGroupId={setSelectedTagGroupId}
-                >
-                    Edit
-                </EditTagGroupModal>
+                <EditTagGroupModal>Edit</EditTagGroupModal>
                 
                 {/* Delete Button */}
                 <DeleteTagsGroupsModal />

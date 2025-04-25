@@ -5,12 +5,11 @@ import { loadable } from "jotai/utils";
 import { BASE_URL } from "../App";
 
 
+// --- Examples ---
 export const counterAtom = atom(0);
-
 
 // Example derived state
 export const doubledCounterAtom = atom((get) => get(counterAtom) * 2);
-
 
 // Async atom
 export const asyncUserAtom = atom(async () => {
@@ -18,7 +17,7 @@ export const asyncUserAtom = atom(async () => {
     return response.json();
 });
 export const loadableUserAtom = loadable(asyncUserAtom);
-
+// --- End of Examples ---
 
 
 
@@ -26,7 +25,6 @@ export const loadableUserAtom = loadable(asyncUserAtom);
 export const refreshTagGroupsAtom = atom(0);
 
 export const tagGroupsAtom = atom(async (get) => {
-    //const [_, setIsLoadTagGroups] = useAtom(isLoadTagGroups);
     get(refreshTagGroupsAtom); // Now dependent on the refresh trigger
     try {
         const res = await fetch(BASE_URL + "/tag-groups", { method: "GET" });
@@ -49,8 +47,6 @@ export const tagGroupsAtom = atom(async (get) => {
 
 export const ldbTagGroupsAtom = loadable(tagGroupsAtom);
 
-
-
 // Setected Tag Group
 export const selectedTagGroupId = atom(null);
 export const isSelectedTagGroup = atom((get) => get(selectedTagGroupId) !== null);
@@ -59,5 +55,33 @@ export const isSelectedTagGroup = atom((get) => get(selectedTagGroupId) !== null
 export const selectedTagId = atom(null);
 export const isSelectedTag = atom((get) => get(selectedTagId) !== null);
 
-//const group = groupsData.data.find(group => group.id === selectedTagGroupId);
-//export const isSelectedTagGroup = atom((get) => get(selectedTagGroupId) !== null);
+
+
+// Fetch Transactions
+export const refreshTransactionsAtom = atom(0);
+
+export const transactionsAtom = atom(async (get) => {
+    get(refreshTransactionsAtom);
+    try {
+        const res = await fetch(BASE_URL + "/transactions");
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || "Failed to fetch tag groups");
+        };
+        if (!Array.isArray(data)) {
+            console.error("Fetched data is not an array:", data);
+            return [];
+        };
+        return data;
+    
+    } catch (error) {
+        console.error("Error fetching transactions:", error);
+        return [];
+    };
+});
+
+export const ldbTransactionsAtom = loadable(transactionsAtom);
+
+// Setected Transaction
+export const selectedTransaction = atom(null);
+export const isSelectedTransaction = atom((get) => get(selectedTransaction) !== null);
