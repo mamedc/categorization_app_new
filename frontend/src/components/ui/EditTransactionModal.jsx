@@ -1,63 +1,114 @@
-import { Button, Dialog, Field, Input, Portal, Flex, Textarea, CloseButton } from "@chakra-ui/react"
-import { Toaster, toaster } from "@/components/ui/toaster"
+// EditTransactionModal.jsx
+
 import { useState } from "react";
-import { CiEdit } from "react-icons/ci"
 import { BASE_URL } from "../../App"
+import { Button, CloseButton, Dialog, Portal, Text, VStack, Stack, Field, Input, Checkbox, Flex, Textarea, HStack, ColorSwatch, Box } from "@chakra-ui/react";
+import { Toaster, toaster } from "@/components/ui/toaster"
+import { useAtom, useSetAtom } from "jotai";
+import { selectedTransaction, refreshTransactionsAtom, selectedTagId } from "../../context/atoms";
 
 
-const EditModal = ({ usuario, setUsuarios }) => {
+export default function EditTransactionModal ({ 
+}) {
+    
+    const refreshTransactions = useSetAtom(refreshTransactionsAtom);
+    const [selectedTransac, setSelectedTransac] = useAtom(selectedTransaction);
+    const [selectedTag, setSelectedTag] = useAtom(selectedTagId);
+
     const [open, setOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const initialFormState = {id: "", amount: '', date: '',description: '', tags: [], tag_group: {}};
+    const [formData, setFormData] = useState(initialFormState);
+    const [isSaving, setIsSaving] = useState(false); // State for loading indicator
+    const [saveError, setSaveError] = useState(''); // State for potential errors
     
-    const initialInputState = {
-        name: usuario.name,
-        role: usuario.role,
-        description: usuario.description,
+    const requiredFields = [
+        "id", "date", "amount", "description", "children_flag", "doc_flag", 
+        "created_at", "updated_at", "tags",
+    ];
+
+    const hasRequiredFields = (data, requiredFields) => {
+        return requiredFields.every(field => field in data);
+      };
+
+    const getTransaction = async (e) => {
+        console.log('selectedTransac: ' + selectedTransac)
+        try {
+            const res = await fetch(BASE_URL + "/transactions/view/" + selectedTransac, { method: "GET" });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to fetch tag groups");
+            };
+            if (!hasRequiredFields(data, requiredFields)) {
+                console.error("Fetched data does not have all fields:", data);
+                return[]
+            };
+            return data;       
+        } catch (error) {
+            console.error("Error fetching transactions:", error);
+            return [];
+        };
     };
-    const [inputs, setInputs] = useState(initialInputState);
-    
-    const handleOpen = () => {
+
+    const handleOpen = async () => {
         setOpen(true);
-        setInputs(initialInputState);
-        setIsLoading(false); // Reset when opening
+        setSaveError('');
+        const data = await getTransaction();
+
+        if (data && typeof data === "object") {
+            requiredFields.forEach(field => {
+                console.log(`${field}:`, data[field]);
+            });
+            setFormData({
+                id: data.id || "",
+                amount: data.amount || "",
+                date: data.date || "",
+                description: data.description || "",
+                tags: data.tags || [],
+                created_at: data.created_at || "",
+                updated_at: data.updated_at || "",
+            });
+        };
+        //requiredFields.forEach(field => { console.log(`${field}:`, data[field]); });
+        //setFormData(data);
     };
     const handleClose = () => {
-        setInputs(initialInputState);
+        setFormData(initialFormState);
+        setSelectedTransac(null);
         setOpen(false);
     };
-
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setInputs({ ...inputs, [name]: value });
+        setFormData({ ...formData, [name]: value });
+    };
+    const handleSelectTag = (tagId) => {
+        const newSel = tagId === selectedTag ? null : tagId;
+        setSelectedTag(newSel);
     };
 
-    const handleEditUser = async (e) => {
-        // e.preventDefault();
-        
+    const handleSave = async () => { 
+        setIsSaving(true); // Start loading
         try {
-            console.log(inputs);
-            console.log(JSON.stringify(inputs));
-            const res = await fetch(BASE_URL + "/friends/" + usuario.id, {
-                method: "PATCH",
+            const res = await fetch(BASE_URL + "/transactions/new", {
+                method: "POST",
                 headers: { "Content-Type": "application/json", },
-                body: JSON.stringify(inputs),
+                body: JSON.stringify(formData),
             });
             const data = await res.json();
             if(!res.ok) { 
-                throw new Error(data.error);
+                throw new Error(data.error); 
             };
-            setUsuarios((prevUsers) => prevUsers.map((u) => u.id === usuario.id ? data : u)); // Update the user profile
-            
             toaster.create({
                 title: "Success!",
-                description: "Friend edited!",
+                description: "New transaction added.",
                 type: "success",
                 duration: 2000,
                 placement: "top-center",
             })
-
-            setOpen(false);
-        
+            console.log(formData);
+            setSaveError(''); // Clear any previous error
+            setOpen(false); // Close dialog
+            //setTransactions((prevTransactions) => [...prevTransactions, data]); // Add new transaction to Transactions without new rendering
+            refreshTransactions((prev) => prev + 1); // This triggers a refresh
         } catch (error) {
             toaster.create({
                 title: "An error occurred.",
@@ -67,101 +118,154 @@ const EditModal = ({ usuario, setUsuarios }) => {
                 placement: "top-center",
             })
             console.error('Error saving name:', error);
-                    
         } finally {
-            setIsLoading(false);
+            setIsSaving(false);
         }
-    }
-    
+    };
+
     return (
-        <>
-            {/* initialFocusEl={() => ref.current } */}
-            <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
+        <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
+            
+            <Dialog.Trigger asChild>
+                <Button 
+                    size="sm" 
+                    colorPalette="yellow" 
+                    rounded="sm" 
+                    width={20} 
+                    onClick={handleOpen}
+                    disabled={selectedTransac === null}
+                >
+                    Edit
+                </Button>
+            </Dialog.Trigger>
+
+            <Portal>
                 <Toaster />
-                <Dialog.Trigger asChild>
-                    <Button size='sm' variant="ghost" colorPalette='blue' aria-label="See menu" onClick={handleOpen}>
-                        <CiEdit />
-                    </Button>
-                </Dialog.Trigger>
-                
-                <Portal>
-                    <Dialog.Backdrop />
-                    <Dialog.Positioner>
-                        <Dialog.Content>
-                            
-                            <Dialog.Header><Dialog.Title>My new BFF</Dialog.Title></Dialog.Header>
-                            
-                            <Dialog.Body pb="4">
-                                <Flex alignItems={"center"} gap="4">
-                                    <Field.Root>
-                                        <Field.Label>Full Name</Field.Label>
-                                        <Input 
-                                            placeholder="First Name" 
-                                            name="name"
-                                            type="text"
-                                            value={inputs.name}
-                                            onChange={handleChange}
-                                            disabled={isLoading}
-                                        />
-                                    </Field.Root>                             
-                                    <Field.Root>
-                                        <Field.Label>Role</Field.Label>
-                                        <Input 
-                                            placeholder="Focus First" 
-                                            name="role"
-                                            type="text"
-                                            value={inputs.role}
-                                            onChange={handleChange}
-                                            disabled={isLoading}
-                                        />
-                                    </Field.Root>                            
-                                </Flex>
-
-                                <Field.Root mt={4}>
-                                    <Field.Label>Description</Field.Label>
-                                    <Textarea
-                                        resize={"none"}
-                                        overflowY={"hidden"}
-                                        placeholder="He's a software engineer who loves to code and build things."
-                                        name="description"
-                                        value={inputs.description}
-                                        onChange={handleChange}
-                                        disabled={isLoading}
-                                    />
-                                </Field.Root>
-
-                            </Dialog.Body>
-                            
-                            <Dialog.Footer>                          
-                                <Dialog.ActionTrigger asChild>
-                                    <Button 
-                                        variant="surface" 
-                                        onClick={handleClose} 
-                                        disabled={isLoading}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </Dialog.ActionTrigger>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                <Dialog.Content>
+                    <Dialog.Header><Dialog.Title>Edit Transaction</Dialog.Title></Dialog.Header>
+                    <Dialog.Body>
+                        <Stack direction="column" gap="6">
+                            <Stack direction={{ base: "column", md: "row" }} gap="4" width="100%">
                                 
-                                <Button
-                                    onClick={handleEditUser} 
-                                    disabled={isLoading}
-                                >
-                                    Update
-                                </Button>
-                            </Dialog.Footer>
+                                <p>Created at: { formData.created_at }</p>
+                                <p>Updated at: { formData.updated_at }</p>
 
-                            <Dialog.CloseTrigger asChild>
-                                <CloseButton size="sm" onClick={handleClose} disabled={isLoading} />
-                            </Dialog.CloseTrigger>
+                                {/*Left: Date*/}
+                                <Field.Root>
+                                    <Field.Label>Date:</Field.Label>
+                                    <Input
+                                        name="date"
+                                        type="date"
+                                        value={formData.date}
+                                        onChange={handleChange}
+                                        disabled={isSaving} // Disable input during saving
+                                    />
+                                </Field.Root>  
 
-                        </Dialog.Content>
-                    </Dialog.Positioner>
-                </Portal>
-            </Dialog.Root>
+                                {/*Right: Value*/}
+                                <Field.Root>
+                                    <Field.Label>Amount:</Field.Label>
+                                    <Input 
+                                        placeholder="R$ 0.00"
+                                        name="amount"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.amount}
+                                        onChange={handleChange}
+                                        disabled={isSaving}
+                                    />
+                                </Field.Root> 
+                            {/*</Flex>*/}
+                            </Stack>
 
-        </>
-    )
-}
+                            {/*Description*/}
+                            <Field.Root>
+                                <Field.Label>Description:</Field.Label>
+                                <Textarea 
+                                    autoresize 
+                                    size="md"
+                                    placeholder="Enter description"
+                                    resize="none"
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    disabled={isSaving}
+                                />
+                            </Field.Root> 
 
-export default EditModal
+                            {/*Tags*/}
+                            <p>Tags:</p>
+                            <Box borderWidth="1px" p="4">
+                                <VStack spacing={6} align="stretch" >
+                                    {formData.tags.map((tag) => (
+                                        <Flex
+                                            key={tag.id}
+                                            direction={'row'}
+                                            align={{ base: 'start', md: 'center' }}
+                                            gap={4}
+                                            wrap="wrap"
+                                        >
+                                            {/*Checkbox*/}
+                                            <Checkbox.Root
+                                                variant="outline"
+                                                size="sm"
+                                                colorPalette="cyan"
+                                                mt={{ base: 1, md: 0 }}
+                                                checked={tag.id === selectedTag}
+                                                onCheckedChange={() => handleSelectTag(tag.id)}
+                                            >
+                                                <Checkbox.HiddenInput />
+                                                <Checkbox.Control />
+                                            </Checkbox.Root>
+
+                                            {/* Left: Details */}
+                                            <VStack align="start" spacing={1} flex="1">
+                                                <HStack spacing={3} wrap="wrap">
+                                                    <Text fontSize="sm" color="gray.500">
+                                                    {tag.tag_group.name} / {tag.name}
+                                                    </Text>
+                                                </HStack>
+                                            </VStack>
+
+                                            {/* Right: Value + Flags */}
+                                            <VStack align="end" spacing={1}>
+                                                <ColorSwatch value={tag.color} size="xs" borderRadius="xl" />
+                                            </VStack>
+
+                                        </Flex>
+                                    ))}
+                                </VStack>
+                            </Box>
+                            
+                        </Stack>
+                        {saveError && <Text color="red.500">{saveError}</Text>}
+                    </Dialog.Body>
+                    
+                    {/* Cancel and Save buttons */}
+                    <Dialog.Footer>
+                        <Button 
+                            variant="surface" 
+                            onClick={handleClose} 
+                            disabled={isSaving}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            onClick={handleSave} 
+                            disabled={isSaving}
+                        >
+                            Save
+                        </Button>
+                    </Dialog.Footer>
+                    
+                    <Dialog.CloseTrigger asChild>
+                        <CloseButton size="sm" onClick={handleClose} disabled={isSaving} />
+                    </Dialog.CloseTrigger>  
+                </Dialog.Content>
+                </Dialog.Positioner>
+            </Portal>
+    </Dialog.Root>
+    );
+};

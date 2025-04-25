@@ -1,6 +1,8 @@
 // TransactionCard.jsx
 
 import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer } from '@chakra-ui/react'
+import { Fragment } from "react";
+import TagCard from "./TagCard";
 
 
 export default function TransactionCard ({ transaction, isSelected, onSelect }) {
@@ -56,6 +58,32 @@ export default function TransactionCard ({ transaction, isSelected, onSelect }) 
                     >
                         {transaction.description}
                     </Text>
+                </VStack>
+
+                {/* Tags */}
+                <VStack align="start" spacing={1} flex="1">
+                    {transaction.tags.map((tag) => (
+                        <Fragment key={tag.name}> {/* Use Fragment to avoid extra DOM element per group */}
+                            {/* <Text
+                                fontSize="sm"
+                                //fontWeight="semibold"
+                                color="gray.600"
+                                pb={1} // Add some padding below the header
+                                pt={1} // Add some padding below the header
+                                //borderBottomWidth="1px"
+                                //borderColor="gray.200"
+                            >
+                                {tag.name}
+                            </Text> */}
+                            <TagCard 
+                                key={tag.id}
+                                tag={tag}
+                                //isSelectedTag={isSelectedTag}
+                                //onSelectTag={onSelectTag}
+                            />
+                            
+                        </Fragment>
+                    ))}
                 </VStack>
 
                 {/* Spacer pushes the value to the end in horizontal layouts */}

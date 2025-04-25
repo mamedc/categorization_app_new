@@ -6,6 +6,7 @@ import { LuArrowDown, LuArrowUp } from "react-icons/lu";
 import TransactionGrid from "./TransactionGrid";
 import CreateTransactionModal from "./CreateTransactionModal";
 import DeleteTransactionModal from "./DeleteTransactionModal";
+import EditTransactionModal from "./EditTransactionModal";
 
 
 export default function TransactionsManagement({ 
@@ -65,7 +66,7 @@ export default function TransactionsManagement({
                 />
                 
                 {/* Edit Button */}
-                <Button
+                {/* <Button
                     size="sm"
                     colorPalette="blue"
                     rounded="sm"
@@ -73,7 +74,8 @@ export default function TransactionsManagement({
                     disabled={selectedTransactionId === null}
                 >
                     Edit
-                </Button>
+                </Button> */}
+                <EditTransactionModal />
                 
                 {/* Delete Button */}
                 <DeleteTransactionModal
