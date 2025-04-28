@@ -145,7 +145,7 @@ def update_transaction(transaction_id):
         transaction.description = data.get('description', transaction.description)
         db.session.commit()
 
-        return jsonify([transaction.to_json(include_tags=True) for transaction in transactions]), 200 # 200 means ok
+        return jsonify(transaction.to_json(include_tags=True)), 200 # 200 means ok
     
     except Exception as e:
         db.session.rollback()

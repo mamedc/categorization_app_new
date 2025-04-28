@@ -6,6 +6,7 @@ import { Button, CloseButton, Dialog, Portal, Text, VStack, Stack, Field, Input,
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { useAtom, useSetAtom } from "jotai";
 import { selectedTransaction, refreshTransactionsAtom, selectedTagId } from "../../context/atoms";
+import EditTransactionTagsModal from "./EditTransactionTagsModal";
 
 
 export default function EditTransactionModal ({ 
@@ -68,8 +69,6 @@ export default function EditTransactionModal ({
                 updated_at: data.updated_at || "",
             });
         };
-        //requiredFields.forEach(field => { console.log(`${field}:`, data[field]); });
-        //setFormData(data);
     };
     const handleClose = () => {
         setFormData(initialFormState);
@@ -80,16 +79,18 @@ export default function EditTransactionModal ({
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
+    const handleLog = (e) => {
+        console.log(formData);
+    };
     const handleSelectTag = (tagId) => {
         const newSel = tagId === selectedTag ? null : tagId;
         setSelectedTag(newSel);
     };
-
     const handleSave = async () => { 
         setIsSaving(true); // Start loading
         try {
-            const res = await fetch(BASE_URL + "/transactions/new", {
-                method: "POST",
+            const res = await fetch(BASE_URL + "/transactions/update/" + selectedTransac, {
+                method: "PATCH",
                 headers: { "Content-Type": "application/json", },
                 body: JSON.stringify(formData),
             });
@@ -99,15 +100,14 @@ export default function EditTransactionModal ({
             };
             toaster.create({
                 title: "Success!",
-                description: "New transaction added.",
+                description: "Changes saved to transaction.",
                 type: "success",
                 duration: 2000,
                 placement: "top-center",
             })
             console.log(formData);
-            setSaveError(''); // Clear any previous error
-            setOpen(false); // Close dialog
-            //setTransactions((prevTransactions) => [...prevTransactions, data]); // Add new transaction to Transactions without new rendering
+            setSaveError('');
+            handleClose()
             refreshTransactions((prev) => prev + 1); // This triggers a refresh
         } catch (error) {
             toaster.create({
@@ -117,12 +117,12 @@ export default function EditTransactionModal ({
                 duration: 4000,
                 placement: "top-center",
             })
-            console.error('Error saving name:', error);
+            console.error('Error edditing transaction:', error);
         } finally {
             setIsSaving(false);
         }
     };
-
+    
     return (
         <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
             
@@ -208,7 +208,7 @@ export default function EditTransactionModal ({
                                             wrap="wrap"
                                         >
                                             {/*Checkbox*/}
-                                            <Checkbox.Root
+                                            {/* <Checkbox.Root
                                                 variant="outline"
                                                 size="sm"
                                                 colorPalette="cyan"
@@ -218,7 +218,7 @@ export default function EditTransactionModal ({
                                             >
                                                 <Checkbox.HiddenInput />
                                                 <Checkbox.Control />
-                                            </Checkbox.Root>
+                                            </Checkbox.Root> */}
 
                                             {/* Left: Details */}
                                             <VStack align="start" spacing={1} flex="1">
@@ -236,6 +236,7 @@ export default function EditTransactionModal ({
 
                                         </Flex>
                                     ))}
+                                    <EditTransactionTagsModal transacData={formData} setTransacData={setFormData} existingTags={formData.tags} />
                                 </VStack>
                             </Box>
                             
@@ -257,6 +258,11 @@ export default function EditTransactionModal ({
                             disabled={isSaving}
                         >
                             Save
+                        </Button>
+                        <Button 
+                            onClick={handleLog} 
+                        >
+                            Log
                         </Button>
                     </Dialog.Footer>
                     
