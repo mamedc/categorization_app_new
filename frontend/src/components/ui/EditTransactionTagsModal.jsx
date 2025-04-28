@@ -13,6 +13,12 @@ export default function EditTransactionTagsModal ({
     transacData,      // The transaction object { id: ..., ..., tags: [...] }
     setTransacData,   // Function to update the transaction object in parent state
     existingTags,     // Array of tag objects currently associated: [{id, name, color, ...}, ...]
+    selectedTagIds,
+    setSelectedTagIds,
+    addedTags,
+    setAddedTags,
+    removedTags,
+    setRemovedTags
 }) {
 
     const [open, setOpen] = useState(false);
@@ -22,9 +28,6 @@ export default function EditTransactionTagsModal ({
     const refreshTagGroups = useSetAtom(refreshTagGroupsAtom);
     // selectedGroup might still be useful for UI highlighting, keeping it for now
     const [selectedGroup, setSelectedTagGroupId] = useAtom(selectedTagGroupId);
-
-    // State to hold the IDs of tags selected IN THIS MODAL
-    const [selectedTagIds, setSelectedTagIds] = useState(new Set());
 
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState('');
@@ -47,13 +50,30 @@ export default function EditTransactionTagsModal ({
 
     const handleClose = () => {
         setOpen(false);
-        console.log('transacData')
-        console.log(transacData)
+        //console.log('transacData')
+        //console.log(transacData)
         // No need to reset selectedTagIds here, handleOpen will re-initialize on next open
     };
 
     // Handles checking/unchecking a tag
+    // const handleTagSelectionChange = (tagId, isChecked) => {
+    //     setSelectedTagIds(prevIds => {
+    //         const newIds = new Set(prevIds); // Create a mutable copy
+    //         if (isChecked) {
+    //             newIds.add(tagId);
+    //         } else {
+    //             newIds.delete(tagId);
+    //         }
+    //         return newIds; // Return the new Set to update state
+    //     });
+    // };
+
+
+
+
     const handleTagSelectionChange = (tagId, isChecked) => {
+
+        // 1. Update the overall set of currently selected tags
         setSelectedTagIds(prevIds => {
             const newIds = new Set(prevIds); // Create a mutable copy
             if (isChecked) {
@@ -63,7 +83,49 @@ export default function EditTransactionTagsModal ({
             }
             return newIds; // Return the new Set to update state
         });
+    
+        // 2. Update the lists tracking added and removed tags during the session
+        if (isChecked) {
+            // --- Handle ADDING a tag ---
+            
+            // Remove from 'removedTags' first (if it was previously removed)
+            setRemovedTags(prevRemovedTags =>
+                prevRemovedTags.filter(id => id !== tagId)
+            );
+            
+            // Add to 'addedTags' (avoiding duplicates)
+            if (!removedTags.includes(tagId)) {
+                setAddedTags(prevAddedTags => {
+                    if (prevAddedTags.includes(tagId)) {
+                        return prevAddedTags; // Already marked as added
+                    }
+                    return [...prevAddedTags, tagId]; // Add the new tag ID
+                });
+            };
+    
+        } else {
+            // --- Handle REMOVING a tag ---
+            
+            // Add to 'removedTags' (avoiding duplicates)
+            if (!addedTags.includes(tagId)) {
+                setRemovedTags(prevRemovedTags => {
+                
+                    if (prevRemovedTags.includes(tagId)) {
+                        return prevRemovedTags; // Already marked as removed
+                    }
+                    return [...prevRemovedTags, tagId]; // Add the new tag ID
+                });
+            };
+
+            // Remove from 'addedTags' first (if it was previously added)
+            setAddedTags(prevAddedTags =>
+                prevAddedTags.filter(id => id !== tagId)
+            );
+            
+        }
     };
+    
+    
 
     const handleUpdateParent = async () => {
         setIsSaving(true);
@@ -113,14 +175,6 @@ export default function EditTransactionTagsModal ({
                 ...prevTransac,
                 tags: updatedFullTags, // Use the newly constructed array
             }));
-
-            toaster.create({
-                title: "Success!",
-                description: "Transaction tags updated.",
-                type: "success",
-                duration: 2000,
-                placement: "top-center",
-            });
 
             handleClose();
 
@@ -281,7 +335,7 @@ export default function EditTransactionTagsModal ({
                             colorPalette="cyan" // Consistent palette
                             size="sm" // Standardized size
                         >
-                            Save Changes {/* More specific text */}
+                            Ok {/* More specific text */}
                         </Button>
                     </Dialog.Footer>
 

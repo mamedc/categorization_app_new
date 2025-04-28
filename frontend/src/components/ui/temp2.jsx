@@ -21,8 +21,6 @@ export default function EditTransactionModal ({
     const [formData, setFormData] = useState(initialFormState);
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
-
-    const [selectedTagIds, setSelectedTagIds] = useState(new Set());
     const [addedTags, setAddedTags] = useState([]);
     const [removedTags, setRemovedTags] = useState([]);
     
@@ -57,8 +55,6 @@ export default function EditTransactionModal ({
     const handleOpen = async () => {
         setOpen(true);
         setSaveError('');
-        setAddedTags([])
-        setRemovedTags([])
         const data = await getTransaction();
 
         if (data && typeof data === "object") {
@@ -79,8 +75,6 @@ export default function EditTransactionModal ({
     const handleClose = () => {
         setFormData(initialFormState);
         setSelectedTransac(null);
-        setAddedTags([])
-        setRemovedTags([])
         setOpen(false);
     };
     const handleChange = (e) => {
@@ -88,13 +82,8 @@ export default function EditTransactionModal ({
         setFormData({ ...formData, [name]: value });
     };
     const handleLog = (e) => {
-        console.log('formData.tags');
-        console.log(formData.tags);
-        console.log('selectedTagIds');
-        console.log(selectedTagIds);
-        console.log('addedTags');
+        console.log(formData);
         console.log(addedTags);
-        console.log('removedTags');
         console.log(removedTags);
     };
     const handleSelectTag = (tagId) => {
@@ -103,6 +92,8 @@ export default function EditTransactionModal ({
     };
     const handleSave = async () => { 
         setIsSaving(true); // Start loading
+        console.log(selectedTransac);
+        console.log(formData);
         try {
             const res = await fetch(BASE_URL + "/transactions/update/" + selectedTransac, {
                 method: "PATCH",
@@ -255,9 +246,7 @@ export default function EditTransactionModal ({
                                         transacData={formData} 
                                         setTransacData={setFormData} 
                                         existingTags={formData.tags} 
-                                        selectedTagIds={selectedTagIds}
-                                        setSelectedTagIds={setSelectedTagIds}
-                                        addedTags={addedTags}
+                                        addedTags={addedTags} 
                                         setAddedTags={setAddedTags}
                                         removedTags={removedTags}
                                         setRemovedTags={setRemovedTags}
