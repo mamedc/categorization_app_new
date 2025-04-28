@@ -1,6 +1,6 @@
 // EditTransactionModal.jsx
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { BASE_URL } from "../../App"
 import { Button, CloseButton, Dialog, Portal, Text, VStack, Stack, Field, Input, Checkbox, Flex, Textarea, HStack, ColorSwatch, Box } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
@@ -101,43 +101,128 @@ export default function EditTransactionModal ({
         const newSel = tagId === selectedTag ? null : tagId;
         setSelectedTag(newSel);
     };
-    const handleSave = async () => { 
-        setIsSaving(true); // Start loading
+
+
+
+    const handleSave = useCallback(async () => {
+            
+        setIsSaving(true);
+        let successMessage = "Changes saved to transaction.";
+    
         try {
-            const res = await fetch(BASE_URL + "/transactions/update/" + selectedTransac, {
+            // --- 1. Update Core Transaction Data ---
+            console.log("Updating transaction data for ID:", selectedTransac);
+            const updateRes = await fetch(BASE_URL + "/transactions/update/" + selectedTransac, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json", },
                 body: JSON.stringify(formData),
             });
-            const data = await res.json();
-            if(!res.ok) { 
-                throw new Error(data.error); 
-            };
+            const updateData = await updateRes.json();
+            if (!updateRes.ok) {
+                throw new Error(updateData.error || updateData.description || `Failed to update transaction (status ${updateRes.status})`);
+            }
+            console.log("Transaction data updated successfully.");
+    
+            // --- 2. Add New Tags (Using IDs) ---
+            if (addedTags && addedTags.length > 0) {
+                console.log("Attempting to add tags with IDs:", addedTags);
+                for (const tagIdToAdd of addedTags) {
+                    // Validate if it's a usable ID (e.g., a number)
+                    if (typeof tagIdToAdd !== 'number' || tagIdToAdd === null || typeof tagIdToAdd === 'undefined') {
+                        console.warn("Skipping invalid tag ID found in addedTags:", tagIdToAdd);
+                        continue;
+                    }
+                    console.log(`Processing add for tag ID: ${tagIdToAdd}`);
+                    const addTagRes = await fetch(`${BASE_URL}/transactions/${selectedTransac}/tags`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", },
+                        // Send the ID directly in the body as required by the API
+                        body: JSON.stringify({ tag_id: tagIdToAdd }),
+                    });
+                    const addTagData = await addTagRes.json();
+                    if (!addTagRes.ok) {
+                        throw new Error(addTagData.error || addTagData.description || `Failed to add tag ID ${tagIdToAdd} (status ${addTagRes.status})`);
+                    }
+                    console.log(`Tag ID ${tagIdToAdd} added successfully.`);
+                }
+                successMessage = "Transaction and tags updated successfully.";
+            }
+    
+            // --- 3. Remove Existing Tags (Using IDs) ---
+            if (removedTags && removedTags.length > 0) {
+                console.log("Attempting to remove tags with IDs:", removedTags);
+                for (const tagIdToRemove of removedTags) {
+                     // Validate if it's a usable ID (e.g., a number)
+                     if (typeof tagIdToRemove !== 'number' || tagIdToRemove === null || typeof tagIdToRemove === 'undefined') {
+                        console.warn("Skipping invalid tag ID found in removedTags:", tagIdToRemove);
+                        continue;
+                    }
+                    console.log(`Processing remove for tag ID: ${tagIdToRemove}`);
+                    // Include the ID directly in the URL as required by the API
+                    const removeTagRes = await fetch(`${BASE_URL}/transactions/${selectedTransac}/tags/${tagIdToRemove}`, {
+                        method: "DELETE",
+                    });
+    
+                    if (!removeTagRes.ok) {
+                         let errorData = {};
+                        try {
+                             errorData = await removeTagRes.json();
+                        } catch(e) { /* Ignore if no body */ }
+                        throw new Error(errorData.error || errorData.description || `Failed to remove tag ID ${tagIdToRemove} (status ${removeTagRes.status})`);
+                    }
+                     console.log(`Tag ID ${tagIdToRemove} removed successfully.`);
+                }
+                 successMessage = "Transaction and tags updated successfully.";
+            }
+    
+            // --- 4. Success Handling ---
             toaster.create({
                 title: "Success!",
-                description: "Changes saved to transaction.",
+                description: successMessage,
                 type: "success",
                 duration: 2000,
                 placement: "top-center",
-            })
-            console.log(formData);
+            });
+            console.log("All operations completed successfully.");
             setSaveError('');
-            handleClose()
-            refreshTransactions((prev) => prev + 1); // This triggers a refresh
+            handleClose();
+            refreshTransactions((prev) => prev + 1);
+            // Consider clearing addedTags/removedTags here or in handleClose
+            // setAddedTags([]);
+            // setRemovedTags([]);
+    
         } catch (error) {
+            // --- 5. Error Handling ---
             toaster.create({
                 title: "An error occurred.",
                 description: error.message,
                 type: "error",
                 duration: 4000,
                 placement: "top-center",
-            })
-            console.error('Error edditing transaction:', error);
+            });
+            console.error('Error saving transaction changes:', error);
+            // setSaveError(error.message);
+    
         } finally {
+            // --- 6. Cleanup ---
             setIsSaving(false);
         }
-    };
+    }, [
+        // Keep all dependencies used inside handleSave
+        addedTags,
+        removedTags,
+        formData,
+        selectedTransac,
+        setIsSaving,
+        setSaveError,
+        handleClose,
+        refreshTransactions,
+        toaster,
+        BASE_URL
+        // Add any others if used
+    ]);
     
+
     return (
         <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
             
