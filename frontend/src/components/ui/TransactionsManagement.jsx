@@ -1,4 +1,6 @@
+// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\ui\TransactionsManagement.jsx
 // src/components/ui/TransactionsManagement.jsx
+// *** CHANGES APPLIED HERE ***
 
 import { useState, useCallback } from "react";
 import { Container, Flex, Button, Spacer, IconButton, Tooltip, Portal } from "@chakra-ui/react";
@@ -9,34 +11,43 @@ import DeleteTransactionModal from "./DeleteTransactionModal";
 import EditTransactionModal from "./EditTransactionModal";
 
 
-export default function TransactionsManagement({ 
-    transactions, 
-    setTransactions, 
-    selectedTransactionId, 
+export default function TransactionsManagement({
+    transactions,
+    setTransactions,
+    selectedTransactionId,
     setSelectedTransactionId }) {
 
     const [sortOrder, setSortOrder] = useState('desc');
     const toggleSortOrder = () => { //  Flips the sorting state between 'asc' and 'desc'
         setSortOrder(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
-        setSelectedTransactionId(null);
+        // Reset selection when sorting changes to avoid confusion
+        // setSelectedTransactionId(null); // Assuming this is handled elsewhere if needed
     };
     const sortIcon = sortOrder === 'desc' ? <LuArrowUp /> : <LuArrowDown />;
     const sortTooltipLabel = sortOrder === 'desc' ? "Sort Descending (Newest First)" : "Sort Ascending (Oldest First)";
 
     return (
+        // Container provides max-width and padding
         <Container maxW="container.lg" pt={6} pb={8}>
-            
-            {/* Actions Bar */}
+
+            {/* Actions Bar - Made Sticky */}
             <Flex
                 direction={{ base: 'column', md: 'row' }}
                 align={{ base: 'start', md: 'center' }}
                 gap={4}
                 wrap="wrap"
                 minH="60px"
-                bg="#bcdbdb"
+                bg="rgba(249, 249, 244, 0.85)" // Use page background to hide content scrolling under
+                backdropFilter="auto"
+                backdropBlur="8px"   
                 mb={6}
                 p={4}
                 borderRadius="md"
+                position="sticky" // <<< Make the actions bar sticky
+                top={0}           // <<< Stick to the top of its scroll container
+                zIndex="sticky"   // <<< Ensure it stays above scrolling content
+                borderBottomWidth="1px" // Optional: Add subtle separator
+                borderColor="gray.200" // Optional: Separator color
             >
                 {/* Sorting Control */}
                 <Tooltip.Root positioning={{ placement: "bottom" }} openDelay={200} closeDelay={100}>
@@ -64,19 +75,10 @@ export default function TransactionsManagement({
                     //setTransactions={setTransactions} // To include the new transaction to "transactions"
                     //selectedTransactionId={selectedTransactionId} // To enable/disable the 'Add' button
                 />
-                
+
                 {/* Edit Button */}
-                {/* <Button
-                    size="sm"
-                    colorPalette="blue"
-                    rounded="sm"
-                    width={20}
-                    disabled={selectedTransactionId === null}
-                >
-                    Edit
-                </Button> */}
                 <EditTransactionModal />
-                
+
                 {/* Delete Button */}
                 <DeleteTransactionModal
                     //selectedTransactionId={selectedTransactionId}
@@ -85,7 +87,7 @@ export default function TransactionsManagement({
                 />
             </Flex>
 
-            {/* Transaction Grid */}
+            {/* Transaction Grid - Will scroll under the sticky Actions Bar */}
             <TransactionGrid
                 //transactions={transactions}
                 //setTransactions={setTransactions}
@@ -93,7 +95,7 @@ export default function TransactionsManagement({
                 //setSelectedTransactionId={setSelectedTransactionId}
                 sortOrder={sortOrder}
             />
-        
-        </Container>        
+
+        </Container>
     );
 };
