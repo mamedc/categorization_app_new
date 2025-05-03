@@ -6,104 +6,83 @@ Please check the error in the attached image.
 # Improve prompt
 
 The prompt below, delimited by by triple quotes, will be submited to a LLM.
-The LLM task will be to add new grouping to the transactions list in the React application.
+The LLM task will be to add a new functionality in the React application.
 Please improve the prompt so I can go on with the component improvement.
 
 """
-# 1. Project Overview
+# 1. Context
 
-I am building a React application with Chakra UI v3 for managing financial transactions. The \
-application interface includes a top navigation bar that allows users to switch between different views.
+I am developing a React application for managing and classifying financial transactions. 
+The project uses **Chakra UI v3** for the interface design.
 
-## 1.1 Navigation Bar Options
+The main layout includes a top **Navigation Bar** that allows users to switch between different views:
+- In the **Transactions** section, users see a list of all transactions along with their associated tags.
+- In the **Tags** section, users see a list of all existing tag groups and their respective tags.
 
-- **Transactions**  
-  Displays a list of existing financial transactions.
-  This view is fully implemented and must remain **unchanged**.
+Both sections feature an **Actions Bar** with options to **Add**, **Edit**, and **Delete** objects \
+according to the current selection in the grid.
 
-- **Tags**  
-  Displays tags that can be associated with transactions.  
-  This view is not implemented yet. It has a temporary UI in the file **'TagsPlaceholder.jsx'**.
-  
----
+# 2. Task
 
-# 2. Objective
+Your task is to add a new view called **Import Transactions** with the specific functionalities below:
 
-Your task is to create the UI and logic related to Tags througout the user will be able to:
+- The new **Import Transactions** will be accessed by the **Navigation Bar** in the same way as **Transactions** \
+and **Tags**. When accessed, the user will start a sequence of four screens that will guide her \
+with the objective of importing new transactions contained in a CSV file. A step indicator must be provided in order \
+to the user be aware of what step she is in.
 
-- Create, edit and delete tag groups - **TagGroup**.
-- Within each existing TagGroup, create, edit and delete tags.
+- Screen 1: will present the user with a button called **Choose file**, where she will be able to select the CSV file \
+to be imported. A **Drag and Drop** area will also be provided as an option to select the CSV file. After the file \
+selection and clicking the "Next" button, the user will be redirected to the next screen.
 
----
+- Screen 2: this screen will be divided in tow sections, "Settings" as a left hand side vertical bar, and \
+"Content Table" showing the CSV file content. Two buttons must be presented: "Next" that will bring the user \
+to the next screen, and "Cancel" to cancel the importing. The name of the imported file must be displayed at the top.
 
-# 3. Database description
+- Screen 2 Settings: the following input fields will be displayed so the user can select how the file will be imported:
+  - "Has header row" option: a toggle button by witch the user will select if the imported file has a header.
+  - "Rows range" option: "First row" and "Last Row" input filds will indicate the range of rows to be imported.
+  - "Date format" option: input field indicating the format of the date column in the CSV file. Should be \
+  filled initialy with the format "dd/mm/yyyy".
+  - "Columns mapping" option: three input fields respectivelly called "Date", "Description" and "Amount", to be \
+  filled by the user with the column of the CSV file where these infos are presented in the CSV file.
 
-In this project, the database structure and behaviour are as follows: 
+- Screen 2 Content Table: a table containing the CSV file data. This table must be dinamically formated as the user \
+updates the options mentioned above in **Screen 2 Settings**. It must have the rows (numbers) and columns (letters) \
+indicators.
 
-## 3.1. Transaction: a financial transaction identified by an unique ID. Each transaction may have multiple tags \
-associated to it (from the same or different TagGroups). As attributes, it has the following fields:
-    - id (PK)
-    - date (Date, not nullable)
-    - amount (Decimal, not nullable)
-    - description (String/Text)
-    - created_at (DateTime, not nullable)
-    - updated_at (DateTime, not nullable)
-    - tags (SQLAlchemy relationship for the many-to-many link, using the association table)
+- Screen 3: in this screen, a table will display only the transactions filtered in **Screen 2**. The table will \
+contain a checkbox for each row to be selected by the user. A "Select All" check box must be also available. The last \
+column of this table will contain a flag indicating if the respective row already exists in the transactions database. \
+By default, all rows that do not exist in the database must be checked. In this screen, the user will be able to \
+click the buttons "Prev", to go back to **Screen 2**, "Next" to go foward to **Screen 4** or "Cancel" to cancel \
+the importing.
 
-## 3.2. Tag: a tag, identified by an ID. Each tag belongs to one TagGroup, and may have multiple transactions \
-associated to it. As attributes, it has the following fields:
-    - id (PK)
-    - name (String, not nullable, unique within a TagGroup)
-    - color (String)
-    - tag_group_id (FK referencing TagGroup.id, not nullable)
-    - tag_group (SQLAlchemy relationship to the parent TagGroup)
-    - transactions (SQLAlchemy relationship for the many-to-many link, using the association table)
+- Screen 4: in this screen, the user will be presented with a table containing the final transactions to be imported. \
+She will be able to click the buttons "Prev", to go back to **Screen 3**, "Import" to go import the displayed \
+transactions and "Cancel" to cancel the importing.
 
-## 3.3. TagGroup: each TagGroupg will have zero to multiple Tags. For example: the tags "Bus Fare", "Gas" \
-and "Tool Fee" would belong to "Transportation" group. Another example is: the tags "Coffee", "Grocery" and \
-"Lunch" would belong to "Food" group. As attributes, TagGroup will have following fields:
-    - id (PK)
-    - name (String, unique, not nullable)
-    - tags (SQLAlchemy relationship back-reference to associated Tags)
+- After selecting "Import" in this last screen, the selected transactions will be recorded in the "Transactions" \
+table in the database .
 
-## 3.4. Transaction/Tag association: this is a relationship between a transaction and a tag. Each \
-transaction may have multiple tags (from the same or different tag groups) associated to it , and each \
-tag may have multiple transactions associated to it.
+# 3. Reference Components
 
-## 3.5. Cascade Behavior: if a Tag is deleted, the corresponding entries in the transaction_tags association table \
-should be deleted. If a TagGroup is deleted, its Tags must also be deleted.
+Use the current implementation of the components (enclosed between triple backticks) as a base:
 
-## 3.6. The database structure and logic are defined in "models.py" and "routes.py", and should not be changed.
-
----
-
-# 4. Code Provided
-
-You will receive the relevant React component files, marked between triple backticks:
 {files_presented}
 
----
+# 4. Chakra UI v3 Documentation
 
-# 5. Chakra UI Reference
+Refer to the official Chakra UI v3 documentation for component usage, styling, and best practices:
 
-Use Chakra UI v3 components and best practices for styling and layout. Refer to the official documentation:
 {docs_presented}
 
----
+# 5. Guidelines
 
-# 5. Implementation Guidelines
+- Use only **Chakra UI v3** components.
+- Preserve the existing structure and behavior of the app.
+- Follow clean code principles: clarity, simplicity, maintainability.
+- Use **4-space indentation**.
+- Avoid introducing third-party libraries or custom CSS; rely solely on Chakra UI capabilities.
 
-- Use **4-space indentation** throughout.
-- You are going to create only the Tags logic. The association between Tags and Transactions will be habdled afterwards.
-- Maintain the **existing logic**—do not change how the current transactions UI works.
-- Ensure the new "Tags" UI is simple and clearly marked as temporary.
-- Follow **clean code** practices: prioritize readability, clarity, and maintainability.
-- Ensure the design remains **visually consistent** with the current Chakra UI layout.
-
----
-
-# 6. Deliverable
-
-Update the code to reflect the new Tags management functionality. You may define new components if necessary, \
-but keep the structure minimal and clean.
 """
