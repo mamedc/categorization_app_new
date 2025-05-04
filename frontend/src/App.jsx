@@ -1,15 +1,11 @@
 // App.jsx
 
-// import { useAtom } from "jotai";
 import { useState } from "react";
 import { Container, Stack } from "@chakra-ui/react";
 import Navbar from "./components/ui/Navbar";
 import TransactionsManagement from "./components/ui/TransactionsManagement";
 import TagsManagement from "./components/ui/TagsManagement";
-// import Counter from "./components/ui/Counter";
-// import UserInfo from "./components/ui/UserInfo";
-// import DoubleCounter from "./components/ui/DoubleCounter";
-// import { counterAtom } from "./context/atoms";
+import ImportTransactions from "./components/import/ImportTransactions";
 
 export const BASE_URL = "http://127.0.0.1:5000/api";
 
@@ -42,13 +38,11 @@ export default function App() {
                     <TagsManagement />
                  </Container>
             )}
-
-            {/* <div>
-                <h1>{ count }</h1>
-                <h1><DoubleCounter /></h1>
-                <Counter />
-                <UserInfo />
-            </div> */}
+            {activeView === 'import' && (
+                 <Container maxW="container.lg" pt={6} pb={8}>
+                    <ImportTransactions />
+                 </Container>
+            )}
         </Stack>
     );
 };

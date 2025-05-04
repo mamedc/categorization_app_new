@@ -38,6 +38,19 @@ export default function Navbar({ activeView, setActiveView }) {
                     >
                         Tags
                     </Text>
+                    {/* Import Transactions Navigation Item */}
+                    <Text
+                        fontSize="md"
+                        fontWeight={activeView === 'import' ? "bold" : "medium"}
+                        color={activeView === 'import' ? "teal.600" : "gray.700"} // Adjusted colors slightly
+                        borderColor={activeView === 'import' ? "teal.500" : "transparent"}
+                        pb={1}
+                        transition="all 0.2s"
+                        _hover={{ color: "teal.600", cursor: "pointer", borderColor: "teal.200" }}
+                        onClick={() => setActiveView('import')}
+                    >
+                        Import
+                    </Text>
                 </Flex>
 
                 <Text fontSize="lg" fontWeight="bold" color="teal.700" display={{ base: "none", md: "block" }}>
