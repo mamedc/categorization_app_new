@@ -1,29 +1,86 @@
 // src/components/import/ImportTransactionsStep2.jsx
 
-import { useState, useEffect, useCallback } from "react";
-import { Container, Flex, Button, Text, Box, FileUpload, useFileUpload, Spacer, Steps, Code, Stack } from "@chakra-ui/react";
-import { HiUpload } from "react-icons/hi"
+import { Stack, Text, Box, Table, Alert, Badge, Code } from "@chakra-ui/react";
 
-
+// Simple component to display a preview of the data
 export default function ImportTransactionsStep2({
     items,
     step,
-    validFile,
-    acceptedFileNames
+    parsedData,   // Receive parsed data array
+    csvHeaders,   // Receive array of headers
+    fileName      // Receive original file name
 }) {
-    
+
+    const MAX_PREVIEW_ROWS = 10; // Limit how many rows to show in preview
+
     return (
-        <Stack direction="column" spacing={4}>
-            <Text fontSize="lg" fontWeight="semibold" textAlign="center">{items[step].title}: {items[step].description}</Text>
-            
-            <Stack spacing={4} p={4} borderWidth="1px" borderRadius="md" borderColor="gray.200">
-                
-                {/* Add Step 2 components here (e.g., column mapping) */}
-                <Text>Content for Step 2 goes here.</Text>
-                
-                {/* Example: Display uploaded file name */}
-                {validFile && acceptedFileNames && <Text>Mapping columns for: {acceptedFileNames}</Text>}
-            </Stack>
+        <Stack direction="column" spacing={6}>
+            <Text fontSize="lg" fontWeight="semibold" textAlign="center">
+                {items[step].title}: {items[step].description}
+            </Text>
+
+            {fileName && (
+                 <Text fontSize="sm" color="gray.600" textAlign="center">
+                     File: <Code>{fileName}</Code>
+                 </Text>
+            )}
+
+            {/* Data Preview Section */}
+            <Box borderWidth="1px" borderRadius="md" p={4} bg="white">
+                <Text fontSize="md" fontWeight="medium" mb={4}>Data Preview & Column Mapping</Text>
+
+                {(!parsedData || parsedData.length === 0) ? (
+                    <Alert.Root status="error" title="This is the alert title">
+                        <Alert.Content>
+                            <Alert.Title>QWERT</Alert.Title>
+                            <Alert.Description>No data available to display. Please go back and upload a valid CSV file.</Alert.Description>
+                        </Alert.Content>
+                        <CloseButton pos="relative" top="-2" insetEnd="-2" onClick={() => setParsingError(null)} />
+                    </Alert.Root>
+                ) : (
+                    <>
+                        {/* TODO: Add Column Mapping UI here */}
+                        <Text mb={4} fontSize="sm" color="gray.700">
+                            Found <Badge colorScheme="green">{csvHeaders.length}</Badge> columns
+                            and <Badge colorScheme="blue">{parsedData.length}</Badge> data rows.
+                            Showing preview of the first {Math.min(parsedData.length, MAX_PREVIEW_ROWS)} rows.
+                        </Text>
+
+                        {/* Simple Table Preview */}
+                        
+
+
+                        <Table.Root size={"sm"} overflowX="auto" variant={"line"}>
+                            <Table.Header bg="gray.50">
+                                <Table.Row>
+                                    {csvHeaders.map((header) => (
+                                        <Table.ColumnHeader key={header}>{header}</Table.ColumnHeader>
+                                    ))}
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                                {parsedData.slice(0, MAX_PREVIEW_ROWS).map((row, rowIndex) => (
+                                    <Table.Row key={`row-${rowIndex}`}>
+                                        {csvHeaders.map((header) => (
+                                            <Table.Cell key={`${header}-${rowIndex}`}>
+                                                {row[header] !== undefined && row[header] !== null ? String(row[header]) : ''}
+                                            </Table.Cell>
+                                        ))}
+                                    </Table.Row>
+                                ))}
+                            </Table.Body>
+                        </Table.Root>
+
+
+
+                        {parsedData.length > MAX_PREVIEW_ROWS && (
+                            <Text mt={2} fontSize="xs" color="gray.500">
+                                ... and {parsedData.length - MAX_PREVIEW_ROWS} more rows not shown in preview.
+                            </Text>
+                        )}
+                    </>
+                )}
+            </Box>
         </Stack>
     );
-};
+}

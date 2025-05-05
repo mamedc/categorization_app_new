@@ -1,95 +1,142 @@
 // src/components/import/ImportTransactions.jsx
 
 import { useState, useEffect, useCallback } from "react";
-import Papa from 'papaparse';
-import { Container, Flex, Button, Text, Box, useFileUpload, Spacer, Steps, Code, Stack } from "@chakra-ui/react";
-import { HiUpload } from "react-icons/hi"
+import {
+    Container, Flex, Button, Text, Box, Spacer, Steps, Code, Stack,
+    useFileUpload, Alert, CloseButton
+} from "@chakra-ui/react";
+// Removed FileUpload from here as it's used in Step1
+import { HiUpload } from "react-icons/hi";
+import Papa from 'papaparse'; // Import PapaParse
+
 import ImportTransactionsStep1 from "./ImportTransactionsStep1";
 import ImportTransactionsStep2 from "./ImportTransactionsStep2";
-import ImportTransactionsStep3 from "./ImportTransactionsStep3";
+import ImportTransactionsStep3 from "./ImportTransactionsStep3"; // Assuming you have this
 
 const items = [
-  {title: "Step 1", description: "Upload File"},
-  {title: "Step 2", description: "Map Columns"},
-  {title: "Step 3", description: "Review & Import"},
-]
-
+    { title: "Step 1", description: "Upload File" },
+    { title: "Step 2", description: "Map Columns & Preview" }, // Updated description
+    { title: "Step 3", description: "Review & Import" },
+];
 
 export default function ImportTransactions({ }) {
     const [step, setStep] = useState(0);
+    // validFile now means "parsed successfully" or "ready to parse"
     const [validFile, setValidFile] = useState(false);
+    const [parsedData, setParsedData] = useState([]); // State for parsed rows
+    const [csvHeaders, setCsvHeaders] = useState([]); // State for CSV headers
+    const [parsingError, setParsingError] = useState(null); // State for parsing errors
+    const [isLoading, setIsLoading] = useState(false); // State for loading during parse
 
     const isFirstStep = step === 0;
     const isLastStep = step === items.length - 1;
 
     const fileUpload = useFileUpload({
-        accept: ".csv",
+        accept: ".csv, text/csv", // Be more specific with accept types
         maxFiles: 1,
-        maxFileSize: 5242880, // Uncomment if needed
+        // maxFileSize: 5242880, // Uncomment if needed
+        onFileChange: (details) => {
+            // Reset state when file selection changes *before* validation/parsing
+            console.log("File selection changed:", details.acceptedFiles);
+            setValidFile(false);
+            setParsedData([]);
+            setCsvHeaders([]);
+            setParsingError(null);
+            // If a file is selected (even if later rejected by type), trigger parsing attempt
+            if (details.acceptedFiles.length > 0) {
+                handleParseFile(details.acceptedFiles[0]);
+            }
+            // Handle rejection (optional: show different message)
+            if (details.rejectedFiles.length > 0) {
+                 setParsingError(`File rejected: ${details.rejectedFiles[0].file.name}. Ensure it's a CSV and within size limits.`);
+            }
+        },
     });
 
-    // Use useCallback for functions passed to useEffect dependencies if they don't change often
-    const handleFileChange = useCallback((files) => {
-        const file = files[0];
-
-        // Check specifically for the 'text/csv' MIME type or '.csv' extension
-        if (file && (file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv'))) {
-            console.log('Valid CSV file:', file.name);
-            setValidFile(true);
-            // Optional: Store file info if needed later
-            // setFileInfo({ name: file.name, size: file.size });
-        } else {
-            console.warn('Invalid file type. Please upload a CSV file.');
-            // Reset if an invalid file is selected after a valid one
+    // Use useCallback for the parsing function
+    const handleParseFile = useCallback((file) => {
+        if (!file) {
             setValidFile(false);
-            // Clear the invalid file from the upload hook if desired
-            // fileUpload.removeFile(file); // Might need adjustment based on hook version
-            alert('Invalid file type. Please upload a CSV file.'); // User feedback
+            setParsedData([]);
+            setCsvHeaders([]);
+            setParsingError(null);
+            return;
         }
-    }, []); // Empty dependency array as handleFileChange itself doesn't depend on component state/props
 
-
-    useEffect(() => {
-        if (fileUpload.acceptedFiles.length > 0) {
-            handleFileChange(fileUpload.acceptedFiles);
-        } else {
-            // If all files are removed, reset validFile state
+        // Double-check type (although useFileUpload should handle 'accept')
+        const isValidType = file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv');
+        if (!isValidType) {
+            setParsingError('Invalid file type. Please upload a CSV file.');
             setValidFile(false);
+            setParsedData([]);
+            setCsvHeaders([]);
+             // Optionally remove the invalid file from the hook's state
+             // fileUpload.removeFile(file); // Check Ark UI docs for exact method if needed
+            return;
         }
-        // fileUpload.acceptedFiles changes, so it's the correct dependency
-        // handleFileChange is stable due to useCallback
-    }, [fileUpload.acceptedFiles, handleFileChange]);
+
+        setIsLoading(true); // Start loading indicator
+        setParsingError(null); // Clear previous errors
+
+        Papa.parse(file, {
+            header: true, // Treat first row as headers
+            skipEmptyLines: true,
+            complete: (results) => {
+                console.log("Parsing complete:", results);
+                setIsLoading(false); // Stop loading
+
+                if (results.errors.length > 0) {
+                    console.error("Parsing errors:", results.errors);
+                    setParsingError(`Error parsing CSV: ${results.errors[0].message}`);
+                    setValidFile(false);
+                    setParsedData([]);
+                    setCsvHeaders([]);
+                } else if (!results.data || results.data.length === 0) {
+                    setParsingError("CSV file is empty or contains only headers.");
+                    setValidFile(false);
+                    setParsedData([]);
+                    setCsvHeaders([]);
+                } else {
+                    // Successfully parsed!
+                    setParsedData(results.data);
+                    setCsvHeaders(results.meta.fields || Object.keys(results.data[0]) || []); // Get headers reliably
+                    setValidFile(true); // File is valid and parsed
+                    setParsingError(null); // Clear any previous error
+                }
+            },
+            error: (error) => {
+                console.error("Fatal parsing error:", error);
+                setIsLoading(false); // Stop loading
+                setParsingError(`Fatal error reading file: ${error.message}`);
+                setValidFile(false);
+                setParsedData([]);
+                setCsvHeaders([]);
+            },
+        });
+    }, []); // No external dependencies needed for the core logic
+
+
+    // We don't need the separate useEffect anymore if using onFileChange
+    // useEffect(() => { ... }, [fileUpload.acceptedFiles, handleParseFile]);
 
 
     const nextStep = () => {
-        // Prevent going beyond the last step
         if (!isLastStep) {
             setStep((prevStep) => prevStep + 1);
         }
     };
 
     const prevStep = () => {
-        // Prevent going before the first step
         if (!isFirstStep) {
-             setStep((prevStep) => prevStep - 1);
+            setStep((prevStep) => prevStep - 1);
         }
     };
 
-    // Simplify getting file names
-    const acceptedFileNames = fileUpload.acceptedFiles.map((file) => file.name).join(", ");
-    const rejectedFileNames = fileUpload.rejectedFiles.map((e) => e.file.name).join(", ");
-
-
     return (
         <Container maxW="container.lg" pt={6} pb={8}>
-
-            {/* Actions Bar */}
+            {/* Actions Bar - (Keep as is, but update button logic) */}
             <Flex
-                direction="row"
-                align="center"
-                justify="space-between"
-                gap={4}
-                wrap="wrap"
+                /* ... existing styles ... */
                 minH="60px"
                 bg="rgba(249, 249, 244, 0.85)"
                 backdropFilter="auto"
@@ -103,15 +150,14 @@ export default function ImportTransactions({ }) {
                 borderBottomWidth="1px"
                 borderColor="gray.200"
             >
-                {/* Steps */}
                 <Steps.Root
                     step={step}
                     count={items.length}
-                    width={{ base: "50%", md: "50%" }} // Responsive width
-                    mb={{ base: 4, md: 0 }} // Margin bottom on small screens
+                    width={{ base: "100%", md: "50%" }} // Adjust width
+                    mb={{ base: 4, md: 0 }}
                 >
-                    <Steps.List>
-                        {items.map((item, index) => ( // Use 'item' instead of 'step' to avoid naming conflict
+                     <Steps.List>
+                        {items.map((item, index) => (
                             <Steps.Item key={index} index={index} title={item.title}>
                                 <Steps.Indicator />
                                 <Steps.Separator />
@@ -120,71 +166,81 @@ export default function ImportTransactions({ }) {
                     </Steps.List>
                 </Steps.Root>
 
-                <Spacer display={{ base: "none", md: "block" }} /> {/* Hide spacer on small screens if steps take full width */}
+                <Spacer display={{ base: "none", md: "block" }} />
 
-                {/* Group buttons */}
-                <Flex gap={2}> 
+                <Flex gap={2} width={{ base: "100%", md: "auto"}} justifyContent={{ base: "space-between", md: "flex-end"}}> {/* Adjust spacing */}
                     <Button
                         size="sm"
-                        colorPalette="cyan" // Note: colorPalette is not a standard prop, use colorScheme="cyan"
-                        colorScheme="gray" // Use gray for prev/cancel actions
-                        variant="subtle"
+                        colorScheme="gray"
+                        variant="outline" // Changed variant for contrast
                         rounded="sm"
-                        width={20}
+                        minW="80px" // Ensure minimum width
                         onClick={prevStep}
-                        disabled={isFirstStep} // Use derived state
+                        disabled={isFirstStep || isLoading} // Disable while parsing
                     >
                         Prev
                     </Button>
                     <Button
                         size="sm"
-                        colorScheme="cyan" // Use colorScheme
+                        colorScheme="cyan"
+                        variant="solid" // Changed variant for primary action
                         rounded="sm"
-                        width={20}
+                        minW="80px" // Ensure minimum width
                         onClick={nextStep}
-                        disabled={isLastStep || (isFirstStep && !validFile)} // Disable if last step OR (first step AND file not valid)
+                        // Disable if: last step OR (first step AND file not valid/parsed) OR currently parsing
+                        disabled={isLastStep || (isFirstStep && !validFile) || isLoading}
+                        isLoading={isLoading && isFirstStep} // Show loading spinner on Next button only during parse on step 1
+                        loadingText="Parsing"
                     >
                         Next
                     </Button>
                 </Flex>
-
             </Flex>
+
+            {/* Display Parsing Errors */}
+            {parsingError && (
+                <Alert.Root status="error" title="This is the alert title">
+                    <Alert.Content>
+                        <Alert.Title>{parsingError}</Alert.Title>
+                        <Alert.Description>{parsingError}</Alert.Description>
+                    </Alert.Content>
+                    <CloseButton pos="relative" top="-2" insetEnd="-2" onClick={() => setParsingError(null)} />
+                </Alert.Root>
+            )}
 
             {/* Content Area */}
             <Box>
-                
-                {/* Step 1 Content */}
                 {step === 0 && (
-                    <ImportTransactionsStep1 
+                    <ImportTransactionsStep1
                         items={items}
                         step={step}
-                        fileUpload={fileUpload}
-                    />
-                )}
-                
-                {/* Step 2 Content */}
-                {step === 1 && (
-                    <ImportTransactionsStep2 
-                        items={items}
-                        step={step}
-                        validFile={validFile}
-                        acceptedFileNames={acceptedFileNames}
+                        fileUpload={fileUpload} // Pass the hook instance
+                        isLoading={isLoading} // Pass loading state if needed in Step 1 UI
                     />
                 )}
 
-                {/* Step 3 Content */}
-                {step === 2 && (
-                    <ImportTransactionsStep2 
+                {step === 1 && (
+                    <ImportTransactionsStep2
                         items={items}
                         step={step}
-                        validFile={validFile}
-                        acceptedFileNames={acceptedFileNames}
+                        // Pass the necessary parsed data and headers
+                        parsedData={parsedData}
+                        csvHeaders={csvHeaders}
+                        // Pass original file info if needed for display
+                        fileName={fileUpload.acceptedFiles[0]?.name}
+                    />
+                )}
+
+                {step === 2 && (
+                     // Pass data needed for the final review/import step
+                    <ImportTransactionsStep3
+                        items={items}
+                        step={step}
+                        parsedData={parsedData}
+                        csvHeaders={csvHeaders}
                     />
                 )}
             </Box>
-
-            {/* Removed TransactionGrid placeholder */}
-
         </Container>
     );
-};
+}
