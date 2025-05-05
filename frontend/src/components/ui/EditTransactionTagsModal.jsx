@@ -281,7 +281,7 @@ export default function EditTransactionTagsModal ({
                                                                         checked={isChecked}
                                                                         // Update selection state when checkbox changes
                                                                         onCheckedChange={(e) => handleTagSelectionChange(tag.id, e.checked)}
-                                                                        aria-label={`Select tag ${tag.name}`}
+                                                                        //aria-label={`Select tag ${tag.name}`}
                                                                         aria-label={`Select tag ${tag.name ?? 'Unnamed Tag'}`} // Defensive fallback
                                                                         disabled={isSaving} // Disable during save
                                                                     >
