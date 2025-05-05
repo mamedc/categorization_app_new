@@ -10,34 +10,31 @@ export default function ImportTransactionsStep1({
     step,
     fileUpload
 }) {
-    
     return (
-        <Stack direction="row" spacing={4}>
-            <Stack spacing={4} p={4} borderWidth="1px" borderRadius="md" bg="white" borderColor="gray.200">
-
-                <Text fontSize="lg" fontWeight="semibold">{items[step].title}: {items[step].description}</Text>
+        <Stack direction="column" spacing={4}>
+            <Text fontSize="lg" fontWeight="semibold" textAlign="center">{items[step].title}: {items[step].description}</Text>
+            
+            <Stack direction="row" spacing={4}>
                 
-                <FileUpload.RootProvider value={fileUpload}>
-                    <FileUpload.HiddenInput />
-                    <Flex direction="column" gap={3} align="start">
-                        <FileUpload.Trigger asChild>
-                            <Button variant="solid" colorScheme="cyan" size="sm">
-                                <HiUpload style={{ marginRight: '8px' }}/> Select CSV File
-                            </Button>
-                        </FileUpload.Trigger>
-
-                        {/* {acceptedFileNames && (
-                            <Text fontSize="sm" color="green.600">Accepted: {acceptedFileNames}</Text>
-                        )}
-                        {rejectedFileNames && (
-                            <Text fontSize="sm" color="red.600">Rejected: {rejectedFileNames}</Text>
-                        )} */}
-                        <FileUpload.List width="100%"/>
-                    </Flex>
-                </FileUpload.RootProvider>
+                {/* File selection */}
+                <Stack spacing={4} p={4} borderWidth="1px" borderRadius="md" bg="white" borderColor="gray.200">
+                    <FileUpload.RootProvider value={fileUpload}>
+                        <FileUpload.HiddenInput />
+                        <Flex direction="column" gap={3} align="start">
+                            <FileUpload.Trigger asChild>
+                                <Button variant="solid" colorScheme="cyan" size="sm">
+                                    <HiUpload style={{ marginRight: '8px' }}/> Select CSV File
+                                </Button>
+                            </FileUpload.Trigger>
+                            <FileUpload.List width="100%"/>
+                        </Flex>
+                    </FileUpload.RootProvider>
+                </Stack>
                 
+                {/* Box Imports placeholder */}
+                <Box bg="gray" width="100%"><Text>IMPORTS ANTERIORES</Text></Box>
+            
             </Stack>
-            <Box bg="gray" width="100%"><Text>IMPORTS ANTERIORES</Text></Box>
         </Stack>
     );
 };

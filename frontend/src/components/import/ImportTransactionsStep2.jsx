@@ -13,14 +13,17 @@ export default function ImportTransactionsStep2({
 }) {
     
     return (
-        <Stack spacing={4} p={4} borderWidth="1px" borderRadius="md" borderColor="gray.200">
-            <Text fontSize="lg" fontWeight="semibold">{items[step].title}: {items[step].description}</Text>
+        <Stack direction="column" spacing={4}>
+            <Text fontSize="lg" fontWeight="semibold" textAlign="center">{items[step].title}: {items[step].description}</Text>
             
-            {/* Add Step 2 components here (e.g., column mapping) */}
-            <Text>Content for Step 2 goes here.</Text>
-            
-            {/* Example: Display uploaded file name */}
-            {validFile && acceptedFileNames && <Text>Mapping columns for: {acceptedFileNames}</Text>}
+            <Stack spacing={4} p={4} borderWidth="1px" borderRadius="md" borderColor="gray.200">
+                
+                {/* Add Step 2 components here (e.g., column mapping) */}
+                <Text>Content for Step 2 goes here.</Text>
+                
+                {/* Example: Display uploaded file name */}
+                {validFile && acceptedFileNames && <Text>Mapping columns for: {acceptedFileNames}</Text>}
+            </Stack>
         </Stack>
     );
 };

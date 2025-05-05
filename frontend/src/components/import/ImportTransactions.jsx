@@ -1,29 +1,21 @@
 // src/components/import/ImportTransactions.jsx
 
 import { useState, useEffect, useCallback } from "react";
-import { Container, Flex, Button, Text, Box, FileUpload, useFileUpload, Spacer, Steps, Code, Stack } from "@chakra-ui/react";
+import Papa from 'papaparse';
+import { Container, Flex, Button, Text, Box, useFileUpload, Spacer, Steps, Code, Stack } from "@chakra-ui/react";
 import { HiUpload } from "react-icons/hi"
 import ImportTransactionsStep1 from "./ImportTransactionsStep1";
 import ImportTransactionsStep2 from "./ImportTransactionsStep2";
+import ImportTransactionsStep3 from "./ImportTransactionsStep3";
 
 const items = [
-  {
-    title: "Step 1",
-    description: "Upload File", // Added more descriptive description
-  },
-  {
-    title: "Step 2",
-    description: "Map Columns", // Added more descriptive description
-  },
-  {
-    title: "Step 3",
-    description: "Review & Import", // Added more descriptive description
-  },
+  {title: "Step 1", description: "Upload File"},
+  {title: "Step 2", description: "Map Columns"},
+  {title: "Step 3", description: "Review & Import"},
 ]
 
 
-export default function ImportTransactions({
-}) {
+export default function ImportTransactions({ }) {
     const [step, setStep] = useState(0);
     const [validFile, setValidFile] = useState(false);
 
@@ -111,8 +103,7 @@ export default function ImportTransactions({
                 borderBottomWidth="1px"
                 borderColor="gray.200"
             >
-                {/* Use Chakra's useSteps hook for managing Steps state if preferred,
-                    but manual state works fine too as implemented here. */}
+                {/* Steps */}
                 <Steps.Root
                     step={step}
                     count={items.length}
@@ -131,7 +122,8 @@ export default function ImportTransactions({
 
                 <Spacer display={{ base: "none", md: "block" }} /> {/* Hide spacer on small screens if steps take full width */}
 
-                <Flex gap={2}> {/* Group buttons */}
+                {/* Group buttons */}
+                <Flex gap={2}> 
                     <Button
                         size="sm"
                         colorPalette="cyan" // Note: colorPalette is not a standard prop, use colorScheme="cyan"
@@ -160,12 +152,7 @@ export default function ImportTransactions({
 
             {/* Content Area */}
             <Box>
-                {/* Debug Info */}
-                {/* <Code>current step index: {step}</Code> <br/>
-                <Code>isFirstStep: {isFirstStep.toString()}</Code> <br/>
-                <Code>isLastStep: {isLastStep.toString()}</Code> <br/>
-                <Code>validFile: {validFile.toString()}</Code> */}
-
+                
                 {/* Step 1 Content */}
                 {step === 0 && (
                     <ImportTransactionsStep1 
@@ -187,13 +174,12 @@ export default function ImportTransactions({
 
                 {/* Step 3 Content */}
                 {step === 2 && (
-                     <Stack spacing={4} p={4} borderWidth="1px" borderRadius="md" borderColor="gray.200">
-                         <Text fontSize="lg" fontWeight="semibold">{items[step].title}: {items[step].description}</Text>
-                        {/* Add Step 3 components here (e.g., review grid, import button) */}
-                        <Text>Content for Step 3 goes here.</Text>
-                         {validFile && acceptedFileNames && <Text>Ready to import: {acceptedFileNames}</Text>}
-                         {/* You might have a final "Import" button here instead of using the "Next" button */}
-                    </Stack>
+                    <ImportTransactionsStep2 
+                        items={items}
+                        step={step}
+                        validFile={validFile}
+                        acceptedFileNames={acceptedFileNames}
+                    />
                 )}
             </Box>
 
