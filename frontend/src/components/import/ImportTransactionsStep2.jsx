@@ -2,11 +2,27 @@
 import {
     Stack, Text, Box, Table, Alert, Badge, Code, Field, VStack, HStack, Input,
 } from "@chakra-ui/react";
-import { useState, useEffect, useMemo } from "react"; // Added useEffect and useMemo
+import { useState, useEffect, useMemo } from "react";
 
-// Helper function remains the same
+// Helper function to get column letter (A, B, C...)
 const getColumnLetter = (index) => {
     return String.fromCharCode(65 + index);
+};
+
+// Helper function to get 0-based column index from letter
+const getColumnIndex = (letter) => {
+    if (typeof letter !== 'string' || letter.trim().length === 0) {
+        return -1; // Invalid input (empty or not a string)
+    }
+    const normalizedLetter = letter.trim().toUpperCase();
+    if (normalizedLetter.length !== 1) { // Must be a single character after trim
+      return -1;
+    }
+    const charCode = normalizedLetter.charCodeAt(0);
+    if (charCode >= 65 && charCode <= 90) { // 'A' to 'Z'
+        return charCode - 65;
+    }
+    return -1; // Not a valid letter A-Z
 };
 
 export default function ImportTransactionsStep2({
@@ -21,27 +37,43 @@ export default function ImportTransactionsStep2({
 
     const dataToDisplay = useMemo(() => {
         return Array.isArray(parsedData) ? parsedData.slice(0, MAX_PREVIEW_ROWS) : [];
-    }, [parsedData]); // MAX_PREVIEW_ROWS is const, so not strictly needed in deps
+    }, [parsedData]);
 
     const numDisplayableRows = useMemo(() => {
         return dataToDisplay.length > 0 ? dataToDisplay.length : 1;
     }, [dataToDisplay]);
 
     const [firstRow, setFirstRow] = useState(1);
-    // Initialize lastRow based on the actual number of rows that will be displayed.
-    // useState initializer runs only once. useEffect below will sync if numDisplayableRows changes later.
     const [lastRow, setLastRow] = useState(() => {
         const initialData = Array.isArray(parsedData) ? parsedData.slice(0, MAX_PREVIEW_ROWS) : [];
         return initialData.length > 0 ? initialData.length : 1;
     });
 
-    // Effect to synchronize firstRow/lastRow if numDisplayableRows changes
+    // State for column selections
+    const [dateColumnLetter, setDateColumnLetter] = useState("A");
+    const [descriptionColumnLetter, setDescriptionColumnLetter] = useState("C");
+    const [amountColumnLetter, setAmountColumnLetter] = useState("E");
+
+    // Memoize selected column indices
+    const selectedColumnIndices = useMemo(() => {
+        const indices = new Set();
+        const dateIdx = getColumnIndex(dateColumnLetter);
+        const descrIdx = getColumnIndex(descriptionColumnLetter);
+        const amountIdx = getColumnIndex(amountColumnLetter);
+
+        if (dateIdx !== -1) indices.add(dateIdx);
+        if (descrIdx !== -1) indices.add(descrIdx);
+        if (amountIdx !== -1) indices.add(amountIdx);
+        
+        return indices;
+    }, [dateColumnLetter, descriptionColumnLetter, amountColumnLetter]);
+
     useEffect(() => {
         setFirstRow(currentFirst => {
             const newFirst = Math.max(1, Math.min(currentFirst, numDisplayableRows));
             setLastRow(currentLast => {
                 let newLast = Math.max(1, Math.min(currentLast, numDisplayableRows));
-                if (newFirst > newLast) { // Ensure lastRow is not less than the newFirst
+                if (newFirst > newLast) {
                     newLast = newFirst;
                 }
                 return newLast;
@@ -50,54 +82,57 @@ export default function ImportTransactionsStep2({
         });
     }, [numDisplayableRows]);
 
-    const handleCloseAlert = () => {
-        console.log("Close alert clicked");
-    };
+    // const handleCloseAlert = () => { // This function was present but not used
+    //     console.log("Close alert clicked");
+    // };
 
     const headers = Array.isArray(csvHeaders) ? csvHeaders : [];
-    
+    // const numColumns = headers.length; // Available if needed for validation
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         
         let numValue;
-        if (value !== "") { // Parse only if not empty to distinguish from 0
+        if (value !== "") {
             numValue = parseInt(value, 10);
         }
 
         if (name === "first_row") {
-            if (value === "") { // If input is cleared
+            if (value === "") {
                 setFirstRow(1);
-                // If lastRow was < 1 (not possible with current clamping), it would need adjustment.
-                // No need for setLastRow here as the general (newFirst > lastRow) rule handles it.
                 return;
             }
             if (!isNaN(numValue)) {
                 let newFirst = Math.max(1, numValue);
                 newFirst = Math.min(newFirst, numDisplayableRows);
                 setFirstRow(newFirst);
-                if (newFirst > lastRow) { // Use current state of lastRow for comparison
+                if (newFirst > lastRow) {
                     setLastRow(newFirst);
                 }
             }
         } else if (name === "last_row") {
-            if (value === "") { // If input is cleared
+            if (value === "") {
                 setLastRow(numDisplayableRows);
-                // If firstRow was > numDisplayableRows, it needs adjustment.
-                // No need for setFirstRow here as general (newLast < firstRow) rule handles it.
                 return;
             }
             if (!isNaN(numValue)) {
                 let newLast = Math.min(numValue, numDisplayableRows);
                 newLast = Math.max(1, newLast);
                 setLastRow(newLast);
-                if (newLast < firstRow) { // Use current state of firstRow for comparison
+                if (newLast < firstRow) {
                     setFirstRow(newLast);
                 }
             }
-        } else {
-            // Handle other form fields (date_format, date_column, etc.)
-            // console.log(`Unhandled field: ${name}, value: ${value}`);
+        } else if (name === "date_column") {
+            setDateColumnLetter(value.toUpperCase());
+        } else if (name === "descr_column") {
+            setDescriptionColumnLetter(value.toUpperCase());
+        } else if (name === "amount_column") {
+            setAmountColumnLetter(value.toUpperCase());
         }
+        // else if (name === "date_format") {
+        //     // Handle date_format if it becomes controlled state
+        // }
     };
 
     return (
@@ -120,16 +155,16 @@ export default function ImportTransactionsStep2({
             <Stack direction="row" spacing={6} height="570px">
 
                 {/* Import setup */}
-                <Box borderWidth="1px" borderRadius="md" p={4} bg="white">
+                <Box borderWidth="1px" borderRadius="md" p={4} bg="white" minWidth="250px"> {/* Added minWidth for better layout */}
                     <VStack gap="10" width="full">
                         {/* Rows range */}
                         <VStack gap="2" width="full" alignItems="left">
                             <Text fontSize="sm" color="black" fontWeight="semibold">Rows range (for preview):</Text>
-                            <Field.Root required>
+                            <Field.Root>
                                 <Field.Label>First row</Field.Label>
                                 <Input 
                                     placeholder="1"
-                                    value={firstRow} // Controlled component
+                                    value={firstRow}
                                     name="first_row"
                                     type="number"
                                     variant="outline" 
@@ -137,11 +172,11 @@ export default function ImportTransactionsStep2({
                                     size="sm"
                                 />
                             </Field.Root>
-                            <Field.Root required>
+                            <Field.Root>
                                 <Field.Label>Last row</Field.Label>
                                 <Input 
                                     placeholder={numDisplayableRows.toString()} 
-                                    value={lastRow} // Controlled component
+                                    value={lastRow}
                                     name="last_row" 
                                     type="number"
                                     variant="outline" 
@@ -152,14 +187,14 @@ export default function ImportTransactionsStep2({
                         </VStack>
 
                         {/* Date format */}
-                        <Field.Root required>
+                        <Field.Root>
                             <Field.Label>Date format:</Field.Label>
                             <Input
                                 placeholder="DD/MM/YYYY"
-                                defaultValue={"DD/MM/YYYY"} // Using defaultValue if not fully controlled
+                                defaultValue={"DD/MM/YYYY"}
                                 name="date_format"
                                 type="string"
-                                onChange={handleChange} // Add to generic handleChange or make specific
+                                onChange={handleChange}
                                 size="sm"
                             />
                         </Field.Root> 
@@ -167,37 +202,43 @@ export default function ImportTransactionsStep2({
                         {/* Columns mapping */}
                         <VStack gap="2" width="full" alignItems="left">
                             <Text fontSize="sm" color="black" fontWeight="semibold">Columns mapping:</Text>
-                            <Field.Root required>
+                            <Field.Root>
                                 <Field.Label>Date</Field.Label>
                                 <Input 
-                                    defaultValue={"A"}
+                                    value={dateColumnLetter}
                                     name="date_column"
                                     type="string"
                                     variant="outline" 
                                     onChange={handleChange}
                                     size="sm"
+                                    maxLength={1} // Basic UX for single letter column
+                                    placeholder="A"
                                 />
                             </Field.Root>
-                            <Field.Root required>
+                            <Field.Root>
                                 <Field.Label>Description</Field.Label>
                                 <Input 
-                                    defaultValue={"C"}
+                                    value={descriptionColumnLetter}
                                     name="descr_column" 
                                     type="string"
                                     variant="outline" 
                                     onChange={handleChange}
                                     size="sm"
+                                    maxLength={1}
+                                    placeholder="C"
                                 />
                             </Field.Root>
-                            <Field.Root required>
+                            <Field.Root>
                                 <Field.Label>Amount</Field.Label>
                                 <Input 
-                                    defaultValue={"E"}
+                                    value={amountColumnLetter}
                                     name="amount_column" 
                                     type="string"
                                     variant="outline" 
                                     onChange={handleChange}
                                     size="sm"
+                                    maxLength={1}
+                                    placeholder="E"
                                 />
                             </Field.Root>
                         </VStack>
@@ -205,115 +246,128 @@ export default function ImportTransactionsStep2({
                 </Box>
             
                 {/* Data Preview Section */}
-                {/* <Box borderWidth="1px" borderRadius="md" p={4} bg="white" flex="1" minWidth="0"> */}
-                    {(!dataToDisplay || dataToDisplay.length === 0) ? (
-                        <Alert status="warning" borderRadius="md">
-                        No data found in the file or parsing failed.
-                        </Alert>
-                    ) : (
-                        <>
-                            {/* Table Preview */}
-                            <Table.ScrollArea borderWidth="1px" rounded="md" height="570px">
-                                <Table.Root
-                                    size={"sm"}
-                                    variant={"line"}
-                                    __css={{ tableLayout: 'fixed', width: '100%' }}
-                                    stickyHeader
-                                >
-                                    <Table.Header>
-                                        <Table.Row bg="gray.200">
-                                            <Table.ColumnHeader
-                                                key="corner-letter"
-                                                width="60px" // Adjusted width for potentially larger row numbers
-                                                minWidth="60px"
-                                                textAlign="center" fontWeight="medium" color="gray.600"
-                                                borderBottomWidth="1px" borderColor="inherit" fontSize="xs"
-                                            >
-                                            </Table.ColumnHeader>
-                                            {headers.map((_, index) => (
+                {(!dataToDisplay || dataToDisplay.length === 0) ? (
+                    <Alert status="warning" borderRadius="md" flex="1"> {/* Added flex=1 for alert to take space */}
+                    No data found in the file or parsing failed.
+                    </Alert>
+                ) : (
+                    <Box flex="1" minWidth="0"> {/* Wrapper Box for Table Scroll Area */}
+                        <Table.ScrollArea borderWidth="1px" rounded="md" height="570px">
+                            <Table.Root
+                                size={"sm"}
+                                variant={"line"}
+                                __css={{ tableLayout: 'fixed', width: '100%' }}
+                                stickyHeader
+                            >
+                                <Table.Header>
+                                    <Table.Row bg="gray.200">
+                                        <Table.ColumnHeader
+                                            key="corner-letter"
+                                            width="60px"
+                                            minWidth="60px"
+                                            textAlign="center" fontWeight="medium" color="gray.500"
+                                            borderBottomWidth="1px" borderColor="inherit" fontSize="xs"
+                                        >
+                                        </Table.ColumnHeader>
+                                        {headers.map((_, colIndex) => {
+                                            const isColSelected = selectedColumnIndices.has(colIndex);
+                                            const letterHeaderProps = isColSelected 
+                                                ? { bg: "blue.400", fontWeight: "bold", color: "white" } 
+                                                : {};
+                                            return (
                                                 <Table.ColumnHeader
-                                                    key={`letter-${index}`}
+                                                    key={`letter-${colIndex}`}
                                                     textAlign="left" fontWeight="medium" color="gray.600"
                                                     borderBottomWidth="1px" borderColor="inherit" py={1} fontSize="xs"
+                                                    {...letterHeaderProps}
                                                 >
-                                                    {getColumnLetter(index)}
+                                                    {getColumnLetter(colIndex)}
                                                 </Table.ColumnHeader>
-                                            ))}
-                                        </Table.Row>
-                                        <Table.Row bg="gray.400">
-                                            <Table.ColumnHeader
-                                                key="corner-header"
-                                                width="60px" minWidth="60px" textAlign="center" fontSize="xs"
-                                            >
-                                            </Table.ColumnHeader>
-                                            {headers.map((header) => (
+                                            );
+                                        })}
+                                    </Table.Row>
+                                    <Table.Row bg="gray.400">
+                                        <Table.ColumnHeader
+                                            key="corner-header"
+                                            width="60px" minWidth="60px" textAlign="center" fontSize="xs"
+                                        >
+                                        </Table.ColumnHeader>
+                                        {headers.map((header, colIndex) => {
+                                            const isColSelected = selectedColumnIndices.has(colIndex);
+                                            const actualHeaderProps = isColSelected 
+                                                ? { bg: "blue.500", fontWeight: "bold", color: "white" } 
+                                                : {};
+                                            return (
                                                 <Table.ColumnHeader
-                                                    key={header}
+                                                    key={`${header}-${colIndex}`} // Safer key
                                                     whiteSpace="normal" wordBreak="break-word" fontWeight="semibold" fontSize="xs"
+                                                    {...actualHeaderProps}
                                                 >
                                                     {header}
                                                 </Table.ColumnHeader>
-                                            ))}
-                                        </Table.Row>
-                                    </Table.Header>
-                                    <Table.Body>
-                                        {dataToDisplay.map((row, rowIndex) => {
-                                            const currentRowNumber = rowIndex + 1;
-                                            const isInRange = currentRowNumber >= firstRow && currentRowNumber <= lastRow;
+                                            );
+                                        })}
+                                    </Table.Row>
+                                </Table.Header>
+                                <Table.Body>
+                                    {dataToDisplay.map((row, rowIndex) => {
+                                        const currentRowNumber = rowIndex + 1;
+                                        const isRowInRange = currentRowNumber >= firstRow && currentRowNumber <= lastRow;
 
-                                            const tableRowProps = isInRange ? { bg: "yellow.100" } : { opacity: 0.5 };
-                                            
-                                            let rowNumberCellSpecificProps = {};
-                                            if (isInRange) {
-                                                rowNumberCellSpecificProps = {
-                                                    bg: "blue.600",
-                                                    color: "white",
-                                                    fontWeight: "bold",
-                                                };
-                                            }
-                                            // Else, default styles from JSX for row number cell will apply,
-                                            // and will be affected by Table.Row's opacity if not in range.
+                                        const tableRowProps = isRowInRange ? { bg: "yellow.100" } : { opacity: 0.5 };
+                                        
+                                        let rowNumberCellSpecificProps = {};
+                                        if (isRowInRange) {
+                                            rowNumberCellSpecificProps = {
+                                                bg: "blue.500",
+                                                color: "white",
+                                                fontWeight: "bold",
+                                            };
+                                        }
 
-                                            return (
-                                                <Table.Row key={`row-${rowIndex}`} {...tableRowProps}>
-                                                    {/* Row Number Cell */}
-                                                    <Table.Cell
-                                                        key={`rownum-${rowIndex}`}
-                                                        textAlign="center"
-                                                        fontWeight="medium" // Default, overridden by specificProps if in range
-                                                        color="white"       // Default, overridden by specificProps if in range
-                                                        bg="gray.500"       // Default, overridden by specificProps if in range
-                                                        {...rowNumberCellSpecificProps} // Apply conditional styles
-                                                        width="60px"
-                                                        minWidth="60px"
-                                                        py={2}
-                                                        borderRightWidth="1px"
-                                                        borderColor="inherit"
-                                                        fontSize="xs"
-                                                    >
-                                                        {rowIndex + 1}
-                                                    </Table.Cell>
-                                                    {/* Data Cells */}
-                                                    {headers.map((header) => (
+                                        return (
+                                            <Table.Row key={`row-${rowIndex}`} {...tableRowProps}>
+                                                <Table.Cell
+                                                    key={`rownum-${rowIndex}`}
+                                                    textAlign="center"
+                                                    fontWeight="medium"
+                                                    color="white"
+                                                    bg="gray.500"
+                                                    {...rowNumberCellSpecificProps}
+                                                    width="60px"
+                                                    minWidth="60px"
+                                                    py={2}
+                                                    borderRightWidth="1px"
+                                                    borderColor="inherit"
+                                                    fontSize="xs"
+                                                >
+                                                    {rowIndex + 1}
+                                                </Table.Cell>
+                                                {headers.map((header, colIndex) => {
+                                                    const isColumnSelected = selectedColumnIndices.has(colIndex);
+                                                    const cellSpecificProps = !isColumnSelected ? { opacity: 0.75, bg: "white" } : {}; 
+                                                    
+                                                    return (
                                                         <Table.Cell
-                                                            key={`${header}-${rowIndex}`}
+                                                            key={`${header}-${rowIndex}-${colIndex}`} // More robust key
                                                             whiteSpace="normal"
                                                             wordBreak="break-word"
                                                             py={2}
                                                             fontSize="xs"
+                                                            {...cellSpecificProps}
                                                         >
                                                             {row[header] !== undefined && row[header] !== null ? String(row[header]) : ''}
                                                         </Table.Cell>
-                                                    ))}
-                                                </Table.Row>
-                                            );
-                                        })}
-                                    </Table.Body>
-                                </Table.Root>
-                            </Table.ScrollArea>
-                        </>
-                    )}
-                {/* </Box> */}
+                                                    );
+                                                })}
+                                            </Table.Row>
+                                        );
+                                    })}
+                                </Table.Body>
+                            </Table.Root>
+                        </Table.ScrollArea>
+                    </Box>
+                )}
             </Stack>
         </Stack>
     );
