@@ -1,3 +1,5 @@
+# models.py
+
 from app import db
 from sqlalchemy.sql import func
 import decimal
