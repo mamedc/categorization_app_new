@@ -238,7 +238,7 @@ export default function ImportTransactionsStep2({
                                     onChange={handleChange}
                                     size="sm"
                                     maxLength={1}
-                                    placeholder="E"
+                                    placeholder="F"
                                 />
                             </Field.Root>
                         </VStack>
