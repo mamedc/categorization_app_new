@@ -155,6 +155,66 @@ def update_transaction(transaction_id):
     
 
 
+@app.route('/api/transactions/check-duplicates-bulk', methods=['POST'])
+def check_transactions_duplicates_bulk():
+    incoming_transactions = request.get_json()
+    if not isinstance(incoming_transactions, list):
+        abort(400, description="Expected a list of transactions.")
+
+    results = []
+    for tx_data in incoming_transactions:
+        date_str = tx_data.get('Date')
+        amount_str = tx_data.get('Amount')
+        description = tx_data.get('Description') # Might be None or empty string
+
+        # Basic validation for essential fields for a duplicate check
+        if not date_str or amount_str is None:
+            results.append(False) # Cannot be a duplicate if key fields are missing
+            continue
+        
+        try:
+            # Assuming frontend sends date as 'YYYY-MM-DD' string
+            parsed_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            results.append(False) 
+            continue
+
+        try:
+            # Amount parsing: handle comma as decimal separator
+            # Ensure amount_str is a string for replacement and Decimal conversion
+            current_amount_str = str(amount_str)
+            if ',' in current_amount_str:
+                current_amount_str = current_amount_str.replace(',', '.')
+            
+            # Remove any non-numeric characters except for the decimal point and minus sign (optional)
+            # This is a basic sanitization. More robust parsing might be needed depending on input variety.
+            # current_amount_str = ''.join(filter(lambda x: x.isdigit() or x == '.' or (x == '-' and current_amount_str.startswith('-')), current_amount_str))
+
+            parsed_amount = decimal.Decimal(current_amount_str)
+        except (decimal.InvalidOperation, TypeError, ValueError):
+            results.append(False)
+            continue
+        
+        # Normalize description for query: treat empty string from input as potentially matching NULL in DB if desired,
+        # or ensure consistent storage (e.g., always store empty as "" not NULL).
+        # Current Transaction model saves description as String, can be nullable.
+        # If description is an empty string "", query for "". If None, query for NULL.
+        query_description = description if description is not None else None
+
+
+        try:
+            existing_transaction = db.session.query(Transaction).filter(
+                Transaction.date == parsed_date,
+                Transaction.amount == parsed_amount,
+                Transaction.description == query_description
+            ).first()
+            results.append(existing_transaction is not None)
+        except Exception as e:
+            app.logger.error(f"Error during duplicate check query for {tx_data}: {e}")
+            results.append(False) # Default to not duplicate on query error
+            
+    return jsonify(results), 200
+
 
 
 # --- TagGroup Routes ---

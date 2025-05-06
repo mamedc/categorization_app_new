@@ -2,19 +2,18 @@
 // src/components/import/ImportTransactionsStep3.jsx
 
 import { useState } from "react";
-import { Stack, Text, Box, Alert, Table, CloseButton } from "@chakra-ui/react"; // Added Table and CloseButton for existing alert if needed
+import { Stack, Text, Box, Alert, Table, CloseButton, Badge } from "@chakra-ui/react"; // Added Badge
 
 export default function ImportTransactionsStep3({
     items,
     step,
-    reviewData,
-    reviewHeaders
+    reviewData,     // Expect reviewData rows to have an 'isDuplicate' boolean property
+    reviewHeaders   // Expect reviewHeaders to include "Duplicated"
 }) {
     const hasReviewData = reviewData && reviewData.length > 0;
 
     // State for the local alert in this component (if it's meant to be dismissible locally)
     const [isAlertOpen, setIsAlertOpen] = useState(true);
-
 
     return (
         <Stack direction="column" spacing={6}>
@@ -45,7 +44,14 @@ export default function ImportTransactionsStep3({
                                 <Table.Header bg="gray.100" stickyHeader>
                                     <Table.Row>
                                         {reviewHeaders.map(header => (
-                                            <Table.ColumnHeader key={header} fontWeight="semibold" fontSize="xs" textTransform="capitalize" whiteSpace="nowrap">
+                                            <Table.ColumnHeader 
+                                                key={header} 
+                                                fontWeight="semibold" 
+                                                fontSize="xs" 
+                                                textTransform="capitalize" 
+                                                whiteSpace="nowrap"
+                                                textAlign={header.toLowerCase() === "duplicated" ? "center" : undefined}
+                                            >
                                                 {header}
                                             </Table.ColumnHeader>
                                         ))}
@@ -53,10 +59,30 @@ export default function ImportTransactionsStep3({
                                 </Table.Header>
                                 <Table.Body>
                                     {reviewData.map((row, rowIndex) => (
-                                        <Table.Row key={`review-row-${rowIndex}`} _hover={{ bg: "gray.50" }}>
+                                        <Table.Row 
+                                            key={`review-row-${rowIndex}`} 
+                                            _hover={{ bg: "gray.50" }}
+                                            bg={row.isDuplicate ? "red.50" : undefined} // Highlight duplicate rows
+                                        >
                                             {reviewHeaders.map(header => (
-                                                <Table.Cell key={`${header}-${rowIndex}`} fontSize="xs" whiteSpace="normal" wordBreak="break-word">
-                                                    {row[header]}
+                                                <Table.Cell 
+                                                    key={`${header}-${rowIndex}`} 
+                                                    fontSize="xs" 
+                                                    whiteSpace="normal" 
+                                                    wordBreak="break-word"
+                                                    textAlign={header.toLowerCase() === "duplicated" ? "center" : undefined}
+                                                >
+                                                    {header.toLowerCase() === "duplicated" ? (
+                                                        row.isDuplicate !== undefined ? (
+                                                            <Badge colorScheme={row.isDuplicate ? "red" : "green"} variant="subtle" size="sm">
+                                                                {row.isDuplicate ? "Yes" : "No"}
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge colorScheme="gray" variant="subtle" size="sm">-</Badge> 
+                                                        )
+                                                    ) : (
+                                                        row[header]
+                                                    )}
                                                 </Table.Cell>
                                             ))}
                                         </Table.Row>
