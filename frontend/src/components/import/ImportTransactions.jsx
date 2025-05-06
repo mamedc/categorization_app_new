@@ -32,9 +32,9 @@ export default function ImportTransactions({ }) {
     const isLastStep = step === items.length - 1;
 
     const fileUpload = useFileUpload({
-        accept: ".csv, text/csv", // Be more specific with accept types
+        accept: ".csv, text/csv",
         maxFiles: 1,
-        // maxFileSize: 5242880, // Uncomment if needed
+        maxFileSize: 5242880,
         onFileChange: (details) => {
             // Reset state when file selection changes *before* validation/parsing
             console.log("File selection changed:", details.acceptedFiles);
@@ -81,11 +81,18 @@ export default function ImportTransactions({ }) {
         Papa.parse(file, {
             header: true, // Treat first row as headers
             skipEmptyLines: true,
+            // Fix: Specify the encoding. 'Windows-1252' is common for CSVs from Excel on Windows
+            // that contain characters like 'ç', 'á', 'é', 'õ', etc.
+            // Other possibilities include 'ISO-8859-1' (Latin-1).
+            // If your files are guaranteed to be UTF-8, you can use 'UTF-8'.
+            encoding: "Windows-1252",
             complete: (results) => {
                 console.log("Parsing complete:", results);
                 setIsLoading(false); // Stop loading
 
                 if (results.errors.length > 0) {
+                    // Check if the error is related to encoding, though PapaParse might not always specify this.
+                    // For now, we'll show the generic Papaparse error.
                     console.error("Parsing errors:", results.errors);
                     setParsingError(`Error parsing CSV: ${results.errors[0].message}`);
                     setValidFile(false);
@@ -199,10 +206,10 @@ export default function ImportTransactions({ }) {
 
             {/* Display Parsing Errors */}
             {parsingError && (
-                <Alert.Root status="error" title="This is the alert title">
+                <Alert.Root status="error" title="This is the alert title"> {/* Note: `title` prop here might be overridden or not visible */}
                     <Alert.Content>
                         <Alert.Title>{parsingError}</Alert.Title>
-                        <Alert.Description>{parsingError}</Alert.Description>
+                        {/* <Alert.Description>{parsingError}</Alert.Description> */} {/* Often Title is enough, or provide more context here */}
                     </Alert.Content>
                     <CloseButton pos="relative" top="-2" insetEnd="-2" onClick={() => setParsingError(null)} />
                 </Alert.Root>
