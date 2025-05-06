@@ -1,16 +1,20 @@
 // File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\import\ImportTransactionsStep3.jsx
 // src/components/import/ImportTransactionsStep3.jsx
 
-import { Stack, Text, Box, Alert, Table } from "@chakra-ui/react"; // Added Table
-// Removed CloseButton as it's not used for the specific alert here.
+import { useState } from "react";
+import { Stack, Text, Box, Alert, Table, CloseButton } from "@chakra-ui/react"; // Added Table and CloseButton for existing alert if needed
 
 export default function ImportTransactionsStep3({
     items,
     step,
-    reviewData,     // Renamed from parsedData, this is the filtered & mapped data
-    reviewHeaders   // Headers for the reviewData, e.g., ["Date", "Description", "Amount"]
+    reviewData,
+    reviewHeaders
 }) {
     const hasReviewData = reviewData && reviewData.length > 0;
+
+    // State for the local alert in this component (if it's meant to be dismissible locally)
+    const [isAlertOpen, setIsAlertOpen] = useState(true);
+
 
     return (
         <Stack direction="column" spacing={6}>
@@ -19,29 +23,29 @@ export default function ImportTransactionsStep3({
             </Text>
 
             <Box borderWidth="1px" borderRadius="md" p={4} bg="white">
-                 <Text fontSize="md" fontWeight="medium" mb={4}>Final Review & Import</Text>
-                 {!hasReviewData ? (
-                    <Alert.Root status="warning"> {/* Changed to warning, not necessarily an error */}
+                 <Text fontSize="md" fontWeight="medium" mb={4}>Final Review</Text>
+                 {!hasReviewData && isAlertOpen ? ( // Check isAlertOpen for local dismissal
+                    <Alert.Root status="warning">
                         <Alert.Indicator />
                         <Alert.Content>
                             <Alert.Title>No data to review.</Alert.Title>
                             <Alert.Description>
-                                No transactions match the filter criteria from Step 2, or the source file was empty. Please go back to adjust settings or upload a valid file.
+                                No transactions match the filter criteria from Step 2, or the source file was empty/invalid. Please go back to adjust settings or upload a valid file.
                             </Alert.Description>
                         </Alert.Content>
-                        {/* Removed CloseButton that called setParsingError */}
+                        <CloseButton pos="relative" top="-2" insetEnd="-2" onClick={() => setIsAlertOpen(false)} />
                     </Alert.Root>
-                 ) : (
+                 ) : hasReviewData ? (
                     <Stack spacing={4}>
                         <Text>
-                            Ready to import <Text as="b">{reviewData.length}</Text> records. Please review the data below.
+                            Displaying <Text as="b">{reviewData.length}</Text> records based on your selections in Step 2.
                         </Text>
-                        <Table.ScrollArea borderWidth="1px" rounded="md" maxHeight="500px"> {/* Added ScrollArea */}
-                            <Table.Root size="sm" variant="line">
-                                <Table.Header bg="gray.100">
+                        <Table.ScrollArea borderWidth="1px" rounded="md" maxHeight="500px">
+                            <Table.Root size="sm" variant="line" __css={{ tableLayout: 'auto', width: '100%' }}>
+                                <Table.Header bg="gray.100" stickyHeader>
                                     <Table.Row>
                                         {reviewHeaders.map(header => (
-                                            <Table.ColumnHeader key={header} fontWeight="semibold" fontSize="xs" textTransform="capitalize">
+                                            <Table.ColumnHeader key={header} fontWeight="semibold" fontSize="xs" textTransform="capitalize" whiteSpace="nowrap">
                                                 {header}
                                             </Table.ColumnHeader>
                                         ))}
@@ -60,11 +64,12 @@ export default function ImportTransactionsStep3({
                                 </Table.Body>
                             </Table.Root>
                         </Table.ScrollArea>
-                        {/* TODO: Add Import button and logic here */}
                         <Text fontSize="sm" color="gray.500" mt={2}>
-                            (Import functionality is not yet implemented.)
+                            Click "Proceed to Import" above to confirm and import these transactions.
                         </Text>
                     </Stack>
+                 ) : (
+                    <Text color="gray.500">No data to review.</Text> // Message if alert was dismissed
                  )}
             </Box>
         </Stack>
