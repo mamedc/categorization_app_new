@@ -5,7 +5,32 @@ import { Fragment } from "react";
 import TagCard from "./TagCard";
 
 
+function formatBrazilianCurrency(value) {
+    const number = parseFloat(value);
+  
+    if (isNaN(number)) {
+      return "Invalid Number"; // Or handle the error as you see fit
+    }
+  
+    const formattedValue = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(number);
+  
+    // Remove the currency symbol and add "R$" with a space
+    const parts = formattedValue.split(' ');
+    if (parts.length === 2) {
+      return `- R$ ${parts[1]}`;
+    } else {
+      return formattedValue; // Fallback in case the format is unexpected
+    }
+  };
+
+
 export default function TransactionCard ({ transaction, isSelected, onSelect }) {
+
     return (
         <Box
             bg="white"
@@ -73,11 +98,11 @@ export default function TransactionCard ({ transaction, isSelected, onSelect }) 
                 {/* Right: Value + Flags */}
                 <VStack align="end" spacing={1}>
                     <Text
-                        fontSize="md"
+                        fontSize="sm"
                         fontWeight="bold"
                         color={Number(transaction.amount) >= 0 ? 'green.600' : 'red.600'}
                     >
-                        R$ {transaction.amount}
+                        {formatBrazilianCurrency(transaction.amount)}
                     </Text>
 
                     <HStack spacing={2} wrap="wrap" justify="end">

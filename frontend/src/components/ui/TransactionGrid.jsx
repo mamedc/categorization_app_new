@@ -11,7 +11,7 @@ import {
 } from "../../context/atoms";
 import { useEffect, useState, useMemo, Fragment, useRef } from "react";
 import { BASE_URL } from "../../App";
-import { VStack, Spinner, Text, Flex, StackSeparator, Box, Spacer } from "@chakra-ui/react";
+import { VStack, Spinner, Text, Flex, StackSeparator, Box, Spacer, HStack } from "@chakra-ui/react";
 import TransactionCard from "./TransactionCard";
 
 // Helper functions (formatDateHeader, formatCurrency) remain the same...
@@ -275,22 +275,22 @@ export default function TransactionGrid ({
                 <VStack spacing={6} align="stretch" >
 
                      {/* Display Initial Balance - Always show if data is loaded and no errors */}
-                     {!hasInitialBalanceError && initialBalanceData.state === 'hasData' && (
+                     {/* {!hasInitialBalanceError && initialBalanceData.state === 'hasData' && (
                          <Flex justify="space-between" p={2} borderBottomWidth="1px" borderColor="gray.300" mb={4}>
                             <Text fontSize="md" fontWeight="semibold" color="gray.700">
-                                Initial Balance
+                                Initial BalanceXX
                             </Text>
                             <Text fontSize="md" fontWeight="bold" color="teal.600">
                                 {formatCurrency(initialBalanceData.data ?? 0)}
                             </Text>
                         </Flex>
-                     )}
+                     )} */}
 
                     {/* Render groups based on display order (derived from filteredTransactions) */}
                     {displayGroupedTransactions.map((group) => (
                         <Fragment key={group.date}>
                              <Box
-                                fontSize="md"
+                                fontSize="sm"
                                 fontWeight="semibold"
                                 color="gray.600"
                                 pb={2}
@@ -302,8 +302,19 @@ export default function TransactionGrid ({
                                     <Box>{formatDateHeader(group.date)}</Box>
                                     <Spacer />
                                      {/* Display the running balance calculated for the filtered set */}
-                                     <Box fontSize="md" fontWeight="bold" color="teal.600">
-                                        {formatCurrency(group.groupBalance)}
+                                     <Box 
+                                        fontSize="sm" 
+                                        marginRight={4}
+                                    >
+                                        <HStack gap={4}>
+                                            <Text color="gray.600" >Balance:</Text>
+                                            <Text 
+                                                fontWeight="bold"
+                                                color={group.groupBalance >= 0 ? 'green.600' : 'red.600'}
+                                            >
+                                                {formatCurrency(group.groupBalance)}
+                                            </Text>
+                                        </HStack>
                                     </Box>
                                 </Flex>
                             </Box>
