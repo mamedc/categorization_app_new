@@ -74,11 +74,11 @@ export default function ImportTransactionsStep3({
                                                 >
                                                     {header.toLowerCase() === "duplicated" ? (
                                                         row.isDuplicate !== undefined ? (
-                                                            <Badge colorScheme={row.isDuplicate ? "red" : "green"} variant="subtle" size="sm">
+                                                            <Badge colorPalette={row.isDuplicate ? "red" : "green"} variant="subtle" size="sm">
                                                                 {row.isDuplicate ? "Yes" : "No"}
                                                             </Badge>
                                                         ) : (
-                                                            <Badge colorScheme="gray" variant="subtle" size="sm">-</Badge> 
+                                                            <Badge colorPalette="gray" variant="subtle" size="sm">-</Badge> 
                                                         )
                                                     ) : (
                                                         row[header]

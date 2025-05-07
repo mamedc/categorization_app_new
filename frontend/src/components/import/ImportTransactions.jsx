@@ -6,9 +6,11 @@ import {
     Container, Flex, Button, Text, Box, Spacer, Steps, Code, Stack,
     useFileUpload, Alert, CloseButton, Dialog, Portal,  // Added useToast for performImport
 } from "@chakra-ui/react";
+import { Toaster, toaster } from "@/components/ui/toaster"
 import { HiUpload } from "react-icons/hi";
 import Papa from 'papaparse';
-
+import { useAtom, useSetAtom } from "jotai";
+import { selectedTransaction, refreshTransactionsAtom } from "../../context/atoms";
 import ImportTransactionsStep1 from "./ImportTransactionsStep1";
 import ImportTransactionsStep2 from "./ImportTransactionsStep2";
 import ImportTransactionsStep3 from "./ImportTransactionsStep3";
@@ -91,6 +93,7 @@ const standardizeAmountString = (rawValue) => {
 const MAX_PREVIEW_ROWS_IN_STEP2_TABLE = 1000;
 
 export default function ImportTransactions({ }) {
+    const refreshTransactions = useSetAtom(refreshTransactionsAtom);
     const [step, setStep] = useState(0);
     const [validFile, setValidFile] = useState(false);
     const [parsedData, setParsedData] = useState([]);
@@ -350,13 +353,14 @@ export default function ImportTransactions({ }) {
         const transactionsToImport = dataForStep3.data.filter(tx => !tx.isDuplicate);
         if (transactionsToImport.length === 0) {
             console.log("All transactions to import are duplicates or there's no data.")
-            // toast({ 
-            //     title: "No New Transactions", 
-            //     description: "All transactions to import are duplicates or there's no data.",
-            //     status: "warning",
-            //     duration: 5000,
-            //     isClosable: true,
-            // });
+            toaster.create({
+                title: "No New Transactions",
+                description: "All transactions to import are duplicates or there's no data.",
+                type: "warning",
+                duration: 5000,
+                placement: "top-center",
+                isClosable: true,
+            });
             setIsConfirmDialogOpen(false);
             return;
         }
@@ -379,7 +383,7 @@ export default function ImportTransactions({ }) {
                     body: JSON.stringify(payload)
                 });
                 if (response.ok) {
-                    successCount++;
+                    successCount++;                    
                 } else {
                     errorCount++;
                     const errorData = await response.json();
@@ -396,26 +400,32 @@ export default function ImportTransactions({ }) {
 
         if (successCount > 0) {
             console.log(`${successCount} new records imported. ${errorCount > 0 ? `${errorCount} failed.` : ''}`)
-            // toast({
-            //     title: "Import Complete",
-            //     description: `${successCount} new records imported. ${errorCount > 0 ? `${errorCount} failed.` : ''}`,
-            //     status: errorCount > 0 ? "warning" : "success",
-            //     duration: 5000,
-            //     isClosable: true,
-            // });
+            toaster.create({
+                title: "Import Complete",
+                description: `${successCount} new records imported. ${errorCount > 0 ? `${errorCount} failed.` : ''}`,
+                type: errorCount > 0 ? "warning" : "success",
+                duration: 5000,
+                isClosable: true,
+            });
+            refreshTransactions((prev) => prev + 1); // This triggers a refresh
             
         } else if (errorCount > 0) {
             console.log(`All ${errorCount} selected new transactions failed to import. Check console for details.`)
-            //  toast({
-            //     title: "Import Failed",
-            //     description: `All ${errorCount} selected new transactions failed to import. Check console for details.`,
-            //     status: "error",
-            //     duration: 5000,
-            //     isClosable: true,
-            // });
+            toaster.create({
+                title: "Import Failed",
+                description: `All ${errorCount} selected new transactions failed to import. Check console for details.`,
+                type: "error",
+                duration: 5000,
+                isClosable: true,
+            });
         }
         // Optionally reset after import:
-        // setStep(0); fileUpload.removeFile(fileUpload.acceptedFiles[0]); setParsedData([]); setCsvHeaders([]); setValidFile(false); setDuplicateFlags([]);
+        setStep(0);
+        fileUpload.removeFile(fileUpload.acceptedFiles[0]);
+        setParsedData([]);
+        setCsvHeaders([]);
+        setValidFile(false);
+        setDuplicateFlags([]);
     };
 
     const mainButtonAction = step === 2 ? handleProceedToImport : advanceToNextStep;
@@ -441,6 +451,7 @@ export default function ImportTransactions({ }) {
 
     return (
         <Container maxW="container.lg" pt={6} pb={8}>
+            <Toaster />
             <Flex
                 minH="60px" bg="rgba(249, 249, 244, 0.85)" backdropFilter="auto" backdropBlur="8px"
                 mb={6} p={4} borderRadius="md" position="sticky" top={0} zIndex="sticky"
