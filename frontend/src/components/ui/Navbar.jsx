@@ -1,6 +1,8 @@
+// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\ui\Navbar.jsx
 // Navbar.jsx
 
 import { Box, Flex, Text } from "@chakra-ui/react"
+import Settings from './Settings'; // Import the new Settings component
 
 export default function Navbar({ activeView, setActiveView }) {
     return (
@@ -8,7 +10,7 @@ export default function Navbar({ activeView, setActiveView }) {
             <Flex h="16" alignItems="center" justifyContent="space-between">
 
                 <Flex align="center" gap={6} display={{ base: "none", sm: "flex" }}>
-  
+
                     {/* Transactions Navigation Item */}
                     <Text
                         fontSize="md"
@@ -53,9 +55,8 @@ export default function Navbar({ activeView, setActiveView }) {
                     </Text>
                 </Flex>
 
-                <Text fontSize="lg" fontWeight="bold" color="teal.700" display={{ base: "none", md: "block" }}>
-                    Settings
-                </Text>
+                {/* Render the Settings component which includes its trigger */}
+                <Settings />
 
             </Flex>
         </Box>

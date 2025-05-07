@@ -1,3 +1,4 @@
+// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\context\atoms.js
 // atoms.js
 
 import { atom, useAtom } from "jotai";
@@ -38,7 +39,7 @@ export const tagGroupsAtom = atom(async (get) => {
         };
         const sortedData = [...data].sort((a, b) => a.name.localeCompare(b.name));
         return sortedData;
-    
+
     } catch (error) {
         console.error("Error fetching tag groups:", error);
         return [];
@@ -73,7 +74,7 @@ export const transactionsAtom = atom(async (get) => {
             return [];
         };
         return data;
-    
+
     } catch (error) {
         console.error("Error fetching transactions:", error);
         return [];
@@ -85,3 +86,7 @@ export const ldbTransactionsAtom = loadable(transactionsAtom);
 // Setected Transaction
 export const selectedTransaction = atom(null);
 export const isSelectedTransaction = atom((get) => get(selectedTransaction) !== null);
+
+// App Settings
+// Initial balance atom (defaulting to 0 for now)
+export const initialBalanceAtom = atom(0);
