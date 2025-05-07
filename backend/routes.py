@@ -1,12 +1,15 @@
 # routes.py
 
 from app import app, db
+# Add Setting to imports and SQLAlchemyError for exception handling
 from flask import request, jsonify, abort
-from models import Transaction, Tag, TagGroup
+from models import Transaction, Tag, TagGroup, Setting  # <-- Ensure Setting is here
 from datetime import datetime
-from sqlalchemy.exc import IntegrityError
+# Make sure IntegrityError is imported if used elsewhere, otherwise add SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError # <-- Add SQLAlchemyError
 import decimal
 from werkzeug.exceptions import HTTPException
+
 
 
 @app.errorhandler(HTTPException)
@@ -414,3 +417,81 @@ def remove_tag_from_transaction(tx_id, tag_id):
         db.session.rollback()
         app.logger.error(f"Error removing tag {tag_id} from transaction {tx_id}: {e}")
         abort(500, description="Could not remove tag from transaction.")
+
+
+
+    
+    # --- Settings Routes ---
+
+
+
+@app.route('/api/settings/<string:setting_key>', methods=['GET'])
+def get_setting(setting_key):
+    """Retrieves a specific setting value."""
+    try:
+        # This line caused the first NameError because Setting wasn't imported
+        setting = Setting.query.filter_by(key=setting_key).first()
+
+        if setting:
+            return jsonify(setting.to_json())
+        else:
+            if setting_key == 'initial_balance':
+                return jsonify({'key': setting_key, 'value': '0.00'})
+            else:
+                abort(404, description=f"Setting '{setting_key}' not found.")
+
+    # This line caused the second NameError because SQLAlchemyError wasn't imported
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        app.logger.error(f"Database error retrieving setting '{setting_key}': {e}")
+        abort(500, description=f"Database error retrieving setting '{setting_key}'.")
+    except Exception as e:
+        app.logger.error(f"Unexpected error retrieving setting '{setting_key}': {e}", exc_info=True)
+        abort(500, description=f"An unexpected error occurred while retrieving setting '{setting_key}'.")
+
+
+@app.route('/api/settings/<string:setting_key>', methods=['POST'])
+def set_setting(setting_key):
+    """Creates or updates a specific setting value."""
+    # ... (rest of the function remains the same) ...
+    data = request.get_json()
+    if not data or 'value' not in data:
+        abort(400, description="Missing 'value' in request body.")
+
+    new_value_str = data['value']
+    parsed_value = None
+
+    if setting_key == 'initial_balance':
+        try:
+            if isinstance(new_value_str, str) and ',' in new_value_str:
+                 new_value_str = new_value_str.replace(',', '.')
+            parsed_value = decimal.Decimal(new_value_str)
+        except (decimal.InvalidOperation, TypeError, ValueError) as e:
+            app.logger.error(f"Invalid value format for initial_balance: {new_value_str} - {e}")
+            abort(400, description=f"Invalid value format for {setting_key}. Expected a number.")
+    else:
+        abort(400, description=f"Setting key '{setting_key}' is not supported.")
+
+    # This query also requires Setting to be imported
+    setting = Setting.query.filter_by(key=setting_key).first()
+
+    try:
+        if setting:
+            setting.value = parsed_value
+            app.logger.info(f"Updating setting '{setting_key}' to {parsed_value}")
+        else:
+            # This instantiation also requires Setting to be imported
+            setting = Setting(key=setting_key, value=parsed_value)
+            db.session.add(setting)
+            app.logger.info(f"Creating new setting '{setting_key}' with value {parsed_value}")
+
+        db.session.commit()
+        return jsonify(setting.to_json()), 200
+    except SQLAlchemyError as e: # Catch potential DB errors during save
+        db.session.rollback()
+        app.logger.error(f"Database error saving setting '{setting_key}': {e}")
+        abort(500, description=f"Database error saving setting '{setting_key}'.")
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Unexpected error saving setting '{setting_key}': {e}", exc_info=True) # Log traceback
+        abort(500, description=f"Could not save setting '{setting_key}'.")

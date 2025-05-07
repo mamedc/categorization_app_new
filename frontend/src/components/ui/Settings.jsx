@@ -1,8 +1,8 @@
 // File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\ui\Settings.jsx
-// Settings.jsx - CORRECTED for standard Input
+// Settings.jsx
 
-import React, { useState } from 'react';
-import { useAtom } from 'jotai';
+import React, { useState, useEffect } from 'react';
+import { useAtom, useSetAtom } from 'jotai';
 import {
     Button,
     CloseButton,
@@ -11,38 +11,89 @@ import {
     Text,
     Stack,
     Field,
-    Input, // Using standard Input
+    Input,
+    Spinner
 } from "@chakra-ui/react";
-import { initialBalanceAtom } from '../../context/atoms'; // Adjust path if needed
-import { Toaster, toaster } from "@/components/ui/toaster" // Assuming toaster is used for feedback
+// Import the base atom, not the loadable one for setting
+import { initialBalanceAtom, ldbInitialBalanceAtom } from '../../context/atoms';
+import { Toaster, toaster } from "@/components/ui/toaster"
+import { BASE_URL } from '../../App';
 
 export default function Settings() {
     const [open, setOpen] = useState(false);
-    const [balance, setBalance] = useAtom(initialBalanceAtom);
-    const [localBalance, setLocalBalance] = useState(String(balance));
+    const [initialBalanceData] = useAtom(ldbInitialBalanceAtom);
+    // Use useSetAtom for triggering the write operation
+    const setBackendBalance = useSetAtom(initialBalanceAtom); // Renamed for clarity
+
+    const [localBalance, setLocalBalance] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        if (initialBalanceData.state === 'hasData') {
+            setLocalBalance(String(initialBalanceData.data));
+        }
+         // Add placeholder/loading handling if needed when state is 'loading' or 'hasError'
+         else if (initialBalanceData.state === 'loading'){
+             // Optionally set localBalance to a loading state or keep it empty
+             // setLocalBalance('Loading...');
+         }
+         else if (initialBalanceData.state === 'hasError') {
+             setLocalBalance('Error'); // Indicate error
+         }
+    }, [initialBalanceData.state, initialBalanceData.data]); // Depend on state and data
+
 
     const handleOpen = () => {
-        setLocalBalance(String(balance));
+         if (initialBalanceData.state === 'hasData') {
+            setLocalBalance(String(initialBalanceData.data));
+         } else {
+             setLocalBalance(''); // Clear or set default if not loaded
+         }
         setOpen(true);
     };
 
     const handleClose = () => {
         setOpen(false);
+        setIsSaving(false);
     };
 
-    const handleSave = () => {
-        const numericBalance = localBalance === '' ? 0 : parseFloat(localBalance);
+    const handleSave = async () => {
+        setIsSaving(true);
+        const numericBalance = localBalance === '' ? 0 : parseFloat(localBalance.replace(',', '.'));
+
         if (!isNaN(numericBalance)) {
-            setBalance(numericBalance);
-            toaster.create({
-                title: "Settings Saved",
-                description: `Initial balance set to ${numericBalance.toFixed(2)}.`,
-                type: "success",
-                duration: 3000,
-                placement: "top-center",
-            });
-            handleClose();
+            try {
+                // Call the atom's write function. This triggers the API call.
+                // Await the promise returned/thrown by the write function.
+                await setBackendBalance(numericBalance);
+
+                // UI feedback on successful save (handled by the write function triggering refresh)
+                toaster.create({
+                    title: "Settings Saved",
+                    description: `Initial balance set to ${numericBalance.toFixed(2)}.`,
+                    type: "success",
+                    duration: 3000,
+                    placement: "top-center",
+                });
+                handleClose();
+
+            } catch (error) {
+                // Handle errors thrown by the atom's write function (API failure)
+                console.error("Error saving initial balance:", error);
+                toaster.create({
+                    title: "Save Failed",
+                    description: error.message || "Could not save initial balance to the server.",
+                    type: "error",
+                    duration: 4000,
+                    placement: "top-center",
+                });
+                // Keep the dialog open on error? Or close? User preference.
+                // handleClose();
+            } finally {
+                setIsSaving(false);
+            }
         } else {
+            // Handle invalid input format
             console.error("Invalid balance input:", localBalance);
             toaster.create({
                 title: "Invalid Input",
@@ -51,14 +102,15 @@ export default function Settings() {
                 duration: 4000,
                 placement: "top-center",
             });
+            setIsSaving(false);
         }
     };
 
-    // Correct handler for standard Input onChange event
     const handleInputChange = (event) => {
-        // Extract the value from the event target
         setLocalBalance(event.target.value);
     };
+
+    const isLoadingInitial = initialBalanceData.state === 'loading';
 
     return (
         <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
@@ -88,15 +140,19 @@ export default function Settings() {
                             <Stack spacing={4}>
                                 <Field.Root id="initialBalance">
                                     <Field.Label>Initial Balance</Field.Label>
-                                    {/* Using standard Input */}
-                                    <Input
-                                        name="initBalance"
-                                        value={localBalance}
-                                        onChange={handleInputChange} // Attach the corrected handler
-                                        type="number"
-                                        placeholder="R$ 0.00"
-                                        step="0.01"
-                                    />
+                                    {isLoadingInitial ? (
+                                         <Spinner size="sm" />
+                                    ) : (
+                                         <Input
+                                            name="initBalance"
+                                            value={localBalance}
+                                            onChange={handleInputChange}
+                                            type="text"
+                                            inputMode="decimal"
+                                            placeholder="R$ 0.00"
+                                            disabled={isSaving || initialBalanceData.state === 'hasError'} // Disable if saving or error loading
+                                        />
+                                    )}
                                     <Field.HelperText>
                                         Set the starting balance for calculations.
                                     </Field.HelperText>
@@ -105,15 +161,21 @@ export default function Settings() {
                             </Stack>
                         </Dialog.Body>
                         <Dialog.Footer gap={3}>
-                            <Button variant="outline" onClick={handleClose}>
+                            <Button variant="outline" onClick={handleClose} disabled={isSaving}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleSave} colorPalette="teal">
+                            <Button
+                                onClick={handleSave}
+                                colorPalette="teal"
+                                isLoading={isSaving}
+                                loadingText="Saving..."
+                                disabled={isSaving || isLoadingInitial || initialBalanceData.state === 'hasError'}
+                            >
                                 Save
                             </Button>
                         </Dialog.Footer>
                         <Dialog.CloseTrigger asChild>
-                            <CloseButton size="sm" onClick={handleClose} />
+                            <CloseButton size="sm" onClick={handleClose} disabled={isSaving} />
                         </Dialog.CloseTrigger>
                     </Dialog.Content>
                 </Dialog.Positioner>
