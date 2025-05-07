@@ -1,15 +1,15 @@
 // File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\ui\TransactionsManagement.jsx
 // src/components/ui/TransactionsManagement.jsx
-// *** FIXES APPLIED HERE for Select component usage ***
+// *** FIXES APPLIED HERE for Select value display ***
 
 import { useState, useMemo, useEffect } from "react";
 import { useAtomValue } from "jotai";
 import {
     Container, Flex, Button, Spacer, IconButton, Tooltip, Portal,
-    Select, // Keep Select for the namespace
-    Input, HStack, VStack, Box, Field
+    Select, Input, HStack, VStack, Box, Field,
+    createListCollection // Import createListCollection
 } from "@chakra-ui/react";
-import { LuArrowDown, LuArrowUp, LuCheck, LuChevronsUpDown } from "react-icons/lu"; // Added icons for Select
+import { LuArrowDown, LuArrowUp, LuCheck, LuChevronsUpDown } from "react-icons/lu";
 import TransactionGrid from "./TransactionGrid";
 import CreateTransactionModal from "./CreateTransactionModal";
 import DeleteTransactionModal from "./DeleteTransactionModal";
@@ -32,7 +32,9 @@ const getUniqueYears = (transactions) => {
             }
         }
     });
-    return Array.from(years).sort((a, b) => b - a);
+    // Ensure numbers are sorted numerically, then convert back to objects for Select
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+    return sortedYears.map(year => ({ label: String(year), value: String(year) }));
 };
 
 const getTodayDateString = () => {
@@ -45,6 +47,26 @@ const getDateNDaysAgoString = (days) => {
     date.setDate(date.getDate() - days);
     return date.toISOString().split('T')[0];
 };
+
+// Define filter options data structure for the collection
+const filterOptionsData = [
+    { label: "All Time", value: "all" },
+    { label: "Last 30 Days", value: "last30Days" },
+    { label: "Month/Year", value: "monthYear" },
+    { label: "Date Range", value: "dateRange" },
+];
+// Create the collection for the filter type Select
+const filterOptionsCollection = createListCollection({ items: filterOptionsData });
+
+// Define month data structure for the collection
+const monthsData = [
+    { value: '1', label: 'January' }, { value: '2', label: 'February' }, { value: '3', label: 'March' },
+    { value: '4', label: 'April' }, { value: '5', label: 'May' }, { value: '6', label: 'June' },
+    { value: '7', label: 'July' }, { value: '8', label: 'August' }, { value: '9', label: 'September' },
+    { value: '10', label: 'October' }, { value: '11', label: 'November' }, { value: '12', label: 'December' }
+];
+// Create the collection for the months Select
+const monthsCollection = createListCollection({ items: monthsData });
 
 
 export default function TransactionsManagement({
@@ -66,43 +88,31 @@ export default function TransactionsManagement({
     const [filterType, setFilterType] = useState('all');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [selectedMonth, setSelectedMonth] = useState(''); // Store value ('1'-'12')
-    const [selectedYear, setSelectedYear] = useState(''); // Store value (string year)
+    const [selectedMonth, setSelectedMonth] = useState('');
+    const [selectedYear, setSelectedYear] = useState('');
 
-    // Data for Select components
-    const filterOptions = [
-        { label: "All Time", value: "all" },
-        { label: "Last 30 Days", value: "last30Days" },
-        { label: "Month/Year", value: "monthYear" },
-        { label: "Date Range", value: "dateRange" },
-    ];
-
-    const months = [
-        { value: '1', label: 'January' }, { value: '2', label: 'February' }, { value: '3', label: 'March' },
-        { value: '4', label: 'April' }, { value: '5', label: 'May' }, { value: '6', label: 'June' },
-        { value: '7', label: 'July' }, { value: '8', label: 'August' }, { value: '9', label: 'September' },
-        { value: '10', label: 'October' }, { value: '11', label: 'November' }, { value: '12', label: 'December' }
-    ];
-
-    const availableYears = useMemo(() => {
-        if (transactionState === 'hasData') {
-            return getUniqueYears(transactionsData).map(year => ({ label: String(year), value: String(year) }));
-        }
-        return [];
-    }, [transactionState, transactionsData]);
+    // --- Dynamic Year Options (now returns collection) ---
+     const availableYearsCollection = useMemo(() => {
+         if (transactionState === 'hasData') {
+             // getUniqueYears now returns the correct format [{label, value}, ...]
+             return createListCollection({ items: getUniqueYears(transactionsData) });
+         }
+         return createListCollection({ items: [] }); // Return empty collection
+     }, [transactionState, transactionsData]);
 
     // Set default year
     useEffect(() => {
-        if (availableYears.length > 0 && !availableYears.some(y => y.value === selectedYear)) {
-             setSelectedYear(availableYears[0].value); // Default to the most recent year's value
+        // Check against collection.items
+        if (availableYearsCollection.items.length > 0 && !availableYearsCollection.items.some(y => y.value === selectedYear)) {
+            setSelectedYear(availableYearsCollection.items[0].value); // Default to the most recent year's value
         }
-        if (availableYears.length === 0) {
-             setSelectedYear('');
+        if (availableYearsCollection.items.length === 0) {
+            setSelectedYear('');
         }
-    }, [availableYears, selectedYear]);
+    }, [availableYearsCollection, selectedYear]);
 
     // --- Filtering Logic (remains the same) ---
-    const filteredTransactions = useMemo(() => {
+     const filteredTransactions = useMemo(() => {
          if (transactionState !== 'hasData' || !transactionsData) {
              return [];
          }
@@ -187,53 +197,43 @@ export default function TransactionsManagement({
                     {/* Sorting Control */}
                     <Tooltip.Root positioning={{ placement: "bottom" }} openDelay={200} closeDelay={100}>
                         <Tooltip.Trigger asChild>
-                             <IconButton
-                                size="sm"
-                                aria-label="Toggle sort order by date"
-                                onClick={toggleSortOrder}
-                                variant="outline"
-                                colorPalette="teal"
-                                _hover={{ bg: "teal.500", color: "white" }}
+                            <IconButton
+                                size="sm" aria-label="Toggle sort order by date" onClick={toggleSortOrder}
+                                variant="outline" colorPalette="teal" _hover={{ bg: "teal.500", color: "white" }}
                             >
                                 {sortIcon}
                             </IconButton>
                         </Tooltip.Trigger>
-                        <Portal>
-                             <Tooltip.Positioner><Tooltip.Content>{sortTooltipLabel}</Tooltip.Content></Tooltip.Positioner>
-                        </Portal>
+                        <Portal><Tooltip.Positioner><Tooltip.Content>{sortTooltipLabel}</Tooltip.Content></Tooltip.Positioner></Portal>
                     </Tooltip.Root>
 
-                    {/* Filter Type Select - Using Chakra v3 Select */}
+                    {/* Filter Type Select - Using Collection */}
                     <Field.Root id="filterTypeSelect" minW="150px" flexShrink={0}>
                         <Field.Label srOnly>Filter by</Field.Label>
                         <Select.Root
-                             items={filterOptions}
-                            value={[filterType]} // Select expects an array for value
-                             onValueChange={(details) => setFilterType(details.value[0] || 'all')}
+                            // Use the collection prop with the created collection
+                            collection={filterOptionsCollection}
+                            value={[filterType]}
+                            onValueChange={(details) => setFilterType(details.value[0] || 'all')}
                             size="sm"
-                             variant="outline" // Apply variant here if needed
-                            positioning={{ sameWidth: true, gutter: 2 }} // Adjust positioning
+                            positioning={{ sameWidth: true, gutter: 2 }}
                         >
-                            <Select.HiddenSelect /> {/* For form submission/accessibility */}
+                            <Select.HiddenSelect />
                             <Select.Control>
-                                <Select.Trigger bg="white">
+                                <Select.Trigger bg="white" variant="outline">
+                                    {/* ValueText will now display the label of the selected item */}
                                     <Select.ValueText placeholder="Filter by..." />
-                                     <Select.IndicatorGroup>
-                                         <Select.Indicator>
-                                            <LuChevronsUpDown />
-                                        </Select.Indicator>
-                                    </Select.IndicatorGroup>
+                                    <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
                                 </Select.Trigger>
                             </Select.Control>
                             <Portal>
                                 <Select.Positioner>
                                     <Select.Content>
-                                        {filterOptions.map((option) => (
+                                        {/* Iterate over collection items */}
+                                        {filterOptionsCollection.items.map((option) => (
                                             <Select.Item item={option} key={option.value}>
                                                 {option.label}
-                                                <Select.ItemIndicator>
-                                                    <LuCheck />
-                                                </Select.ItemIndicator>
+                                                <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
                                             </Select.Item>
                                         ))}
                                     </Select.Content>
@@ -242,52 +242,43 @@ export default function TransactionsManagement({
                         </Select.Root>
                     </Field.Root>
 
-
                     {/* Date Range Inputs (Conditional) */}
                     {filterType === 'dateRange' && (
                         <HStack spacing={2}>
-                            <Field.Root id="startDate">
+                             <Field.Root id="startDate">
                                 <Field.Label srOnly>Start Date</Field.Label>
-                                <Input
-                                    size="sm" type="date" value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    maxW="150px" bg="white"
-                                />
+                                <Input size="sm" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} maxW="150px" bg="white" />
                              </Field.Root>
-                            <Field.Root id="endDate">
+                             <Field.Root id="endDate">
                                 <Field.Label srOnly>End Date</Field.Label>
-                                <Input
-                                    size="sm" type="date" value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    maxW="150px" bg="white" min={startDate}
-                                />
+                                <Input size="sm" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} maxW="150px" bg="white" min={startDate} />
                             </Field.Root>
                         </HStack>
                     )}
 
-                    {/* Month/Year Selects (Conditional) */}
+                    {/* Month/Year Selects (Conditional) - Using Collections */}
                     {filterType === 'monthYear' && (
                         <HStack spacing={2}>
                              {/* Month Select */}
                              <Field.Root id="selectMonth" minW="120px">
                                  <Field.Label srOnly>Month</Field.Label>
                                  <Select.Root
-                                     items={months}
-                                    value={[selectedMonth]}
+                                     collection={monthsCollection} // Use month collection
+                                     value={[selectedMonth]}
                                      onValueChange={(details) => setSelectedMonth(details.value[0] || '')}
-                                    size="sm" variant="outline" positioning={{ sameWidth: true, gutter: 2 }}
+                                     size="sm" positioning={{ sameWidth: true, gutter: 2 }}
                                 >
                                     <Select.HiddenSelect />
                                     <Select.Control>
-                                        <Select.Trigger bg="white">
+                                        <Select.Trigger bg="white" variant="outline">
                                              <Select.ValueText placeholder="Month" />
-                                            <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
+                                             <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
                                         </Select.Trigger>
                                     </Select.Control>
                                      <Portal>
                                         <Select.Positioner>
                                             <Select.Content>
-                                                {months.map((m) => (
+                                                {monthsCollection.items.map((m) => ( // Iterate collection
                                                      <Select.Item item={m} key={m.value}>
                                                         {m.label}
                                                         <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
@@ -303,15 +294,15 @@ export default function TransactionsManagement({
                             <Field.Root id="selectYear" minW="100px">
                                 <Field.Label srOnly>Year</Field.Label>
                                 <Select.Root
-                                    items={availableYears}
+                                    collection={availableYearsCollection} // Use year collection
                                     value={[selectedYear]}
                                     onValueChange={(details) => setSelectedYear(details.value[0] || '')}
-                                    size="sm" variant="outline" positioning={{ sameWidth: true, gutter: 2 }}
-                                    disabled={availableYears.length === 0}
+                                    size="sm" positioning={{ sameWidth: true, gutter: 2 }}
+                                    disabled={availableYearsCollection.items.length === 0}
                                 >
                                      <Select.HiddenSelect />
                                      <Select.Control>
-                                        <Select.Trigger bg="white">
+                                        <Select.Trigger bg="white" variant="outline">
                                              <Select.ValueText placeholder="Year" />
                                              <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
                                          </Select.Trigger>
@@ -319,7 +310,7 @@ export default function TransactionsManagement({
                                      <Portal>
                                          <Select.Positioner>
                                              <Select.Content>
-                                                 {availableYears.map((y) => (
+                                                 {availableYearsCollection.items.map((y) => ( // Iterate collection
                                                      <Select.Item item={y} key={y.value}>
                                                          {y.label}
                                                          <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
