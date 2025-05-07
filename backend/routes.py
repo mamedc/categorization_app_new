@@ -29,40 +29,60 @@ def handle_http_exception(e):
 # Create a new transaction
 @app.route('/api/transactions/new', methods=['POST'])
 def create_transaction():
-    # ... (your existing try/except, validation, data prep) ...
     try:
         data = request.get_json()
-        # ... (validation for date, amount, description) ...
-        # Correct date format
+
+        # --- Validation ---
+        if not data:
+            abort(400, description="Missing request body.")
+        if 'date' not in data or not data['date']:
+             abort(400, description="Missing 'date' field.")
+        if 'amount' not in data: # Allow amount to be zero, but must be present
+             abort(400, description="Missing 'amount' field.")
+        # Description and Note are optional/nullable in the model
+
+        # --- Data Parsing and Preparation ---
         try:
              parsed_date = datetime.strptime(data['date'], '%Y-%m-%d').date() # Use .date() if model uses Date
-        except ValueError:
+        except (ValueError, TypeError):
             abort(400, description="Invalid date format. Use YYYY-MM-DD.")
 
-        # Correct amount format
         try:
-            if isinstance(data['amount'], str) and ',' in data['amount']:
-                data['amount'] = data['amount'].replace(',', '.')
-            parsed_amount = decimal.Decimal(data['amount'])
-            print('****', parsed_amount)
+            # Handle potential string amounts with commas
+            amount_str = str(data['amount']) # Ensure it's a string first
+            if ',' in amount_str:
+                amount_str = amount_str.replace(',', '.')
+            parsed_amount = decimal.Decimal(amount_str)
         except (decimal.InvalidOperation, TypeError, ValueError):
              abort(400, description="Invalid amount format.")
 
+        # Get description safely, defaulting to None or empty string if needed
+        description = data.get('description') # Defaults to None if missing
+
+        # *** FIX: Get 'note' safely, defaulting to an empty string if missing ***
+        note = data.get('note', '') # Use .get() to avoid KeyError
+
+        # Get flags safely, defaulting to False
+        children_flag = data.get('children_flag', False)
+        doc_flag = data.get('doc_flag', False)
+
+
+        # --- Create Transaction Object ---
         new_transaction = Transaction(
             date=parsed_date,
             amount=parsed_amount,
-            description=data['description'],
-            note=data['note'],
-            # Set other flags if needed from data.get(...)
+            description=description,
+            note=note, # Use the safe variable
+            children_flag=children_flag,
+            doc_flag=doc_flag,
         )
 
         # Handle tags if provided (list of tag IDs)
         tag_ids = data.get('tag_ids', [])
         if tag_ids:
-            # Ensure tag_ids are integers if they come as strings
             try:
-                int_tag_ids = [int(tid) for tid in tag_ids]
-            except ValueError:
+                int_tag_ids = [int(tid) for tid in tag_ids if tid is not None] # Filter out potential nulls
+            except (ValueError, TypeError):
                 abort(400, description="Invalid tag_id format in tag_ids list.")
 
             tags = Tag.query.filter(Tag.id.in_(int_tag_ids)).all()
@@ -70,19 +90,33 @@ def create_transaction():
                 found_ids = {tag.id for tag in tags}
                 missing_ids = [tid for tid in int_tag_ids if tid not in found_ids]
                 abort(400, description=f"One or more tag IDs not found: {missing_ids}")
-            # *** FIX: Use the correct variable name: new_transaction ***
+
             new_transaction.tags.extend(tags)
 
+        # --- Save to Database ---
         db.session.add(new_transaction)
         db.session.commit()
-        # Decide what to include in the response
+
+        # Return the created transaction with tags included
         return jsonify(new_transaction.to_json(include_tags=True)), 201
 
-    except Exception as e:
-        db.session.rollback() # Rollback on any exception during creation
-        app.logger.error(f"Error creating transaction: {e}") # Log the actual error
-        # Return a more generic 500 for unexpected errors, use abort for client errors (4xx)
-        abort(500, description="An error occurred while creating the transaction.")
+    except HTTPException as e:
+         # Re-raise HTTP exceptions (like aborts) so Flask handles them
+         raise e
+    except SQLAlchemyError as e: # Catch DB errors specifically
+        db.session.rollback()
+        app.logger.error(f"Database error creating transaction: {e}")
+        # Provide a more specific error message if possible, e.g., from IntegrityError
+        error_msg = "A database error occurred while creating the transaction."
+        if isinstance(e, IntegrityError):
+             error_msg = "A database constraint was violated. Check for duplicates or missing required relationships."
+        abort(500, description=error_msg)
+    except Exception as e: # Catch any other unexpected errors
+        db.session.rollback()
+        # Log the specific error for debugging
+        app.logger.error(f"Error creating transaction: {e}", exc_info=True) # Log traceback
+        # Return a generic error to the client
+        abort(500, description="An unexpected error occurred while creating the transaction.")
 
 
 
