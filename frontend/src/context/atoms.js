@@ -87,6 +87,9 @@ export const ldbTransactionsAtom = loadable(transactionsAtom);
 export const selectedTransaction = atom(null);
 export const isSelectedTransaction = atom((get) => get(selectedTransaction) !== null);
 
+
+
+
 // App Settings
 // Initial balance atom (defaulting to 0 for now)
 export const refreshInitialBalanceAtom = atom(0);
