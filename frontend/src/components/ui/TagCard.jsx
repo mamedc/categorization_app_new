@@ -13,23 +13,11 @@ export default function TagGroupCard ({
             gap={4}
             wrap="wrap"
         >
-            
-            {/* Left: Details */}
-            <VStack align="start" spacing={1} flex="1">
-                <HStack spacing={3} wrap="wrap">
-                    <Text fontSize="sm" color="gray.500">
-                        {tag.name}
-                    </Text>
-                </HStack>
-            </VStack>
+            <Badge>
+                <ColorSwatch value={tag.color} boxSize="0.82em" />
+                {tag.name}
+            </Badge>
 
-            {/* Spacer pushes the value to the end in horizontal layouts */}
-            <Spacer display={{ base: 'none', md: 'block' }} />
-
-            {/* Right: Value + Flags */}
-            <VStack align="end" spacing={1}>
-                <ColorSwatch value={tag.color} size="xs" borderRadius="xl" />
-            </VStack>
         </Flex>
     );
 };

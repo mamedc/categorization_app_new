@@ -41,17 +41,9 @@ export default function TransactionCard ({ transaction, isSelected, onSelect }) 
                 </Checkbox.Root>
 
                 {/* Left: Details */}
-                <VStack align="start" spacing={1} flex="1">
-                    <HStack spacing={3} wrap="wrap">
-                        <Text fontSize="sm" color="gray.500">
-                            {transaction.id}
-                        </Text>
-                        <Text fontSize="sm" color="gray.500">
-                            {new Date(transaction.date).toISOString().split('T')[0]}
-                        </Text>
-                    </HStack>
+                <VStack align="start" spacing={1} flex="2">
                     <Text
-                        fontSize="md"
+                        fontSize="sm"
                         fontWeight="medium"
                         color="gray.700"
                         noOfLines={2}
@@ -61,30 +53,19 @@ export default function TransactionCard ({ transaction, isSelected, onSelect }) 
                 </VStack>
 
                 {/* Tags */}
-                <VStack align="start" spacing={1} flex="1">
+                <Flex
+                    direction={{ base: 'column', md: 'row' }}
+                    align="start"
+                    gap={2}
+                    wrap="wrap"
+                    flex="3"
+                >
                     {transaction.tags.map((tag) => (
-                        <Fragment key={tag.name}> {/* Use Fragment to avoid extra DOM element per group */}
-                            {/* <Text
-                                fontSize="sm"
-                                //fontWeight="semibold"
-                                color="gray.600"
-                                pb={1} // Add some padding below the header
-                                pt={1} // Add some padding below the header
-                                //borderBottomWidth="1px"
-                                //borderColor="gray.200"
-                            >
-                                {tag.name}
-                            </Text> */}
-                            <TagCard 
-                                key={tag.id}
-                                tag={tag}
-                                //isSelectedTag={isSelectedTag}
-                                //onSelectTag={onSelectTag}
-                            />
-                            
+                        <Fragment key={tag.name}>
+                            <TagCard key={tag.id} tag={tag} />
                         </Fragment>
                     ))}
-                </VStack>
+                </Flex>
 
                 {/* Spacer pushes the value to the end in horizontal layouts */}
                 <Spacer display={{ base: 'none', md: 'block' }} />
