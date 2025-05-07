@@ -425,22 +425,26 @@ def remove_tag_from_transaction(tx_id, tag_id):
 
 
 
+SUPPORTED_DECIMAL_SETTINGS = ['initial_balance', 'final_running_balance'] # List of settings expected to be numeric
+
 @app.route('/api/settings/<string:setting_key>', methods=['GET'])
 def get_setting(setting_key):
     """Retrieves a specific setting value."""
     try:
-        # This line caused the first NameError because Setting wasn't imported
         setting = Setting.query.filter_by(key=setting_key).first()
 
         if setting:
             return jsonify(setting.to_json())
         else:
-            if setting_key == 'initial_balance':
+            # Default numeric settings to '0.00' if not found
+            if setting_key in SUPPORTED_DECIMAL_SETTINGS:
+                 # Return the default structure expected by the frontend atom
                 return jsonify({'key': setting_key, 'value': '0.00'})
             else:
+                # For other settings, a 404 might be more appropriate if they are expected to exist
+                # Or return a specific default if applicable
                 abort(404, description=f"Setting '{setting_key}' not found.")
 
-    # This line caused the second NameError because SQLAlchemyError wasn't imported
     except SQLAlchemyError as e:
         db.session.rollback()
         app.logger.error(f"Database error retrieving setting '{setting_key}': {e}")
@@ -453,7 +457,6 @@ def get_setting(setting_key):
 @app.route('/api/settings/<string:setting_key>', methods=['POST'])
 def set_setting(setting_key):
     """Creates or updates a specific setting value."""
-    # ... (rest of the function remains the same) ...
     data = request.get_json()
     if not data or 'value' not in data:
         abort(400, description="Missing 'value' in request body.")
@@ -461,18 +464,29 @@ def set_setting(setting_key):
     new_value_str = data['value']
     parsed_value = None
 
-    if setting_key == 'initial_balance':
+    # Check if the setting key is one that should be stored as a Decimal
+    if setting_key in SUPPORTED_DECIMAL_SETTINGS:
         try:
-            if isinstance(new_value_str, str) and ',' in new_value_str:
-                 new_value_str = new_value_str.replace(',', '.')
-            parsed_value = decimal.Decimal(new_value_str)
+            # Ensure string conversion before potential replacements
+            current_value_str = str(new_value_str)
+            if ',' in current_value_str:
+                 current_value_str = current_value_str.replace(',', '.')
+            parsed_value = decimal.Decimal(current_value_str)
         except (decimal.InvalidOperation, TypeError, ValueError) as e:
-            app.logger.error(f"Invalid value format for initial_balance: {new_value_str} - {e}")
+            app.logger.error(f"Invalid value format for {setting_key}: {new_value_str} - {e}")
             abort(400, description=f"Invalid value format for {setting_key}. Expected a number.")
     else:
-        abort(400, description=f"Setting key '{setting_key}' is not supported.")
+        # If you intend to support other setting types (e.g., strings) in the future,
+        # you would add logic here. For now, we only support the decimal ones explicitly.
+        # If the key is not supported, maybe return an error or handle differently.
+        # For this task, we assume only decimal settings are being set via this endpoint for now.
+        # If other *types* of settings were needed, the model/logic might need adjustment.
+         if setting_key not in SUPPORTED_DECIMAL_SETTINGS:
+             abort(400, description=f"Setting key '{setting_key}' is not currently supported for updates.")
+         # Fallback for safety, although the above check should catch unsupported keys
+         parsed_value = str(new_value_str) # Or handle based on expected type
 
-    # This query also requires Setting to be imported
+
     setting = Setting.query.filter_by(key=setting_key).first()
 
     try:
@@ -480,13 +494,24 @@ def set_setting(setting_key):
             setting.value = parsed_value
             app.logger.info(f"Updating setting '{setting_key}' to {parsed_value}")
         else:
-            # This instantiation also requires Setting to be imported
-            setting = Setting(key=setting_key, value=parsed_value)
-            db.session.add(setting)
-            app.logger.info(f"Creating new setting '{setting_key}' with value {parsed_value}")
+            # Only create settings that are explicitly supported
+            if setting_key in SUPPORTED_DECIMAL_SETTINGS:
+                setting = Setting(key=setting_key, value=parsed_value)
+                db.session.add(setting)
+                app.logger.info(f"Creating new setting '{setting_key}' with value {parsed_value}")
+            else:
+                 # Avoid creating settings with unsupported keys dynamically unless intended
+                 abort(400, description=f"Cannot create unsupported setting key '{setting_key}'.")
+
 
         db.session.commit()
-        return jsonify(setting.to_json()), 200
+        # Ensure setting is not None before calling to_json
+        if setting:
+            return jsonify(setting.to_json()), 200
+        else:
+             # This case should ideally not be reached due to the aborts above, but for safety:
+            abort(500, description=f"Failed to save setting '{setting_key}'.")
+
     except SQLAlchemyError as e: # Catch potential DB errors during save
         db.session.rollback()
         app.logger.error(f"Database error saving setting '{setting_key}': {e}")

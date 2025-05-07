@@ -91,64 +91,130 @@ export const isSelectedTransaction = atom((get) => get(selectedTransaction) !== 
 
 
 // App Settings
-// Initial balance atom (defaulting to 0 for now)
+// --- Initial Balance ---
 export const refreshInitialBalanceAtom = atom(0);
 
 export const initialBalanceAtom = atom(
-    // **Read function (getter)**: Fetches the value, depends on the refresh atom
+    // Read function
     async (get) => {
-        get(refreshInitialBalanceAtom); // Depend on the refresh trigger
+        get(refreshInitialBalanceAtom);
         try {
             const res = await fetch(BASE_URL + "/settings/initial_balance", { method: "GET" });
             if (!res.ok) {
                 if (res.status === 404) {
                     console.log("Initial balance setting not found, defaulting to 0.");
-                    return 0;
+                    return 0; // Return 0 directly
                 }
                 const errorData = await res.json().catch(() => ({ error: "Failed to parse error response" }));
                 throw new Error(errorData.error || errorData.description || `HTTP error! status: ${res.status}`);
             }
             const data = await res.json();
+            // Use parseFloat and handle potential NaN
             const balance = parseFloat(data.value);
             return isNaN(balance) ? 0 : balance;
-
         } catch (error) {
             console.error("Error fetching initial balance:", error);
-            return 0; // Fallback to 0
+            return 0; // Fallback to 0 on any error
         }
     },
-    // **Write function (setter)**: Handles the update logic
+    // Write function
     async (get, set, newBalance) => {
-        // 1. Perform the API call to update the backend
         try {
             const response = await fetch(BASE_URL + '/settings/initial_balance', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                // Ensure the value sent is a string representation of the number
-                body: JSON.stringify({ value: String(newBalance) }),
+                body: JSON.stringify({ value: String(newBalance) }), // Send as string
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                // Throw an error to be caught by the component calling the setter
+                const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
                 throw new Error(errorData.error || errorData.description || `HTTP error! status: ${response.status}`);
             }
 
-            // 2. On successful backend update, trigger a refresh of this atom
+            // Refresh this atom on success
             set(refreshInitialBalanceAtom, c => c + 1);
 
-            // Optional: Return the successful response data if needed
-            // return await response.json();
+            // Also refresh final running balance as initial balance affects it
+            set(refreshFinalRunningBalanceAtom, c => c + 1);
 
         } catch (error) {
             console.error("Error saving initial balance via atom:", error);
-            // Re-throw the error so the component can handle UI feedback (e.g., error toast)
-            throw error;
+            throw error; // Re-throw for component handling
         }
     }
 );
 
-// Loadable version remains useful for handling loading state in the UI
 export const ldbInitialBalanceAtom = loadable(initialBalanceAtom);
+
+
+// --- Final Running Balance ---
+export const refreshFinalRunningBalanceAtom = atom(0);
+
+export const finalRunningBalanceAtom = atom(
+    // Read function
+    async (get) => {
+        get(refreshFinalRunningBalanceAtom); // Depend on its own refresh trigger
+        // Also depend on initial balance refresh, as initial balance affects final balance
+        get(refreshInitialBalanceAtom);
+        // Also depend on transaction refresh, as transactions affect final balance
+        get(refreshTransactionsAtom);
+
+        try {
+            // Fetch the specific setting
+            const res = await fetch(BASE_URL + "/settings/final_running_balance", { method: "GET" });
+            if (!res.ok) {
+                if (res.status === 404) {
+                    console.log("Final running balance setting not found, defaulting to 0.");
+                    return 0; // Return 0 directly
+                }
+                const errorData = await res.json().catch(() => ({ error: "Failed to parse error response" }));
+                throw new Error(errorData.error || errorData.description || `HTTP error! status: ${res.status}`);
+            }
+            const data = await res.json();
+            // Use parseFloat and handle potential NaN
+            const balance = parseFloat(data.value);
+            return isNaN(balance) ? 0 : balance;
+        } catch (error) {
+            console.error("Error fetching final running balance:", error);
+            return 0; // Fallback to 0 on any error
+        }
+    },
+    // Write function
+    async (get, set, newBalance) => {
+        // Only update if the new balance is a valid number
+        if (typeof newBalance !== 'number' || isNaN(newBalance)) {
+            console.warn("Attempted to save invalid final running balance:", newBalance);
+            return; // Or throw an error if preferred
+        }
+
+        try {
+            const response = await fetch(BASE_URL + '/settings/final_running_balance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // Ensure the value sent is a string representation of the number
+                body: JSON.stringify({ value: String(newBalance.toFixed(2)) }), // Send as string, formatted
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
+                throw new Error(errorData.error || errorData.description || `HTTP error! status: ${response.status}`);
+            }
+
+            // Refresh this atom on success
+            set(refreshFinalRunningBalanceAtom, c => c + 1);
+
+        } catch (error) {
+            console.error("Error saving final running balance via atom:", error);
+            // Decide if this error should be surfaced to the user (e.g., via toast)
+            // For now, we just log it, as it happens in the background from TransactionGrid
+            // throw error; // Re-throwing might cause issues if TransactionGrid doesn't catch it
+        }
+    }
+);
+
+// Loadable version for UI states
+export const ldbFinalRunningBalanceAtom = loadable(finalRunningBalanceAtom);
