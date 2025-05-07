@@ -25,6 +25,7 @@ class Transaction(db.Model):
     date = db.Column(db.Date, nullable=False, index=True)
     amount = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
     description = db.Column(db.String(200), nullable=True)
+    note = db.Column(db.String(200), nullable=True)
     children_flag = db.Column(db.Boolean, nullable=False, default=False)
     doc_flag = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -43,6 +44,7 @@ class Transaction(db.Model):
             'date': self.date.isoformat() if self.date else None,
             'amount': str(self.amount) if isinstance(self.amount, decimal.Decimal) else self.amount,
             'description': self.description,
+            'note': self.note,
             'children_flag': self.children_flag,
             'doc_flag': self.doc_flag,
             'created_at': self.created_at.isoformat() if self.created_at else None,

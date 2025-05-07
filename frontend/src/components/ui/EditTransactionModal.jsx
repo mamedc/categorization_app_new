@@ -17,7 +17,7 @@ export default function EditTransactionModal ({
     const [selectedTag, setSelectedTag] = useAtom(selectedTagId);
 
     const [open, setOpen] = useState(false);
-    const initialFormState = {id: "", amount: '', date: '',description: '', tags: [], tag_group: {}};
+    const initialFormState = {id: "", amount: '', date: '', description: '', note: '', tags: [], tag_group: {}};
     const [formData, setFormData] = useState(initialFormState);
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
@@ -70,6 +70,7 @@ export default function EditTransactionModal ({
                 amount: data.amount || "",
                 date: data.date || "",
                 description: data.description || "",
+                note: data.note || "",
                 tags: data.tags || [],
                 created_at: data.created_at || "",
                 updated_at: data.updated_at || "",
@@ -290,6 +291,21 @@ export default function EditTransactionModal ({
                                     resize="none"
                                     name="description"
                                     value={formData.description}
+                                    onChange={handleChange}
+                                    disabled={isSaving}
+                                />
+                            </Field.Root> 
+
+                            {/*Note*/}
+                            <Field.Root>
+                                <Field.Label>Note:</Field.Label>
+                                <Textarea 
+                                    autoresize 
+                                    size="md"
+                                    placeholder="Enter note"
+                                    resize="none"
+                                    name="note"
+                                    value={formData.note}
                                     onChange={handleChange}
                                     disabled={isSaving}
                                 />

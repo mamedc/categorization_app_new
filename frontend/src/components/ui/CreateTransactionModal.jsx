@@ -15,7 +15,7 @@ export default function CreateTransactionModal ({
     const [selectedTransac, setSelectedTransac] = useAtom(selectedTransaction);
 
     const [open, setOpen] = useState(false);
-    const initialFormState = {amount: '', date: '',description: ''};
+    const initialFormState = {amount: '', date: '', description: '', note: ''};
     const [formData, setFormData] = useState(initialFormState);
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
@@ -136,6 +136,21 @@ export default function CreateTransactionModal ({
                                     resize="none"
                                     name="description"
                                     value={formData.description}
+                                    onChange={handleChange}
+                                    disabled={isSaving}
+                                />
+                            </Field.Root> 
+
+                            {/*Note*/}
+                            <Field.Root>
+                                <Field.Label>Note:</Field.Label>
+                                <Textarea 
+                                    autoresize 
+                                    size="md"
+                                    placeholder="Enter description"
+                                    resize="none"
+                                    name="note"
+                                    value={formData.note}
                                     onChange={handleChange}
                                     disabled={isSaving}
                                 />

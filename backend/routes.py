@@ -52,6 +52,7 @@ def create_transaction():
             date=parsed_date,
             amount=parsed_amount,
             description=data['description'],
+            note=data['note'],
             # Set other flags if needed from data.get(...)
         )
 
@@ -148,6 +149,7 @@ def update_transaction(transaction_id):
         transaction.amount = data.get('amount', transaction.amount) # Get the amount from the request or use the current amount
         transaction.date = data.get('date', transaction.date)
         transaction.description = data.get('description', transaction.description)
+        transaction.note = data.get('note', transaction.note)
         db.session.commit()
 
         return jsonify(transaction.to_json(include_tags=True)), 200 # 200 means ok
