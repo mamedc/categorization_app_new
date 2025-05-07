@@ -54,7 +54,7 @@ export default function Navbar({ activeView, setActiveView }) {
                 </Flex>
 
                 <Text fontSize="lg" fontWeight="bold" color="teal.700" display={{ base: "none", md: "block" }}>
-                    BFFship
+                    Settings
                 </Text>
 
             </Flex>
