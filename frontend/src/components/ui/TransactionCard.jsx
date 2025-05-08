@@ -39,7 +39,7 @@ export default function TransactionCard ({
 
     return (
         <Box
-            bg="white"
+            //bg="white"
             bg={isParent ? "#f1eee5" : "white"}
             borderRadius="lg"
             p={4}
