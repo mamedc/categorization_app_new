@@ -1,21 +1,25 @@
-# File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\backend\models.py
-# models.py
+# .\backend\models.py
 
 from app import db
 from sqlalchemy.sql import func
 import decimal
 
+
+
 # --- Association Table ---
-# ... (keep existing association table) ...
+
+
+
 transaction_tags = db.Table('transaction_tags',
     db.Column('transaction_id', db.Integer, db.ForeignKey('transaction.id', ondelete='CASCADE'), primary_key=True),
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id', ondelete='CASCADE'), primary_key=True)
 )
 
 
+
 # --- Model Definitions ---
 
-# ... (keep existing Transaction, Tag, TagGroup models) ...
+
 
 class Transaction(db.Model):
     """Represents a financial transaction."""
@@ -60,6 +64,7 @@ class Transaction(db.Model):
         return f'<Transaction {self.id} | {date_str} | {amount_str}>'
 
 
+
 class Tag(db.Model):
     """Represents a classification tag."""
     __tablename__ = 'tag'
@@ -69,7 +74,6 @@ class Tag(db.Model):
     name = db.Column(db.String(80), unique=False, nullable=False, index=True)
     color = db.Column(db.String(7), nullable=True)
     tag_group_id = db.Column(db.Integer, db.ForeignKey('tag_group.id'), nullable=False)
-
     tag_group = db.relationship('TagGroup', back_populates='tags')
     transactions = db.relationship(
         'Transaction',

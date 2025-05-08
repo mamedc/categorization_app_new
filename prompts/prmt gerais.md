@@ -10,48 +10,67 @@ The LLM task will be to add a new functionality in the React application.
 Please improve the prompt so I can go on with the component improvement.
 
 """
-# 1. Context
+You are contributing to a React application that helps users manage and classify financial transactions. \
+The application uses Chakra UI v3 for all styling and UI components. The main layout includes a top \
+navigation bar with four sections:
 
-I am developing a React application for managing and classifying financial transactions. 
-The project uses **Chakra UI v3** for the interface design.
+* Transactions: Displays a list of all financial transactions along with their associated tags.
+* Tags: Lists all existing tag groups and their respective tags.
+* Import: Allows users to import transactions from a CSV file.
+* Settings: Provides configuration options for the application.
 
-The main layout includes a top navigation bar that allows users to switch between different views:
-- In the **Transactions** section, users see a list of all transactions along with their associated tags.
-- In the **Tags** section, users see a list of all existing tag groups and their respective tags.
-- In the **Import** section, user are able to select a CSV file containing new transactions to be uploaded.
-- In the **Settings** section, user will be able to adjust the App settings.
+In the Transactions section, transactions are currently grouped by date, with each group having a \
+date-based header. The running balance for each transaction group is also displayed in the group header.
 
-# 2. Task
 
-In the **Transactions** section, the transactions are grouped by date. Each group has a header indicating \
-the group date. Your task is to include the **balance** for each group. It should work as follows:
+## Split functionality
 
-- The **initial balance** must be displayed before the first transaction group. The first transaction group \
-is the one with the oldest date.
-- The balance of each following transaction group must be computed and displayed in it's header on the right \
-hand side.
-- The balance of each following transaction group must be calculated as follows:
-  - Get the balance of the previous group. If it is the first group, the previopus balance is the initial balance.
-  - The current group balance is the previous balance minus the sum of all transactions values of the current group.
+Each transaction may contain distinct classified sub transactions. For example: the user may want to \
+classify one groceries buying into two classes, one as "groceries" and one as "gifts". 
 
-# 3. Reference Components
+To be able to do that, the app must provide the ability to split the transaction into multiple ones. \
+When splitting a transaction, the user will select the number of sub-transactions she wants to create, \
+and the system will create it.
 
-Use the current implementation of the components (enclosed between triple backticks) as a base:
 
-{files_presented}
 
-# 4. Chakra UI v3 Documentation
+# 2. Task: Implement the "Split Transaction" Feature
 
-Refer to the official Chakra UI v3 documentation for component usage, styling, and best practices:
+We want to allow users to split a single transaction into multiple sub-transactions with individual \
+classifications. This is useful for cases where a purchase needs to be divided into different categories \
+(e.g., a $100 purchase could be split into $70 for “Groceries” and $30 for “Gifts”).
 
-{docs_presented}
+## Requirements:
 
-# 5. Guidelines
+- Trigger: Add a “Split” button on the **Action Buttons** group of **TransactionsManagement.jsx**.
 
-- Use only **Chakra UI v3** components.
-- Preserve the existing structure and behavior of the app.
-- Follow clean code principles: clarity, simplicity, maintainability.
-- Use **4-space indentation**.
-- Avoid introducing third-party libraries or custom CSS; rely solely on Chakra UI capabilities.
+## UI/UX:
+
+- When triggered, open a modal (using Chakra UI v3) that allows the user to define how to split the transaction.
+- Allow the user to specify only the number of sub-transactions.
+- Provide Cancel and Confirm buttons to discard or apply the split.
+
+## Behavior:
+
+- Upon confirmation, insert into the transactions grid the new sub-transactions. Position them just after the \
+original transaction. This positioning must always be mantained, i.e., the child transactions must always be \
+located imediatly after it's parent transaction, independent of the sorting or filtering configurations.
+
+- The sub-transactions will:
+  - Inherit the following data from the original transaction: date, description, note and tags.
+  - have the "amount" field initialized to zero.
+  - be able to be edited as a it is a original transaction.
+
+- The original transaction will:
+  - Be maintained in the database.
+  - Display it's amount subtracted by the amount of it's sub-transactions.
+  - Display a "children_flag" badge, indicating it was splited.
+
+- When a sub-transaction is deleted, it's parent amount will be added with the amount of the deleted sub-transaction.
+
+- If a original transaction have already been splited, to add a new sub-transaction to it the user will access the \
+"Split" modal to add the new sub-transaction.
+
+- Maintain correct grouping and balance updates in the UI.
 
 """

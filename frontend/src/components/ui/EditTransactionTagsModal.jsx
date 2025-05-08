@@ -55,22 +55,6 @@ export default function EditTransactionTagsModal ({
         // No need to reset selectedTagIds here, handleOpen will re-initialize on next open
     };
 
-    // Handles checking/unchecking a tag
-    // const handleTagSelectionChange = (tagId, isChecked) => {
-    //     setSelectedTagIds(prevIds => {
-    //         const newIds = new Set(prevIds); // Create a mutable copy
-    //         if (isChecked) {
-    //             newIds.add(tagId);
-    //         } else {
-    //             newIds.delete(tagId);
-    //         }
-    //         return newIds; // Return the new Set to update state
-    //     });
-    // };
-
-
-
-
     const handleTagSelectionChange = (tagId, isChecked) => {
 
         // 1. Update the overall set of currently selected tags
@@ -126,7 +110,6 @@ export default function EditTransactionTagsModal ({
     };
     
     
-
     const handleUpdateParent = async () => {
         setIsSaving(true);
         setSaveError('');
@@ -198,12 +181,11 @@ export default function EditTransactionTagsModal ({
         <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
             <Dialog.Trigger asChild>
                 <Button
-                    size="sm"
+                    size="xs"
                     colorPalette="cyan"
-                    rounded="sm"
+                    rounded="xs"
                     width={20}
                     onClick={handleOpen}
-                    // Removed disabled condition based on single selectedTag
                 >
                     Edit Tags {/* Changed Button Text */}
                 </Button>

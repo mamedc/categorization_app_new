@@ -3,7 +3,7 @@
 import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer, ColorSwatch } from '@chakra-ui/react'
 
 
-export default function TagGroupCard ({ 
+export default function TagCard ({ 
     tag,
 }) {
     return (

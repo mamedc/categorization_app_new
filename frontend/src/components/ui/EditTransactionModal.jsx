@@ -2,11 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { BASE_URL } from "../../App"
-import { Button, CloseButton, Dialog, Portal, Text, VStack, Stack, Field, Input, Checkbox, Flex, Textarea, HStack, ColorSwatch, Box } from "@chakra-ui/react";
+import { Button, CloseButton, Dialog, Portal, Text, VStack, Stack, Field, Input, Flex, Textarea, HStack, ColorSwatch, Box } from "@chakra-ui/react";
+import { Fragment } from "react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { useAtom, useSetAtom } from "jotai";
 import { selectedTransaction, refreshTransactionsAtom, selectedTagId } from "../../context/atoms";
 import EditTransactionTagsModal from "./EditTransactionTagsModal";
+import TagCard from "./TagCard";
 
 
 export default function EditTransactionModal ({ 
@@ -248,11 +250,13 @@ export default function EditTransactionModal ({
                     <Dialog.Header><Dialog.Title>Edit Transaction</Dialog.Title></Dialog.Header>
                     <Dialog.Body>
                         <Stack direction="column" gap="6">
-                            <Stack direction={{ base: "column", md: "row" }} gap="4" width="100%">
-                                
-                                <p>Created at: { formData.created_at }</p>
-                                <p>Updated at: { formData.updated_at }</p>
 
+                            <Stack direction={{ base: "column", md: "row" }} gap="8" width="100%" textStyle="xs" fontWeight="semibold">
+                                <Text>Created at: { new Date(formData.created_at).toLocaleDateString("pt-BR") }</Text>
+                                <Text>Updated at: { new Date(formData.updated_at).toLocaleDateString("pt-BR") }</Text>
+                            </Stack>
+
+                            <Stack direction={ "row" } gap="4" width="100%">
                                 {/*Left: Date*/}
                                 <Field.Root>
                                     <Field.Label>Date:</Field.Label>
@@ -265,7 +269,7 @@ export default function EditTransactionModal ({
                                     />
                                 </Field.Root>  
 
-                                {/*Right: Value*/}
+                                {/*Right: Amount*/}
                                 <Field.Root>
                                     <Field.Label>Amount:</Field.Label>
                                     <Input 
@@ -278,7 +282,6 @@ export default function EditTransactionModal ({
                                         disabled={isSaving}
                                     />
                                 </Field.Root> 
-                            {/*</Flex>*/}
                             </Stack>
 
                             {/*Description*/}
@@ -312,46 +315,10 @@ export default function EditTransactionModal ({
                             </Field.Root> 
 
                             {/*Tags*/}
-                            <p>Tags:</p>
-                            <Box borderWidth="1px" p="4">
-                                <VStack spacing={6} align="stretch" >
-                                    {formData.tags.map((tag) => (
-                                        <Flex
-                                            key={tag.id}
-                                            direction={'row'}
-                                            align={{ base: 'start', md: 'center' }}
-                                            gap={4}
-                                            wrap="wrap"
-                                        >
-                                            {/*Checkbox*/}
-                                            {/* <Checkbox.Root
-                                                variant="outline"
-                                                size="sm"
-                                                colorPalette="cyan"
-                                                mt={{ base: 1, md: 0 }}
-                                                checked={tag.id === selectedTag}
-                                                onCheckedChange={() => handleSelectTag(tag.id)}
-                                            >
-                                                <Checkbox.HiddenInput />
-                                                <Checkbox.Control />
-                                            </Checkbox.Root> */}
-
-                                            {/* Left: Details */}
-                                            <VStack align="start" spacing={1} flex="1">
-                                                <HStack spacing={3} wrap="wrap">
-                                                    <Text fontSize="sm" color="gray.500">
-                                                    {tag.tag_group.name} / {tag.name}
-                                                    </Text>
-                                                </HStack>
-                                            </VStack>
-
-                                            {/* Right: Value + Flags */}
-                                            <VStack align="end" spacing={1}>
-                                                <ColorSwatch value={tag.color} size="xs" borderRadius="xl" />
-                                            </VStack>
-
-                                        </Flex>
-                                    ))}
+                            <Stack direction={ "row" } gap="4" width="100%">
+                                
+                                <Stack direction={ "column" } gap="4">
+                                    <p>Tags:</p>
                                     <EditTransactionTagsModal 
                                         transacData={formData} 
                                         setTransacData={setFormData} 
@@ -363,8 +330,36 @@ export default function EditTransactionModal ({
                                         removedTags={removedTags}
                                         setRemovedTags={setRemovedTags}
                                     />
-                                </VStack>
-                            </Box>
+                                </Stack>
+
+                                <Box borderWidth="1px" p="4" width="100%">
+                                    <VStack spacing={6} align="stretch" >
+                                        {formData.tags.map((tag) => (
+                                            <Flex
+                                                key={tag.id}
+                                                direction={'row'}
+                                                align={{ base: 'start', md: 'center' }}
+                                                gap={4}
+                                                wrap="wrap"
+                                            >
+                                                {/* Left: Details */}
+                                                <VStack align="start" spacing={1} flex="1">
+                                                    <HStack spacing={3} wrap="wrap">
+                                                        <Text fontSize="sm" color="gray.500">
+                                                        {tag.tag_group.name}
+                                                        </Text>
+                                                    </HStack>
+                                                </VStack>
+                                            
+                                                <Fragment key={tag.name}>
+                                                    <TagCard key={tag.id} tag={tag} />
+                                                </Fragment>
+                                            </Flex>
+                                        ))} 
+                                    </VStack>
+                                </Box>
+                            
+                            </Stack>
                             
                         </Stack>
                         {saveError && <Text color="red.500">{saveError}</Text>}
