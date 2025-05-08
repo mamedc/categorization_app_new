@@ -1,4 +1,4 @@
-// File path: frontend/src/components/ui/TransactionGrid.jsx
+// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\ui\TransactionGrid.jsx
 // TransactionGrid.jsx
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -105,35 +105,46 @@ export default function TransactionGrid ({
     // Memoize the chronologically grouped *full* transactions with *total running balance*
     // This now uses the adjusted parent amounts for balance calculation.
     const chronologicalGroupsWithTotalBalance = useMemo(() => {
-        if (initialBalanceData.state !== 'hasData' || !chronologicallySortedAllTransactions) {
+        if (initialBalanceData.state !== 'hasData' || !chronologicallySortedAllTransactions || !allTransactionsData) {
+             // Added check for allTransactionsData
             return [];
         }
 
+        // Create a map for quick lookup of children by parent ID
+        const childrenMap = new Map();
+        allTransactionsData.forEach(tx => {
+            if (tx.parent_id !== null) {
+                if (!childrenMap.has(tx.parent_id)) {
+                    childrenMap.set(tx.parent_id, []);
+                }
+                childrenMap.get(tx.parent_id).push(tx);
+            }
+        });
+
         // Adjust parent amounts first before grouping and balance calculation
         const transactionsWithAdjustedAmounts = chronologicallySortedAllTransactions.map(tx => {
-            if (tx.children_flag && allTransactionsData) {
-                const children = allTransactionsData.filter(childTx => childTx.parent_id === tx.id);
+            let effectiveAmount = 0;
+            const originalAmount = parseFloat(tx.amount || '0'); // Ensure parsing
+
+            if (tx.children_flag && tx.parent_id === null) { // Explicitly check parent_id is null
+                const children = childrenMap.get(tx.id) || [];
                 const sumOfChildrenAmounts = children.reduce((sum, child) => {
-                    const childAmount = parseFloat(child.amount);
+                    const childAmount = parseFloat(child.amount || '0'); // Ensure parsing
                     return sum + (isNaN(childAmount) ? 0 : childAmount);
                 }, 0);
-                const originalAmount = parseFloat(tx.amount);
-                const effectiveAmount = isNaN(originalAmount) ? 0 : originalAmount - sumOfChildrenAmounts;
 
-                return {
-                    ...tx,
-                    // Use the *effective* amount for balance calculations
-                    effective_amount_for_balance: effectiveAmount,
-                    // Keep original amount if needed elsewhere, or adjust 'amount' only for display later
-                    original_amount: originalAmount,
-                };
+                effectiveAmount = isNaN(originalAmount) ? 0 : originalAmount - sumOfChildrenAmounts;
+            } else {
+                // Non-parents or children use their amount directly for balance calculation
+                effectiveAmount = isNaN(originalAmount) ? 0 : originalAmount;
             }
-            // Non-parents use their amount directly for balance calculation
-            const amount = parseFloat(tx.amount);
+
             return {
-                 ...tx,
-                 effective_amount_for_balance: isNaN(amount) ? 0 : amount,
-                 original_amount: isNaN(amount) ? 0 : amount,
+                ...tx,
+                // Use the *effective* amount for balance calculations
+                _effectiveAmountForBalance: effectiveAmount,
+                // Keep original amount if needed elsewhere
+                _originalAmount: isNaN(originalAmount) ? 0 : originalAmount,
             };
         });
 
@@ -155,21 +166,23 @@ export default function TransactionGrid ({
             }
         });
 
-        const sortedDateKeys = Array.from(groups.keys()).sort();
+        // Sort by date ASC
+        const sortedDateKeys = Array.from(groups.keys()).sort((a, b) => new Date(a + 'T00:00:00Z').getTime() - new Date(b + 'T00:00:00Z').getTime());
 
         let runningBalance = initialBalanceData.data;
         const groupsWithBalance = sortedDateKeys.map(dateKey => {
             const txs = groups.get(dateKey);
             // Sum based on the *effective* amount for balance
-            const groupSum = txs.reduce((sum, tx) => sum + tx.effective_amount_for_balance, 0);
+            const groupSum = txs.reduce((sum, tx) => sum + tx._effectiveAmountForBalance, 0);
             const groupBalance = runningBalance + groupSum;
-            runningBalance = groupBalance;
+            runningBalance = groupBalance; // Update running balance for the next group
             return { date: dateKey, transactions: txs, groupSum, groupBalance };
         });
 
         return groupsWithBalance;
 
-    }, [chronologicallySortedAllTransactions, initialBalanceData.state, initialBalanceData.data, allTransactionsData]); // Added allTransactionsData dependency for children finding
+    // Added allTransactionsData dependency for children finding and effective amount calc
+    }, [chronologicallySortedAllTransactions, initialBalanceData.state, initialBalanceData.data, allTransactionsData]);
 
 
     // Effect to update the final running balance in the backend (based on *all* transactions using effective amounts)
@@ -180,6 +193,7 @@ export default function TransactionGrid ({
         ) {
             // Use the balance calculated with effective amounts
             const finalBalance = chronologicalGroupsWithTotalBalance[chronologicalGroupsWithTotalBalance.length - 1].groupBalance;
+            // Only update if the value is different to avoid unnecessary writes
             if (finalBalance !== lastSentBalanceRef.current) {
                  console.log(`Updating final running balance (based on ALL transactions, effective amounts): ${finalBalance}`);
                  setFinalBalance(finalBalance);
@@ -190,6 +204,7 @@ export default function TransactionGrid ({
             initialBalanceData.state === 'hasData' &&
             chronologicallySortedAllTransactions.length === 0 // Check based on sorted all transactions
         ) {
+            // If there are no transactions, the final balance is just the initial balance
             const finalBalance = initialBalanceData.data;
              if (finalBalance !== lastSentBalanceRef.current) {
                  console.log(`Updating final running balance (initial): ${finalBalance}`);
@@ -201,19 +216,25 @@ export default function TransactionGrid ({
          else if (transactionState !== 'hasData' || initialBalanceData.state !== 'hasData') {
              lastSentBalanceRef.current = null;
          }
-         // Removed sortedAllTransactions.length from dependency array as it's derived from allTransactionsData
-    }, [chronologicalGroupsWithTotalBalance, transactionState, initialBalanceData.state, initialBalanceData.data, setFinalBalance, chronologicallySortedAllTransactions]);
+         // chronologicallySortedAllTransactions depends on allTransactionsData, so it's covered
+    }, [chronologicalGroupsWithTotalBalance, transactionState, initialBalanceData.state, initialBalanceData.data, setFinalBalance]);
 
 
     // Memoize the *display* grouped transactions (based on filteredTransactions prop and sortOrder)
     const displayGroupedTransactions = useMemo(() => {
          // Use the filteredTransactions prop passed from parent
-         if (!filteredTransactions || filteredTransactions.length === 0 || initialBalanceData.state !== 'hasData') {
-            return [];
-        }
+         // Also needs initialBalanceData and allTransactionsData
+         if (!filteredTransactions || initialBalanceData.state !== 'hasData' || !allTransactionsData) {
+             return [];
+         }
 
-        // 1. Sort the *filtered* data based on display preferences and parent/child constraints
-        const sortedFiltered = [...filteredTransactions].sort((a, b) => {
+         // Return early if filtered list is empty, avoids unnecessary calculations
+         if (filteredTransactions.length === 0) {
+             return [];
+         }
+
+         // 1. Sort the *filtered* data based on display preferences and parent/child constraints
+         const sortedFiltered = [...filteredTransactions].sort((a, b) => {
             // Primary: Date sort based on sortOrder
             const dateA = new Date(a.date + 'T00:00:00Z').getTime();
             const dateB = new Date(b.date + 'T00:00:00Z').getTime();
@@ -236,89 +257,120 @@ export default function TransactionGrid ({
 
             // Quaternary: Consistent order for siblings/children (using ID)
             return String(a.id).localeCompare(String(b.id));
-        });
+         });
 
-        // 2. Group the sorted filtered data
-        const groups = new Map();
-        sortedFiltered.forEach((transaction) => {
-            if (!transaction.date) return;
-            try {
-                const dateKey = transaction.date;
+         // 2. Group the sorted filtered data by date
+         const groups = new Map();
+         sortedFiltered.forEach((transaction) => {
+             if (!transaction.date) return;
+             try {
+                 const dateKey = transaction.date;
                  if (!dateKey || typeof dateKey !== 'string') return;
-                if (!groups.has(dateKey)) groups.set(dateKey, []);
-                groups.get(dateKey).push(transaction); // Push original transaction object for now
-            } catch (e) {
-                console.error(`Error processing date for filtered transaction ID ${transaction.id}:`, e);
-            }
-        });
+                 if (!groups.has(dateKey)) groups.set(dateKey, []);
+                 groups.get(dateKey).push(transaction); // Push original transaction object for now
+             } catch (e) {
+                 console.error(`Error processing date for filtered transaction ID ${transaction.id}:`, e);
+             }
+         });
 
-        // 3. Create display-ready groups with adjusted amounts and running balance for the filtered set
-        const sortedDateKeys = Array.from(groups.keys()).sort((a, b) => {
-             // Sort keys based on date, respecting sortOrder
+         // 3. Sort the date keys according to the overall sortOrder
+         const sortedDateKeys = Array.from(groups.keys()).sort((a, b) => {
              const dateA = new Date(a + 'T00:00:00Z').getTime();
              const dateB = new Date(b + 'T00:00:00Z').getTime();
              return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-        });
+         });
 
-        // Find starting balance for the filtered set based on chronological order
-        const earliestFilteredDate = [...filteredTransactions].sort((a,b) => new Date(a.date + 'T00:00:00Z').getTime() - new Date(b.date + 'T00:00:00Z').getTime())[0]?.date;
-        let runningBalanceFiltered = initialBalanceData.data;
+         // 4. Calculate running balance for the *filtered set* using effective amounts
+         // Find starting balance for the filtered set based on chronological order
+         const earliestFilteredDate = [...sortedFiltered].sort((a,b) => new Date(a.date + 'T00:00:00Z').getTime() - new Date(b.date + 'T00:00:00Z').getTime())[0]?.date;
+         let runningBalanceFiltered = initialBalanceData.data; // Start with initial balance
 
-        if (earliestFilteredDate && chronologicalGroupsWithTotalBalance.length > 0) {
-            let lastBalanceBeforeFiltered = initialBalanceData.data;
-            // Find the group *just before* the earliest filtered date in the *total* balance groups (which are sorted ASC)
-            const chronologicalTotalGroups = chronologicalGroupsWithTotalBalance.sort((a,b) => new Date(a.date + 'T00:00:00Z').getTime() - new Date(b.date + 'T00:00:00Z').getTime());
+         // Get the chronologically sorted groups (always ASC date order)
+         const chronologicalTotalGroupsAsc = chronologicalGroupsWithTotalBalance; //.sort((a,b) => new Date(a.date + 'T00:00:00Z').getTime() - new Date(b.date + 'T00:00:00Z').getTime());
 
-            for (const group of chronologicalTotalGroups) {
-                // Date comparison needs to be careful with string dates 'YYYY-MM-DD'
-                if (group.date < earliestFilteredDate) {
-                    lastBalanceBeforeFiltered = group.groupBalance;
-                } else {
-                    break; // Stop once we reach or pass the earliest filtered date
-                }
-            }
+         if (earliestFilteredDate && chronologicalTotalGroupsAsc.length > 0) {
+             let lastBalanceBeforeFiltered = initialBalanceData.data;
+             // Find the balance of the group *just before* the earliest filtered date
+             for (const group of chronologicalTotalGroupsAsc) {
+                 if (group.date < earliestFilteredDate) {
+                     lastBalanceBeforeFiltered = group.groupBalance;
+                 } else {
+                     // We've reached or passed the earliest date in the filtered set
+                     break;
+                 }
+             }
              runningBalanceFiltered = lastBalanceBeforeFiltered;
-        }
+         }
 
-        // Calculate running balance for the filtered set using adjusted amounts
-        const groupsWithFilteredBalance = sortedDateKeys.map(dateKey => {
-            const originalTxs = groups.get(dateKey);
+         // Prepare children map for quick lookup
+         const childrenMap = new Map();
+         allTransactionsData.forEach(tx => {
+             if (tx.parent_id !== null) {
+                 if (!childrenMap.has(tx.parent_id)) {
+                     childrenMap.set(tx.parent_id, []);
+                 }
+                 childrenMap.get(tx.parent_id).push(tx);
+             }
+         });
 
-            // Process transactions for this group: adjust parent amounts
-            const processedTxs = originalTxs.map(tx => {
-                if (tx.children_flag && allTransactionsData) {
-                    const children = allTransactionsData.filter(childTx => childTx.parent_id === tx.id);
-                    const sumOfChildrenAmounts = children.reduce((sum, child) => {
-                        const childAmount = parseFloat(child.amount);
-                        return sum + (isNaN(childAmount) ? 0 : childAmount);
-                    }, 0);
-                    const originalAmount = parseFloat(tx.amount);
-                    const effectiveAmount = isNaN(originalAmount) ? 0 : originalAmount - sumOfChildrenAmounts;
-                    return {
-                        ...tx,
-                        amount: effectiveAmount.toFixed(2), // Adjusted amount for display
-                        _effectiveAmountForBalance: effectiveAmount // Keep effective amount for balance calc
-                    };
-                }
-                const amount = parseFloat(tx.amount);
-                return {
+         // Process groups according to display sort order
+         const groupsWithFilteredBalance = sortedDateKeys.map(dateKey => {
+             const originalTxs = groups.get(dateKey); // Transactions for this date in sortedFiltered
+
+             // Process transactions within the group to adjust parent amounts for display and calculate effective sum
+             const processedTxs = originalTxs.map(tx => {
+                 let displayAmount = 0;
+                 let effectiveAmountForBalance = 0;
+                 const originalAmount = parseFloat(tx.amount || '0');
+
+                 if (tx.children_flag && tx.parent_id === null) { // It's a parent
+                     const children = childrenMap.get(tx.id) || [];
+                     const sumOfChildrenAmounts = children.reduce((sum, child) => {
+                         const childAmount = parseFloat(child.amount || '0');
+                         return sum + (isNaN(childAmount) ? 0 : childAmount);
+                     }, 0);
+                     effectiveAmountForBalance = isNaN(originalAmount) ? 0 : originalAmount - sumOfChildrenAmounts;
+                     displayAmount = effectiveAmountForBalance; // Parent displays its remaining amount
+                 } else { // It's a child or a non-split transaction
+                     effectiveAmountForBalance = isNaN(originalAmount) ? 0 : originalAmount;
+                     displayAmount = effectiveAmountForBalance; // Child/Non-split displays its own amount
+                 }
+
+                 return {
                      ...tx,
-                     _effectiveAmountForBalance: isNaN(amount) ? 0 : amount // Use original amount for balance if not parent
+                     amount: displayAmount.toFixed(2), // Update amount for TransactionCard display
+                     _effectiveAmountForBalance: effectiveAmountForBalance // Internal use for balance sum
                  };
-            });
+             });
 
-            // Calculate group sum based on effective amounts for balance
-            const groupSum = processedTxs.reduce((sum, tx) => sum + tx._effectiveAmountForBalance, 0);
-            const groupBalanceFiltered = runningBalanceFiltered + groupSum;
-            runningBalanceFiltered = groupBalanceFiltered; // Update for the next group *in the filtered set*
+             // Calculate group sum using effective amounts
+             const groupSum = processedTxs.reduce((sum, tx) => sum + tx._effectiveAmountForBalance, 0);
 
-            return { date: dateKey, transactions: processedTxs, groupSum, groupBalance: groupBalanceFiltered }; // Store the filtered balance and processed transactions
-        });
+             // Calculate running balance for the filtered set
+             // Note: If sorting DESC, the running balance calculation needs care.
+             // It's usually calculated chronologically (ASC). The display here needs to show the balance *at the end* of that day.
+             // We'll find the balance from the chronological calculation for this dateKey.
+             const chronoGroup = chronologicalTotalGroupsAsc.find(g => g.date === dateKey);
+             const groupBalance = chronoGroup ? chronoGroup.groupBalance : runningBalanceFiltered; // Use chronological balance if found
 
-        // No need to reverse again, sortedDateKeys already respects sortOrder
-        return groupsWithFilteredBalance;
+             // Update the running balance *if* sorting ASC for the next iteration (though this isn't strictly needed as we fetch from chronoGroup)
+             if (sortOrder === 'asc') {
+                 runningBalanceFiltered += groupSum;
+             }
+             // If sorting DESC, the concept of "running balance" for the next displayed group is complex.
+             // Displaying the balance *at the end of the day* (from chronological calc) is consistent.
 
-    // Dependencies now include sortOrder and allTransactionsData
+             return {
+                 date: dateKey,
+                 transactions: processedTxs, // Transactions with adjusted display amount for parents
+                 groupSum, // Sum of effective amounts for this group
+                 groupBalance // Chronological balance at the end of this day
+             };
+         });
+
+         return groupsWithFilteredBalance;
+
+    // Dependencies updated to include all necessary data sources for calculations
     }, [filteredTransactions, sortOrder, initialBalanceData.state, initialBalanceData.data, allTransactionsData, chronologicalGroupsWithTotalBalance]);
 
 
@@ -375,7 +427,7 @@ export default function TransactionGrid ({
                                 <Flex justify="space-between" align="center">
                                     <Box>{formatDateHeader(group.date)}</Box>
                                     <Spacer />
-                                     {/* Display the running balance calculated for the filtered set */}
+                                     {/* Display the running balance calculated for the end of this day */}
                                      <Box
                                         fontSize="sm"
                                         marginRight={4}
@@ -400,7 +452,7 @@ export default function TransactionGrid ({
                                         isSelected={transaction.id === selectedTransac?.id} // Compare IDs for selection highlight
                                         onSelect={() => handleSelectTransaction(transaction.id)}
                                         // Pass parent/child flags
-                                        isParent={transaction.children_flag}
+                                        isParent={transaction.children_flag && transaction.parent_id === null} // Ensure it's actually a parent
                                         isChild={!!transaction.parent_id}
                                     />
                                 ))}

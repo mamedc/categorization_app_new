@@ -132,7 +132,7 @@ export default function SplitTransactionModal({ isOpen, onClose, transactionToSp
                                         type="number"
                                         value={numberOfSplits}
                                         onChange={(e) => setNumberOfSplits(e.target.value)}
-                                        min={2} // Minimum 2 sub-transactions for a split to make sense
+                                        min={1}
                                         disabled={isSaving}
                                         placeholder="e.g., 2"
                                     />
