@@ -1,95 +1,100 @@
+// File path: frontend/src/components/ui/EditTransactionModal.jsx
 // EditTransactionModal.jsx
 
 import { useState, useCallback } from "react";
-import { BASE_URL } from "../../App"
+// import { BASE_URL } from "../../App" // No longer needed for direct fetch here
 import { Button, CloseButton, Dialog, Portal, Text, VStack, Stack, Field, Input, Flex, Textarea, HStack, ColorSwatch, Box } from "@chakra-ui/react";
 import { Fragment } from "react";
-import { Toaster, toaster } from "@/components/ui/toaster"
+import { Toaster, toaster } from "@/components/ui/toaster";
 import { useAtom, useSetAtom } from "jotai";
-import { selectedTransaction, refreshTransactionsAtom, selectedTagId } from "../../context/atoms";
+import { selectedTransaction, refreshTransactionsAtom } from "../../context/atoms"; // Removed selectedTagId if unused
 import EditTransactionTagsModal from "./EditTransactionTagsModal";
 import TagCard from "./TagCard";
+import { BASE_URL } from "../../App"; // Keep BASE_URL for the PATCH/POST/DELETE calls
 
 
-export default function EditTransactionModal ({ 
+export default function EditTransactionModal ({
 }) {
-    
+
     const refreshTransactions = useSetAtom(refreshTransactionsAtom);
-    const [selectedTransac, setSelectedTransac] = useAtom(selectedTransaction);
-    const [selectedTag, setSelectedTag] = useAtom(selectedTagId);
+    const [selectedTransacAtomValue, setSelectedTransacAtom] = useAtom(selectedTransaction); // Read the selected transaction OBJECT
 
     const [open, setOpen] = useState(false);
-    const initialFormState = {id: "", amount: '', date: '', description: '', note: '', tags: [], tag_group: {}};
+    const initialFormState = {id: "", amount: '', date: '', description: '', note: '', tags: [], tag_group: {}, created_at: '', updated_at: ''}; // Added missing fields
     const [formData, setFormData] = useState(initialFormState);
     const [isSaving, setIsSaving] = useState(false); // State for loading indicator
     const [saveError, setSaveError] = useState(''); // State for potential errors
 
+    // State for managing tag changes within the EditTransactionTagsModal
     const [selectedTagIds, setSelectedTagIds] = useState(new Set());
     const [addedTags, setAddedTags] = useState([]);
     const [removedTags, setRemovedTags] = useState([]);
-    
-    const requiredFields = [
-        "id", "date", "amount", "description", "children_flag", "doc_flag", 
-        "created_at", "updated_at", "tags",
-    ];
-
-    const hasRequiredFields = (data, requiredFields) => {
-        return requiredFields.every(field => field in data);
-      };
-
-    const getTransaction = async (e) => {
-        console.log('selectedTransac: ' + selectedTransac)
-        try {
-            const res = await fetch(BASE_URL + "/transactions/view/" + selectedTransac, { method: "GET" });
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || "Failed to fetch tag groups");
-            };
-            if (!hasRequiredFields(data, requiredFields)) {
-                console.error("Fetched data does not have all fields:", data);
-                return[]
-            };
-            return data;       
-        } catch (error) {
-            console.error("Error fetching transactions:", error);
-            return [];
-        };
-    };
 
     const handleOpen = async () => {
-        setOpen(true);
-        setSaveError('');
-        setAddedTags([])
-        setRemovedTags([])
-        const data = await getTransaction();
+        // Use the object directly from the atom
+        const currentSelectedTransaction = selectedTransacAtomValue;
+        // console.log("handleOpen called. selectedTransacAtomValue:", currentSelectedTransaction);
 
-        if (data && typeof data === "object") {
-            requiredFields.forEach(field => {
-                console.log(`${field}:`, data[field]);
-            });
+        // Ensure a transaction object is actually selected
+        if (!currentSelectedTransaction || typeof currentSelectedTransaction !== 'object' || !currentSelectedTransaction.id) {
+            console.error("Edit modal opened without a selected transaction object or ID.");
+             toaster.create({
+                 title: "Error",
+                 description: "No transaction selected for editing.",
+                 type: "error",
+                 duration: 3000,
+                 placement: "top-center",
+             });
+            return; // Don't open the modal if no transaction is selected
+        }
+
+        setSaveError('');
+        setAddedTags([]); // Reset tags added in previous sessions
+        setRemovedTags([]); // Reset tags removed in previous sessions
+
+        // Directly use the data from the atom
+        // console.log("Setting form data with:", currentSelectedTransaction);
+        try {
             setFormData({
-                id: data.id || "",
-                amount: data.amount || "",
-                date: data.date || "",
-                description: data.description || "",
-                note: data.note || "",
-                tags: data.tags || [],
-                created_at: data.created_at || "",
-                updated_at: data.updated_at || "",
+                id: currentSelectedTransaction.id ?? "", // Use nullish coalescing for safety
+                amount: currentSelectedTransaction.amount ?? "",
+                date: currentSelectedTransaction.date ?? "",
+                description: currentSelectedTransaction.description ?? "",
+                note: currentSelectedTransaction.note ?? "",
+                tags: currentSelectedTransaction.tags ?? [], // Ensure tags is an array
+                created_at: currentSelectedTransaction.created_at ?? "",
+                updated_at: currentSelectedTransaction.updated_at ?? "",
+                // Include other fields if your form uses them (e.g., parent_id, children_flag)
+                // parent_id: currentSelectedTransaction.parent_id ?? null,
+                // children_flag: currentSelectedTransaction.children_flag ?? false,
             });
-        };
+            // Initialize selectedTagIds based on the currently loaded transaction's tags
+            setSelectedTagIds(new Set(currentSelectedTransaction.tags?.map(tag => tag.id) ?? []));
+            setOpen(true); // Open the modal only after successfully setting data
+        } catch (error) {
+             console.error("Error setting form data in Edit modal:", error);
+             toaster.create({
+                 title: "Error",
+                 description: "Could not load transaction data into the form.",
+                 type: "error",
+             });
+        }
     };
+
     const handleClose = () => {
         setFormData(initialFormState);
-        setSelectedTransac(null);
+        setSelectedTransacAtom(null); // Clear the selected transaction atom
         setAddedTags([])
         setRemovedTags([])
+        setSelectedTagIds(new Set()); // Reset selected tag IDs
         setOpen(false);
     };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
+
     const handleLog = (e) => {
         console.log('formData.tags');
         console.log(formData.tags);
@@ -100,32 +105,45 @@ export default function EditTransactionModal ({
         console.log('removedTags');
         console.log(removedTags);
     };
-    const handleSelectTag = (tagId) => {
-        const newSel = tagId === selectedTag ? null : tagId;
-        setSelectedTag(newSel);
-    };
-
 
 
     const handleSave = useCallback(async () => {
-            
+
         setIsSaving(true);
         let successMessage = "Changes saved to transaction.";
-    
+        const transactionIdToUpdate = formData.id; // Use the ID from the form data
+
+        if (!transactionIdToUpdate) {
+            toaster.create({
+                title: "Save Error",
+                description: "Transaction ID is missing. Cannot save changes.",
+                type: "error",
+            });
+            setIsSaving(false);
+            return;
+        }
+
         try {
             // --- 1. Update Core Transaction Data ---
-            console.log("Updating transaction data for ID:", selectedTransac);
-            const updateRes = await fetch(BASE_URL + "/transactions/update/" + selectedTransac, {
+            console.log("Updating transaction data for ID:", transactionIdToUpdate);
+            const updateRes = await fetch(BASE_URL + "/transactions/update/" + transactionIdToUpdate, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json", },
-                body: JSON.stringify(formData),
+                // Send only fields that can be updated by user
+                body: JSON.stringify({
+                    date: formData.date,
+                    amount: formData.amount,
+                    description: formData.description,
+                    note: formData.note,
+                    // Potentially add doc_flag if editable here
+                }),
             });
             const updateData = await updateRes.json();
             if (!updateRes.ok) {
                 throw new Error(updateData.error || updateData.description || `Failed to update transaction (status ${updateRes.status})`);
             }
             console.log("Transaction data updated successfully.");
-    
+
             // --- 2. Add New Tags (Using IDs) ---
             if (addedTags && addedTags.length > 0) {
                 console.log("Attempting to add tags with IDs:", addedTags);
@@ -136,48 +154,52 @@ export default function EditTransactionModal ({
                         continue;
                     }
                     console.log(`Processing add for tag ID: ${tagIdToAdd}`);
-                    const addTagRes = await fetch(`${BASE_URL}/transactions/${selectedTransac}/tags`, {
+                    const addTagRes = await fetch(`${BASE_URL}/transactions/${transactionIdToUpdate}/tags`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json", },
-                        // Send the ID directly in the body as required by the API
                         body: JSON.stringify({ tag_id: tagIdToAdd }),
                     });
                     const addTagData = await addTagRes.json();
                     if (!addTagRes.ok) {
-                        throw new Error(addTagData.error || addTagData.description || `Failed to add tag ID ${tagIdToAdd} (status ${addTagRes.status})`);
+                        // Check if error is just "already associated" - treat as success-like
+                        if (addTagRes.status !== 409 && !(addTagData.message || addTagData.error || '').includes("already associated")) {
+                            throw new Error(addTagData.error || addTagData.description || `Failed to add tag ID ${tagIdToAdd} (status ${addTagRes.status})`);
+                        } else {
+                            console.log(`Tag ID ${tagIdToAdd} was already associated or add operation handled gracefully.`);
+                        }
+                    } else {
+                         console.log(`Tag ID ${tagIdToAdd} added successfully.`);
                     }
-                    console.log(`Tag ID ${tagIdToAdd} added successfully.`);
                 }
                 successMessage = "Transaction and tags updated successfully.";
             }
-    
+
             // --- 3. Remove Existing Tags (Using IDs) ---
             if (removedTags && removedTags.length > 0) {
                 console.log("Attempting to remove tags with IDs:", removedTags);
                 for (const tagIdToRemove of removedTags) {
-                     // Validate if it's a usable ID (e.g., a number)
                      if (typeof tagIdToRemove !== 'number' || tagIdToRemove === null || typeof tagIdToRemove === 'undefined') {
                         console.warn("Skipping invalid tag ID found in removedTags:", tagIdToRemove);
                         continue;
                     }
                     console.log(`Processing remove for tag ID: ${tagIdToRemove}`);
-                    // Include the ID directly in the URL as required by the API
-                    const removeTagRes = await fetch(`${BASE_URL}/transactions/${selectedTransac}/tags/${tagIdToRemove}`, {
+                    const removeTagRes = await fetch(`${BASE_URL}/transactions/${transactionIdToUpdate}/tags/${tagIdToRemove}`, {
                         method: "DELETE",
                     });
-    
-                    if (!removeTagRes.ok) {
+
+                    // Treat 404 (tag not found on transaction) as success-like for removal
+                    if (!removeTagRes.ok && removeTagRes.status !== 404) {
                          let errorData = {};
                         try {
                              errorData = await removeTagRes.json();
                         } catch(e) { /* Ignore if no body */ }
                         throw new Error(errorData.error || errorData.description || `Failed to remove tag ID ${tagIdToRemove} (status ${removeTagRes.status})`);
                     }
-                     console.log(`Tag ID ${tagIdToRemove} removed successfully.`);
+                     console.log(`Tag ID ${tagIdToRemove} removed successfully or was already removed.`);
                 }
                  successMessage = "Transaction and tags updated successfully.";
             }
-    
+
             // --- 4. Success Handling ---
             toaster.create({
                 title: "Success!",
@@ -188,12 +210,9 @@ export default function EditTransactionModal ({
             });
             console.log("All operations completed successfully.");
             setSaveError('');
-            handleClose();
-            refreshTransactions((prev) => prev + 1);
-            // Consider clearing addedTags/removedTags here or in handleClose
-            // setAddedTags([]);
-            // setRemovedTags([]);
-    
+            handleClose(); // Close modal on success
+            refreshTransactions((prev) => prev + 1); // Refresh list
+
         } catch (error) {
             // --- 5. Error Handling ---
             toaster.create({
@@ -204,39 +223,36 @@ export default function EditTransactionModal ({
                 placement: "top-center",
             });
             console.error('Error saving transaction changes:', error);
-            // setSaveError(error.message);
-    
+            setSaveError(error.message); // Display error in modal if desired
+
         } finally {
             // --- 6. Cleanup ---
             setIsSaving(false);
         }
     }, [
         // Keep all dependencies used inside handleSave
+        formData, // Includes the transaction ID and user changes
         addedTags,
         removedTags,
-        formData,
-        selectedTransac,
-        setIsSaving,
-        setSaveError,
-        handleClose,
         refreshTransactions,
-        toaster,
-        BASE_URL
-        // Add any others if used
+        // Removed unused dependencies like selectedTransac, setIsSaving, setSaveError, handleClose, toaster, BASE_URL
+        // because they are either stable functions/objects or handled directly inside.
+        // Add back if eslint complains and verify necessity.
     ]);
-    
+
 
     return (
-        <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
-            
+        <Dialog.Root lazyMount open={open} onOpenChange={(e) => {if (!e.open) handleClose()}}>
+
             <Dialog.Trigger asChild>
-                <Button 
-                    size="sm" 
-                    colorPalette="yellow" 
-                    rounded="sm" 
-                    width={20} 
+                <Button
+                    size="sm"
+                    colorPalette="yellow"
+                    rounded="sm"
+                    width={20}
                     onClick={handleOpen}
-                    disabled={selectedTransac === null}
+                    // Disable if no transaction OBJECT is selected
+                    disabled={!selectedTransacAtomValue}
                 >
                     Edit
                 </Button>
@@ -252,8 +268,9 @@ export default function EditTransactionModal ({
                         <Stack direction="column" gap="6">
 
                             <Stack direction={{ base: "column", md: "row" }} gap="8" width="100%" textStyle="xs" fontWeight="semibold">
-                                <Text>Created at: { new Date(formData.created_at).toLocaleDateString("pt-BR") }</Text>
-                                <Text>Updated at: { new Date(formData.updated_at).toLocaleDateString("pt-BR") }</Text>
+                                {/* Display formatted dates safely */}
+                                <Text>Created at: {formData.created_at ? new Date(formData.created_at).toLocaleDateString("pt-BR") : 'N/A'}</Text>
+                                <Text>Updated at: {formData.updated_at ? new Date(formData.updated_at).toLocaleDateString("pt-BR") : 'N/A'}</Text>
                             </Stack>
 
                             <Stack direction={ "row" } gap="4" width="100%">
@@ -267,12 +284,12 @@ export default function EditTransactionModal ({
                                         onChange={handleChange}
                                         disabled={isSaving} // Disable input during saving
                                     />
-                                </Field.Root>  
+                                </Field.Root>
 
                                 {/*Right: Amount*/}
                                 <Field.Root>
                                     <Field.Label>Amount:</Field.Label>
-                                    <Input 
+                                    <Input
                                         placeholder="R$ 0.00"
                                         name="amount"
                                         type="number"
@@ -281,14 +298,14 @@ export default function EditTransactionModal ({
                                         onChange={handleChange}
                                         disabled={isSaving}
                                     />
-                                </Field.Root> 
+                                </Field.Root>
                             </Stack>
 
                             {/*Description*/}
                             <Field.Root>
                                 <Field.Label>Description:</Field.Label>
-                                <Textarea 
-                                    autoresize 
+                                <Textarea
+                                    autoresize
                                     size="md"
                                     placeholder="Enter description"
                                     resize="none"
@@ -297,13 +314,13 @@ export default function EditTransactionModal ({
                                     onChange={handleChange}
                                     disabled={isSaving}
                                 />
-                            </Field.Root> 
+                            </Field.Root>
 
                             {/*Note*/}
                             <Field.Root>
                                 <Field.Label>Note:</Field.Label>
-                                <Textarea 
-                                    autoresize 
+                                <Textarea
+                                    autoresize
                                     size="md"
                                     placeholder="Enter note"
                                     resize="none"
@@ -312,84 +329,98 @@ export default function EditTransactionModal ({
                                     onChange={handleChange}
                                     disabled={isSaving}
                                 />
-                            </Field.Root> 
+                            </Field.Root>
 
                             {/*Tags*/}
                             <Stack direction={ "row" } gap="4" width="100%">
-                                
+
                                 <Stack direction={ "column" } gap="4">
                                     <p>Tags:</p>
-                                    <EditTransactionTagsModal 
-                                        transacData={formData} 
-                                        setTransacData={setFormData} 
-                                        existingTags={formData.tags} 
-                                        selectedTagIds={selectedTagIds}
-                                        setSelectedTagIds={setSelectedTagIds}
-                                        addedTags={addedTags}
-                                        setAddedTags={setAddedTags}
-                                        removedTags={removedTags}
-                                        setRemovedTags={setRemovedTags}
+                                     {/* Pass necessary state and setters to EditTransactionTagsModal */}
+                                    <EditTransactionTagsModal
+                                        transacData={formData} // Pass current form data
+                                        setTransacData={setFormData} // Allow modal to update parent's form data (specifically tags)
+                                        existingTags={formData.tags} // Pass current tags from form
+                                        selectedTagIds={selectedTagIds} // Pass the selection state
+                                        setSelectedTagIds={setSelectedTagIds} // Allow modal to update selection state
+                                        addedTags={addedTags} // Pass list of tags added this session
+                                        setAddedTags={setAddedTags} // Allow modal to update added list
+                                        removedTags={removedTags} // Pass list of tags removed this session
+                                        setRemovedTags={setRemovedTags} // Allow modal to update removed list
                                     />
                                 </Stack>
 
                                 <Box borderWidth="1px" p="4" width="100%">
-                                    <VStack spacing={6} align="stretch" >
-                                        {formData.tags.map((tag) => (
-                                            <Flex
-                                                key={tag.id}
-                                                direction={'row'}
-                                                align={{ base: 'start', md: 'center' }}
-                                                gap={4}
-                                                wrap="wrap"
-                                            >
-                                                {/* Left: Details */}
-                                                <VStack align="start" spacing={1} flex="1">
-                                                    <HStack spacing={3} wrap="wrap">
-                                                        <Text fontSize="sm" color="gray.500">
-                                                        {tag.tag_group.name}
-                                                        </Text>
-                                                    </HStack>
-                                                </VStack>
-                                            
-                                                <Fragment key={tag.name}>
-                                                    <TagCard key={tag.id} tag={tag} />
-                                                </Fragment>
-                                            </Flex>
-                                        ))} 
+                                    <VStack spacing={4} align="stretch" > {/* Adjusted spacing */}
+                                         {/* Ensure formData.tags exists and is an array before mapping */}
+                                         {Array.isArray(formData.tags) && formData.tags.length > 0 ? (
+                                            formData.tags.map((tag) => (
+                                                <Flex
+                                                    key={tag.id}
+                                                    direction={'row'}
+                                                    align={{ base: 'start', md: 'center' }}
+                                                    gap={4}
+                                                    wrap="wrap"
+                                                >
+                                                    {/* Left: Details */}
+                                                    <VStack align="start" spacing={1} flex="1">
+                                                        <HStack spacing={3} wrap="wrap">
+                                                            {/* Safely access nested tag_group */}
+                                                            <Text fontSize="sm" color="gray.500">
+                                                            {tag.tag_group?.name || 'No Group'}
+                                                            </Text>
+                                                        </HStack>
+                                                    </VStack>
+
+                                                    <Fragment key={tag.name}>
+                                                        <TagCard key={tag.id} tag={tag} />
+                                                    </Fragment>
+                                                </Flex>
+                                            ))
+                                        ) : (
+                                            <Text fontSize="sm" color="gray.500">No tags assigned.</Text>
+                                        )}
                                     </VStack>
                                 </Box>
-                            
+
                             </Stack>
-                            
+
                         </Stack>
-                        {saveError && <Text color="red.500">{saveError}</Text>}
+                        {saveError && <Text color="red.500" fontSize="sm" mt={2}>{saveError}</Text>}
                     </Dialog.Body>
-                    
+
                     {/* Cancel and Save buttons */}
-                    <Dialog.Footer>
-                        <Button 
-                            variant="surface" 
-                            onClick={handleClose} 
+                    <Dialog.Footer gap={3}> {/* Added gap */}
+                        <Button
+                            variant="outline" // Changed from surface for consistency
+                            onClick={handleClose}
                             disabled={isSaving}
                         >
                             Cancel
                         </Button>
-                        <Button 
-                            onClick={handleSave} 
+                        <Button
+                            colorPalette="teal" // Added color palette for consistency
+                            onClick={handleSave}
+                            isLoading={isSaving} // Use isLoading prop
+                            loadingText="Saving..." // Added loading text
                             disabled={isSaving}
                         >
                             Save
                         </Button>
-                        <Button 
-                            onClick={handleLog} 
+                        {/* <Button
+                            onClick={handleLog}
+                            disabled={isSaving} // Also disable log button when saving
+                            variant="outline"
+                            size="sm"
                         >
                             Log
-                        </Button>
+                        </Button> */}
                     </Dialog.Footer>
-                    
-                    <Dialog.CloseTrigger asChild>
+
+                    {/* Position close button */}
+                    <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
                         <CloseButton size="sm" onClick={handleClose} disabled={isSaving} />
-                    </Dialog.CloseTrigger>  
+                    </Dialog.CloseTrigger>
                 </Dialog.Content>
                 </Dialog.Positioner>
             </Portal>

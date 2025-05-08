@@ -1,9 +1,10 @@
-// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\ui\TransactionsManagement.jsx
+// File path: frontend/src/components/ui/TransactionsManagement.jsx
 // src/components/ui/TransactionsManagement.jsx
-// *** FIXES APPLIED HERE for Select value display ***
+// *** Includes changes from previous steps (Select value display fix) ***
+// *** Plus new changes for Phase 2 Split Transaction ***
 
 import { useState, useMemo, useEffect } from "react";
-import { useAtomValue } from "jotai";
+import { useAtomValue } from "jotai"; // Import useAtomValue directly
 import {
     Container, Flex, Button, Spacer, IconButton, Tooltip, Portal,
     Select, Input, HStack, VStack, Box, Field,
@@ -14,7 +15,8 @@ import TransactionGrid from "./TransactionGrid";
 import CreateTransactionModal from "./CreateTransactionModal";
 import DeleteTransactionModal from "./DeleteTransactionModal";
 import EditTransactionModal from "./EditTransactionModal";
-import { ldbTransactionsAtom } from "../../context/atoms";
+import SplitTransactionModal from "./SplitTransactionModal"; // <-- Import Split Modal
+import { ldbTransactionsAtom, selectedTransaction as selectedTransactionAtom } from "../../context/atoms"; // Import atom
 
 // Helper functions remain the same...
 const getUniqueYears = (transactions) => {
@@ -70,11 +72,14 @@ const monthsCollection = createListCollection({ items: monthsData });
 
 
 export default function TransactionsManagement({
-    selectedTransactionId,
-    setSelectedTransactionId
+    // Props received from App.jsx, potentially unused if using atom directly
+    // We'll rely on the selectedTransactionAtom instead
+    // selectedTransactionId,
+    // setSelectedTransactionId
 }) {
 
     const { state: transactionState, data: transactionsData } = useAtomValue(ldbTransactionsAtom);
+    const selectedTransacAtomValue = useAtomValue(selectedTransactionAtom); // <-- Read selected transaction object from atom
 
     // --- Sorting State ---
     const [sortOrder, setSortOrder] = useState('desc');
@@ -91,9 +96,13 @@ export default function TransactionsManagement({
     const [selectedMonth, setSelectedMonth] = useState('');
     const [selectedYear, setSelectedYear] = useState('');
 
+    // --- Split Transaction State ---
+    const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
+    const [currentTransactionToSplit, setCurrentTransactionToSplit] = useState(null);
+
     // --- Dynamic Year Options (now returns collection) ---
      const availableYearsCollection = useMemo(() => {
-         if (transactionState === 'hasData') {
+         if (transactionState === 'hasData' && transactionsData) { // Check transactionsData exists
              // getUniqueYears now returns the correct format [{label, value}, ...]
              return createListCollection({ items: getUniqueYears(transactionsData) });
          }
@@ -116,19 +125,20 @@ export default function TransactionsManagement({
          if (transactionState !== 'hasData' || !transactionsData) {
              return [];
          }
-         const originalTransactions = [...transactionsData];
+         const originalTransactions = [...transactionsData]; // Use raw data from atom
          switch (filterType) {
              case 'dateRange':
                  if (!startDate || !endDate) return originalTransactions;
                  try {
-                     const start = new Date(startDate + 'T00:00:00Z');
-                     const end = new Date(endDate + 'T23:59:59Z');
-                     if (isNaN(start.getTime()) || isNaN(end.getTime())) return originalTransactions;
+                     // Ensure dates are parsed correctly for comparison
+                     const start = new Date(startDate + 'T00:00:00Z').getTime();
+                     const end = new Date(endDate + 'T23:59:59Z').getTime();
+                     if (isNaN(start) || isNaN(end)) return originalTransactions;
                      return originalTransactions.filter(tx => {
                          if (!tx.date) return false;
                          try {
-                             const txDate = new Date(tx.date + 'T00:00:00Z');
-                             if (isNaN(txDate.getTime())) return false;
+                             const txDate = new Date(tx.date + 'T00:00:00Z').getTime();
+                             if (isNaN(txDate)) return false;
                              return txDate >= start && txDate <= end;
                          } catch { return false; }
                      });
@@ -137,14 +147,14 @@ export default function TransactionsManagement({
                  }
              case 'last30Days':
                  try {
-                     const thirtyDaysAgo = new Date(getDateNDaysAgoString(30) + 'T00:00:00Z');
-                     const todayEnd = new Date(getTodayDateString() + 'T23:59:59Z');
-                     if (isNaN(thirtyDaysAgo.getTime()) || isNaN(todayEnd.getTime())) return originalTransactions;
+                     const thirtyDaysAgo = new Date(getDateNDaysAgoString(30) + 'T00:00:00Z').getTime();
+                     const todayEnd = new Date(getTodayDateString() + 'T23:59:59Z').getTime();
+                     if (isNaN(thirtyDaysAgo) || isNaN(todayEnd)) return originalTransactions;
                      return originalTransactions.filter(tx => {
                          if (!tx.date) return false;
                          try {
-                             const txDate = new Date(tx.date + 'T00:00:00Z');
-                              if (isNaN(txDate.getTime())) return false;
+                             const txDate = new Date(tx.date + 'T00:00:00Z').getTime();
+                              if (isNaN(txDate)) return false;
                              return txDate >= thirtyDaysAgo && txDate <= todayEnd;
                          } catch { return false; }
                      });
@@ -161,6 +171,7 @@ export default function TransactionsManagement({
                      try {
                          const txDate = new Date(tx.date + 'T00:00:00Z');
                           if (isNaN(txDate.getTime())) return false;
+                         // Use UTC methods for comparison consistency
                          return txDate.getUTCFullYear() === yearNum && (txDate.getUTCMonth() + 1) === monthNum;
                      } catch { return false; }
                  });
@@ -169,6 +180,32 @@ export default function TransactionsManagement({
                  return originalTransactions;
          }
      }, [transactionState, transactionsData, filterType, startDate, endDate, selectedMonth, selectedYear]);
+
+
+     // --- Handler for opening the Split Modal ---
+     const handleOpenSplitModal = () => {
+         // Ensure a transaction is selected and it's not already a child
+         if (selectedTransacAtomValue && selectedTransacAtomValue.parent_id === null) {
+             setCurrentTransactionToSplit({
+                 id: selectedTransacAtomValue.id,
+                 description: selectedTransacAtomValue.description,
+                 // parent_id is null here, but pass it for consistency if needed later
+                 parent_id: selectedTransacAtomValue.parent_id,
+             });
+             setIsSplitModalOpen(true);
+         } else {
+            // Optionally show a toast or log if the button wasn't disabled correctly
+            console.warn("Split button clicked but transaction is not splittable or not selected.");
+            // You could add a toaster message here if desired
+            // toaster.create({ title: "Cannot Split", description: "Please select a valid parent transaction.", type: "warning" });
+         }
+     };
+
+     // --- Handler for closing the Split Modal ---
+     const handleCloseSplitModal = () => {
+         setIsSplitModalOpen(false);
+         setCurrentTransactionToSplit(null); // Clear the transaction data when closing
+     };
 
 
     return (
@@ -198,7 +235,7 @@ export default function TransactionsManagement({
                     <Tooltip.Root positioning={{ placement: "bottom" }} openDelay={200} closeDelay={100}>
                         <Tooltip.Trigger asChild>
                             <IconButton
-                                size="sm" aria-label="Toggle sort order by date" onClick={toggleSortOrder}
+                                size="sm" aria-label={sortTooltipLabel} onClick={toggleSortOrder}
                                 variant="outline" colorPalette="teal" _hover={{ bg: "teal.500", color: "white" }}
                             >
                                 {sortIcon}
@@ -331,6 +368,21 @@ export default function TransactionsManagement({
                  <HStack spacing={2} mt={{ base: 4, md: 0 }} width={{ base: "100%", md: "auto"}} justifyContent={{ base: "flex-end", md: "initial"}}>
                     <CreateTransactionModal />
                     <EditTransactionModal />
+                    {/* --- Split Button --- */}
+                    <Button
+                        size="sm"
+                        colorPalette="orange"
+                        variant="outline"
+                        rounded="sm"
+                        width={20}
+                        onClick={handleOpenSplitModal}
+                        // Disable if no transaction selected OR if selected transaction is already a child
+                        disabled={!selectedTransacAtomValue || selectedTransacAtomValue.parent_id !== null}
+                        aria-label="Split selected transaction"
+                    >
+                        Split
+                    </Button>
+                     {/* --- End Split Button --- */}
                     <DeleteTransactionModal />
                 </HStack>
 
@@ -341,6 +393,17 @@ export default function TransactionsManagement({
                 filteredTransactions={filteredTransactions}
                 sortOrder={sortOrder}
             />
+
+            {/* --- Render Split Transaction Modal --- */}
+            {/* Ensure transactionToSplit has data before rendering */}
+            {currentTransactionToSplit && (
+                <SplitTransactionModal
+                    isOpen={isSplitModalOpen}
+                    onClose={handleCloseSplitModal} // Use the handler that also resets state
+                    transactionToSplit={currentTransactionToSplit}
+                />
+            )}
+             {/* --- End Render Split Modal --- */}
 
         </Container>
     );

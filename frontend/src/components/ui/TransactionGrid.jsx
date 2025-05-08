@@ -1,11 +1,9 @@
-// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\ui\TransactionGrid.jsx
 // TransactionGrid.jsx
-// *** CHANGES APPLIED HERE ***
 
-import { useAtom, useAtomValue, useSetAtom } from "jotai"; // Added useAtomValue
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
-    ldbTransactionsAtom, // Still need access to the raw data atom for total balance
-    selectedTransaction,
+    ldbTransactionsAtom,
+    selectedTransaction as selectedTransactionAtom, // Rename imported atom
     ldbInitialBalanceAtom,
     finalRunningBalanceAtom
 } from "../../context/atoms";
@@ -14,7 +12,6 @@ import { BASE_URL } from "../../App";
 import { VStack, Spinner, Text, Flex, StackSeparator, Box, Spacer, HStack } from "@chakra-ui/react";
 import TransactionCard from "./TransactionCard";
 
-// Helper functions (formatDateHeader, formatCurrency) remain the same...
 // Helper function to format date string into a user-friendly format
 const formatDateHeader = (dateString) => {
     // If dateString is already 'Invalid Date', return it directly
@@ -49,7 +46,7 @@ export default function TransactionGrid ({
 }) {
     // Still need raw data for total balance calculation
     const { state: transactionState, data: allTransactionsData } = useAtomValue(ldbTransactionsAtom);
-    const [selectedTransac, setSelectedTransac] = useAtom(selectedTransaction);
+    const [selectedTransac, setSelectedTransac] = useAtom(selectedTransactionAtom); // Use the renamed atom for state management
     const [initialBalanceData] = useAtom(ldbInitialBalanceAtom);
     const setFinalBalance = useSetAtom(finalRunningBalanceAtom);
     const lastSentBalanceRef = useRef(null);
@@ -60,9 +57,11 @@ export default function TransactionGrid ({
     const hasInitialBalanceError = initialBalanceData.state === 'hasError';
 
     const handleSelectTransaction = (transactionId) => {
+        // Find the full transaction object from the raw data using the ID
+        const transactionObject = allTransactionsData?.find(tx => tx.id === transactionId);      
         setSelectedTransac((prevSelectedId) =>
-            prevSelectedId === transactionId ? null : transactionId
-        );
+            prevSelectedId?.id === transactionId ? null : transactionObject // Store the object or null
+        ); // Ensure comparison is based on ID if prevSelectedId is an object
     };
 
     // Memoize the *chronologically sorted* full transaction list for *total balance* calculation
@@ -323,7 +322,7 @@ export default function TransactionGrid ({
                                     <TransactionCard
                                         key={transaction.id}
                                         transaction={transaction}
-                                        isSelected={transaction.id === selectedTransac}
+                                        isSelected={transaction.id === selectedTransac?.id} // Compare IDs for selection highlight
                                         onSelect={() => handleSelectTransaction(transaction.id)}
                                     />
                                 ))}
