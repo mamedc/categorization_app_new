@@ -1,44 +1,53 @@
+// File path: frontend/src/components/ui/TransactionCard.jsx
 // TransactionCard.jsx
 
 import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer } from '@chakra-ui/react'
 import { Fragment } from "react";
 import TagCard from "./TagCard";
 
-
-function formatBrazilianCurrency(value) {
+// Helper function to format number as currency (e.g., BRL)
+const formatBrazilianCurrency = (value) => {
+    // Value might be a string (e.g., "0.00") or a number
     const number = parseFloat(value);
-  
+
     if (isNaN(number)) {
       return "Invalid Number"; // Or handle the error as you see fit
     }
-  
-    const formattedValue = new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(number);
-  
-    // Remove the currency symbol and add "R$" with a space
-    const parts = formattedValue.split(' ');
-    if (parts.length === 2) {
-      return `- R$ ${parts[1]}`;
-    } else {
-      return formattedValue; // Fallback in case the format is unexpected
-    }
+
+    // Always display with 2 decimal places
+    return number.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
   };
 
 
-export default function TransactionCard ({ transaction, isSelected, onSelect }) {
+export default function TransactionCard ({
+    transaction,
+    isSelected,
+    onSelect,
+    isParent, // <-- New prop
+    isChild   // <-- New prop
+}) {
+
+    // Determine the base color based on the amount
+    const baseColor = parseFloat(transaction.amount) >= 0 ? 'green.600' : 'red.600';
+    // Apply 50% opacity if it's a parent transaction
+    const finalColor = isParent ? `${baseColor}/50` : baseColor;
 
     return (
         <Box
             bg="white"
+            bg={isParent ? "#f1eee5" : "white"}
             borderRadius="lg"
             p={4}
             borderLeftWidth={4}
-            borderLeftColor={isSelected ? "teal.500" : "#bcdbdb"} // Example: change border color when selected
+            borderLeftColor={isSelected ? "teal.500" : (isParent ? "gray.300" : "#bcdbdb")} // Example: gray border for children
             //transition="all 0.1s"
+            //opacity={isParent ? 0.75 : 1} // Slightly fade children? Optional.
+            // pl={isChild ? 6 : 4} // Indent children slightly? Optional.
             // _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
             _hover={{ outline: '1px solid', outlineColor: '#bcdbdb' }}
             // Optionally add more visual feedback for selection
@@ -71,6 +80,7 @@ export default function TransactionCard ({ transaction, isSelected, onSelect }) 
                         fontSize="sm"
                         fontWeight="medium"
                         color="gray.700"
+                        opacity={isParent ? 0.5 : 1} // Slightly fade children? Optional.
                         noOfLines={2}
                     >
                         {transaction.description}
@@ -86,8 +96,8 @@ export default function TransactionCard ({ transaction, isSelected, onSelect }) 
                     flex="3"
                 >
                     {transaction.tags.map((tag) => (
-                        <Fragment key={tag.name}>
-                            <TagCard key={tag.id} tag={tag} />
+                        <Fragment key={tag.id}> {/* Use tag.id for key */}
+                            <TagCard tag={tag} />
                         </Fragment>
                     ))}
                 </Flex>
@@ -96,28 +106,44 @@ export default function TransactionCard ({ transaction, isSelected, onSelect }) 
                 <Spacer display={{ base: 'none', md: 'block' }} />
 
                 {/* Right: Value + Flags */}
-                <VStack align="end" spacing={1}>
-                    <Text
-                        fontSize="sm"
-                        fontWeight="bold"
-                        color={Number(transaction.amount) >= 0 ? 'green.600' : 'red.600'}
-                    >
-                        {formatBrazilianCurrency(transaction.amount)}
-                    </Text>
-
+                <HStack align="end" spacing={1}>
+                    
+                    {/* --- Badges Section --- */}
                     <HStack spacing={2} wrap="wrap" justify="end">
-                        {transaction.childrenFlag && (
-                            <Badge colorScheme="blue" variant="subtle" fontSize="xs">
-                                Child
+                        {/* Parent Badge */}
+                        {isParent && (
+                            <Badge colorScheme="purple" variant="outline" fontSize="xs">
+                                Split
                             </Badge>
                         )}
-                        {transaction.docFlag && (
-                            <Badge colorScheme="purple" variant="subtle" fontSize="xs">
+                        {/* Child Badge */}
+                        {isChild && (
+                            <Badge colorScheme="gray" variant="outline" fontSize="xs">
+                                Sub-item
+                            </Badge>
+                        )}
+                        {/* Existing Doc Flag Badge */}
+                        {transaction.doc_flag && (
+                            <Badge colorScheme="blue" variant="subtle" fontSize="xs">
                                 Doc
                             </Badge>
                         )}
+                        {/* Remove the old childrenFlag badge if it existed */}
+                        {/* {transaction.childrenFlag && ( ... )} */}
                     </HStack>
-                </VStack>
+                    {/* --- End Badges Section --- */}
+
+                    <Text
+                        fontSize="sm"
+                        fontWeight="bold"
+                        // Use parseFloat for comparison as amount might be string "0.00"
+                        //color={parseFloat(transaction.amount) >= 0 ? 'green.600' : 'red.600'}
+                        color={finalColor}
+                    >
+                        {formatBrazilianCurrency(transaction.amount)}
+                    </Text>
+                    
+                </HStack>
             </Flex>
         </Box>
     );
