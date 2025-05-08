@@ -128,7 +128,7 @@ def view_transaction(transaction_id):
 
 
 
-# Splitting Transaction
+# --- New Route for Splitting Transactions ---
 @app.route('/api/transactions/<int:transaction_id>/split', methods=['POST'])
 def split_transaction(transaction_id):
     try:

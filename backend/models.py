@@ -1,4 +1,4 @@
-# .\backend\models.py
+# File path: backend/models.py
 
 from app import db
 from sqlalchemy.sql import func
@@ -30,15 +30,28 @@ class Transaction(db.Model):
     amount = db.Column(db.Numeric(precision=10, scale=2), nullable=False)
     description = db.Column(db.String(200), nullable=True)
     note = db.Column(db.String(200), nullable=True)
-    children_flag = db.Column(db.Boolean, nullable=False, default=False)
+    children_flag = db.Column(db.Boolean, nullable=False, default=False) # Indicates if this is a parent transaction
     doc_flag = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    # --- New fields for Split Transaction feature ---
+    parent_id = db.Column(db.Integer, db.ForeignKey('transaction.id', name='fk_transaction_parent_id'), nullable=True, index=True)
+    
+    # Relationship to load children for a parent transaction
+    # 'parent' backref allows child_transaction.parent to access the parent object
+    children = db.relationship(
+        'Transaction',
+        backref=db.backref('parent', remote_side=[id]), 
+        lazy='subquery', # Fetches children using a separate query when parent.children is accessed
+        cascade='all, delete-orphan' # If parent is deleted, its children are also deleted
+    )
+    # --- End of New fields ---
+
     tags = db.relationship(
         'Tag',
         secondary=transaction_tags,
-        lazy='subquery',
+        lazy='subquery', # Similar to above, fetches tags when parent.tags is accessed
         back_populates='transactions'
     )
 
@@ -51,6 +64,7 @@ class Transaction(db.Model):
             'note': self.note,
             'children_flag': self.children_flag,
             'doc_flag': self.doc_flag,
+            'parent_id': self.parent_id, # Added for Split Transaction feature
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -61,7 +75,9 @@ class Transaction(db.Model):
     def __repr__(self):
         amount_str = f"{self.amount:.2f}" if self.amount is not None else "None"
         date_str = self.date.isoformat() if self.date else "None"
-        return f'<Transaction {self.id} | {date_str} | {amount_str}>'
+        parent_info = f", parent_id={self.parent_id}" if self.parent_id is not None else ""
+        children_flag_info = ", children_flag=True" if self.children_flag else ""
+        return f'<Transaction {self.id} | {date_str} | {amount_str}{parent_info}{children_flag_info}>'
 
 
 
@@ -78,7 +94,7 @@ class Tag(db.Model):
     transactions = db.relationship(
         'Transaction',
         secondary=transaction_tags,
-        lazy='dynamic',
+        lazy='dynamic', # Use 'dynamic' if you expect many transactions per tag and want to apply filters
         back_populates='tags'
     )
 
@@ -110,8 +126,8 @@ class TagGroup(db.Model):
     tags = db.relationship(
         'Tag',
         back_populates='tag_group',
-        cascade="all, delete-orphan",
-        lazy=True
+        cascade="all, delete-orphan", # If group is deleted, its tags are deleted
+        lazy=True # Default lazy loading
     )
 
     def to_json(self, include_tags=True):
@@ -127,6 +143,7 @@ class TagGroup(db.Model):
     def __repr__(self):
         return f'<TagGroup {self.id} ({self.name})>'
 
+
 # --- New Settings Model ---
 class Setting(db.Model):
     """Represents an application setting."""
@@ -138,17 +155,16 @@ class Setting(db.Model):
 
     def to_json(self):
         """Returns a dictionary representation of the setting."""
-        # Explicitly handle None value -> return '0.00' for initial_balance consistency
         value_output = None
         if self.value is not None:
             value_output = str(self.value)
         elif self.key == 'initial_balance':
-            value_output = '0.00' # Default if value is None in DB
+            value_output = '0.00'
 
         return {
             'id': self.id,
             'key': self.key,
-            'value': value_output # Return string representation or '0.00' or None
+            'value': value_output
         }
 
     def __repr__(self):
