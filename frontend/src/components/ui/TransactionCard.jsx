@@ -34,8 +34,16 @@ export default function TransactionCard ({
 
     // Determine the base color based on the amount
     const baseColor = parseFloat(transaction.amount) >= 0 ? 'green.600' : 'red.600';
-    // Apply 50% opacity if it's a parent transaction
-    const finalColor = isParent ? `${baseColor}/50` : baseColor;
+    // const finalColor = isParent ? `${baseColor}/50` : baseColor; // Apply 50% opacity if it's a parent transaction
+
+    let finalColor;
+    if (isParent && parseFloat(transaction.amount) === 0) {
+        finalColor = "gray.300";
+    } else if (isParent && parseFloat(transaction.amount) !== 0) {
+        finalColor = `${baseColor}/50`;
+    } else {
+        finalColor = baseColor;
+    }
 
     return (
         <Box
@@ -113,19 +121,19 @@ export default function TransactionCard ({
                     <HStack spacing={2} wrap="wrap" justify="end">
                         {/* Parent Badge */}
                         {isParent && (
-                            <Badge colorScheme="purple" variant="outline" fontSize="xs">
+                            <Badge colorPalette={ parseFloat(transaction.amount) === 0 ? "gray" : "red" } variant="subtle" fontSize="xs">
                                 Split
                             </Badge>
                         )}
                         {/* Child Badge */}
                         {isChild && (
-                            <Badge colorScheme="gray" variant="outline" fontSize="xs">
+                            <Badge colorPalette="gray" variant="subtle" fontSize="xs">
                                 Sub-item
                             </Badge>
                         )}
                         {/* Existing Doc Flag Badge */}
                         {transaction.doc_flag && (
-                            <Badge colorScheme="blue" variant="subtle" fontSize="xs">
+                            <Badge colorPalette="blue" variant="subtle" fontSize="xs">
                                 Doc
                             </Badge>
                         )}

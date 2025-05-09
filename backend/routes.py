@@ -199,29 +199,39 @@ def split_transaction(transaction_id):
 @app.route('/api/transactions/delete/<int:transaction_id>', methods=['DELETE'])
 def delete_transaction(transaction_id):
     try:
-        transaction = Transaction.query.get(transaction_id)
-        if not transaction:
+        # Ensure consistent variable name: transaction_to_delete
+        transaction_to_delete = db.session.get(Transaction, transaction_id) 
+        if not transaction_to_delete:
             abort(404, description=f"Transaction {transaction_id} not found")
         
-        # If parent transaction is deleted, children are deleted due to `cascade='all, 
-        # delete-orphan'`
-        # If a child transaction is deleted:
-        # - Its amount does not get added back to parent's *stored* amount.
-        # - Parent's children_flag remains True even if it's the last child.
-        
-        db.session.delete(transaction)
+        # Check if the transaction to delete is a child and if it's the last one
+        if transaction_to_delete.parent_id is not None:
+            # It's a child, get the parent
+            parent = db.session.get(Transaction, transaction_to_delete.parent_id)
+            
+            if parent: 
+                # Count how many children this parent has currently in the DB.
+                num_current_children = db.session.query(Transaction.id)\
+                    .filter(Transaction.parent_id == parent.id)\
+                    .count()
+                
+                if num_current_children == 1:
+                    parent.children_flag = False
+                    db.session.add(parent) 
+
+        db.session.delete(transaction_to_delete) # Use the correct variable name
         db.session.commit()
         return jsonify({'message': 'Transaction deleted successfully'}), 200
     
-    except HTTPException as e: # To re-raise abort() calls
+    except HTTPException as e: 
         raise e
-    except SQLAlchemyError as e: # Catch DB errors specifically
+    except SQLAlchemyError as e: 
         db.session.rollback()
         app.logger.error(f"Database error deleting transaction {transaction_id}: {e}", exc_info=True)
         abort(500, description="A database error occurred while deleting the transaction.")
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f"Unexpected error deleting transaction {transaction_id}: {e}", exc_info=True)
+        app.logger.error(f"Unexpected error deleting transaction {transaction_id}: {e}", exc_info=True) 
         abort(500, description="An unexpected error occurred while deleting the transaction.")
 
 
