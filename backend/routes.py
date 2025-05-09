@@ -162,7 +162,7 @@ def split_transaction(transaction_id):
             child_transaction = Transaction(
                 parent_id=parent_transaction.id,
                 date=parent_transaction.date,               # Inherit date
-                description=parent_transaction.description, # Inherit description
+                description='Sub-item: ' + parent_transaction.description, # Inherit description
                 note=parent_transaction.note,               # Inherit note
                 amount=decimal.Decimal('0.00'),             # Initialize amount to 0
                 tags=list(parent_transaction.tags),         # Inherit tags by associating same Tag objects

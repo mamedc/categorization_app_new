@@ -43,11 +43,12 @@ export default function TransactionCard ({
             bg={isParent ? "#f1eee5" : "white"}
             borderRadius="lg"
             p={4}
+            ml={isChild ? 2 : 0}  // Adds left margin
             borderLeftWidth={4}
             borderLeftColor={isSelected ? "teal.500" : (isParent ? "gray.300" : "#bcdbdb")} // Example: gray border for children
             //transition="all 0.1s"
             //opacity={isParent ? 0.75 : 1} // Slightly fade children? Optional.
-            // pl={isChild ? 6 : 4} // Indent children slightly? Optional.
+            //pl={isChild ? 16 : 4} // Indent children slightly? Optional.
             // _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
             _hover={{ outline: '1px solid', outlineColor: '#bcdbdb' }}
             // Optionally add more visual feedback for selection

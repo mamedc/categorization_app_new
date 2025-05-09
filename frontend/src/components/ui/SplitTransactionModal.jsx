@@ -12,9 +12,9 @@ import {
     Spinner,
     Alert,
 } from "@chakra-ui/react";
-import { useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { Toaster, toaster } from "@/components/ui/toaster"; // Assuming toaster setup exists globally or via Portal
-import { refreshTransactionsAtom } from "../../context/atoms";
+import { selectedTransaction, refreshTransactionsAtom } from "../../context/atoms";
 import { BASE_URL } from "../../App"; // Assuming BASE_URL is correctly defined
 
 export default function SplitTransactionModal({ isOpen, onClose, transactionToSplit }) {
@@ -22,10 +22,11 @@ export default function SplitTransactionModal({ isOpen, onClose, transactionToSp
     const [isSaving, setIsSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const refreshTransactions = useSetAtom(refreshTransactionsAtom);
+    const [selectedTransacAtomValue, setSelectedTransacAtom] = useAtom(selectedTransaction);
 
     const handleConfirmSplit = async () => {
         const numSplits = parseInt(numberOfSplits, 10);
-        if (isNaN(numSplits) || numSplits < 2) {
+        if (isNaN(numSplits) || numSplits < 1) {
             const errorMsg = "Number of sub-transactions must be at least 2.";
             setErrorMessage(errorMsg);
             toaster.create({
@@ -66,7 +67,9 @@ export default function SplitTransactionModal({ isOpen, onClose, transactionToSp
                 placement: "top-center",
             });
             refreshTransactions(prev => prev + 1); // Trigger transaction list refresh
+            setSelectedTransacAtom(null);
             onClose(); // Close the modal
+
 
         } catch (error) {
             console.error("Error splitting transaction:", error);
@@ -151,8 +154,7 @@ export default function SplitTransactionModal({ isOpen, onClose, transactionToSp
                                 onClick={handleConfirmSplit}
                                 isLoading={isSaving}
                                 loadingText="Splitting..."
-                                // Disable confirm if input is invalid or saving
-                                disabled={isSaving || parseInt(numberOfSplits, 10) < 2 || isNaN(parseInt(numberOfSplits, 10))}
+                                disabled={isSaving || parseInt(numberOfSplits, 10) < 1 || isNaN(parseInt(numberOfSplits, 10))}
                             >
                                 Confirm Split
                             </Button>
