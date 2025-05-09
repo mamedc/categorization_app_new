@@ -157,6 +157,7 @@ def split_transaction(transaction_id):
         parent_transaction.children_flag = True
         
         new_child_transactions = []
+        inherited_tags = list(parent_transaction.tags)
         for _ in range(num_children):
             # Create new sub-transaction
             child_transaction = Transaction(
@@ -165,13 +166,14 @@ def split_transaction(transaction_id):
                 description='Sub-item: ' + parent_transaction.description, # Inherit description
                 note=parent_transaction.note,               # Inherit note
                 amount=decimal.Decimal('0.00'),             # Initialize amount to 0
-                tags=list(parent_transaction.tags),         # Inherit tags by associating same Tag objects
+                tags=inherited_tags,                        # Inherit tags by associating same Tag objects
                 children_flag=False,                        # Children cannot be parents themselves initially
                 doc_flag=False                              # doc_flag not specified to be inherited, defaults to False
             )
             db.session.add(child_transaction)
             new_child_transactions.append(child_transaction)
         
+        parent_transaction.tags = [] # Delete tags from the original (parent) transaction
         db.session.commit()
 
         return jsonify({
