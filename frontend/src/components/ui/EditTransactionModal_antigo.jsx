@@ -1,0 +1,446 @@
+// File path: frontend/src/components/ui/EditTransactionModal.jsx
+// ANTIGO
+// EditTransactionModal.jsx
+
+import { useState, useCallback } from "react";
+import { Button, CloseButton, Dialog, Portal, Text, VStack, Stack, Field, Input, Flex, Textarea, HStack, ColorSwatch, Box } from "@chakra-ui/react";
+import { Fragment } from "react";
+import { Toaster, toaster } from "@/components/ui/toaster";
+import { useAtom, useSetAtom } from "jotai";
+import { selectedTransaction, refreshTransactionsAtom } from "../../context/atoms"; // Removed selectedTagId if unused
+import EditTransactionTagsModal from "./EditTransactionTagsModal";
+import TagCard from "./TagCard";
+import { BASE_URL } from "../../App"; // Keep BASE_URL for the PATCH/POST/DELETE calls
+
+
+export default function EditTransactionModal ({
+}) {
+
+    const refreshTransactions = useSetAtom(refreshTransactionsAtom);
+    const [selectedTransacAtomValue, setSelectedTransacAtom] = useAtom(selectedTransaction);
+
+
+    const [open, setOpen] = useState(false);
+    const initialFormState = {
+        id: "", 
+        amount: '', 
+        date: '', 
+        description: '', 
+        note: '', 
+        tags: [], 
+        tag_group: {}, 
+        created_at: '', 
+        updated_at: '',
+
+    
+    };
+    const [formData, setFormData] = useState(initialFormState);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState('');
+
+    const [selectedTagIds, setSelectedTagIds] = useState(new Set());
+    const [addedTags, setAddedTags] = useState([]);
+    const [removedTags, setRemovedTags] = useState([]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const handleOpen = async () => {
+        const currentSelectedTransaction = selectedTransacAtomValue;
+        if (!currentSelectedTransaction || typeof currentSelectedTransaction !== 'object' || !currentSelectedTransaction.id) {
+            console.error("Edit modal opened without a selected transaction object or ID.");
+             toaster.create({
+                 title: "Error",
+                 description: "No transaction selected for editing.",
+                 type: "error",
+                 duration: 3000,
+                 placement: "top-center",
+             });
+            return;
+        }
+        setSaveError('');
+        setAddedTags([]);
+        setRemovedTags([]);
+        try {
+            setFormData({
+                id: currentSelectedTransaction.id ?? "",
+                amount: currentSelectedTransaction.amount ?? "",
+                date: currentSelectedTransaction.date ?? "",
+                description: currentSelectedTransaction.description ?? "",
+                note: currentSelectedTransaction.note ?? "",
+                tags: currentSelectedTransaction.tags ?? [],
+                created_at: currentSelectedTransaction.created_at ?? "",
+                updated_at: currentSelectedTransaction.updated_at ?? "",
+                
+
+            });
+            // Initialize selectedTagIds based on the currently loaded transaction's tags
+            setSelectedTagIds(new Set(currentSelectedTransaction.tags?.map(tag => tag.id) ?? []));
+            setOpen(true);
+        } catch (error) {
+             console.error("Error setting form data in Edit modal:", error);
+             toaster.create({
+                 title: "Error",
+                 description: "Could not load transaction data into the form.",
+                 type: "error",
+             });
+        }
+    };
+
+    const handleClose = () => {
+        setFormData(initialFormState);
+        setSelectedTransacAtom(null);
+        setAddedTags([])
+        setRemovedTags([])
+        setSelectedTagIds(new Set());
+        setOpen(false);
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
+
+    const handleLog = (e) => {
+        console.log('formData.tags');
+        console.log(formData.tags);
+        console.log('selectedTagIds');
+        console.log(selectedTagIds);
+        console.log('addedTags');
+        console.log(addedTags);
+        console.log('removedTags');
+        console.log(removedTags);
+    };
+
+
+    const handleSave = useCallback(async () => {
+        setIsSaving(true);
+        let successMessage = "Changes saved to transaction.";
+        const transactionIdToUpdate = formData.id;
+
+        if (!transactionIdToUpdate) {
+            toaster.create({
+                title: "Save Error",
+                description: "Transaction ID is missing. Cannot save changes.",
+                type: "error",
+            });
+            setIsSaving(false);
+            return;
+        }
+
+        try {
+            // --- 1. Update Core Transaction Data ---
+            console.log("Updating transaction data for ID:", transactionIdToUpdate);
+            const updateRes = await fetch(BASE_URL + "/transactions/update/" + transactionIdToUpdate, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", },
+                // Send only fields that can be updated by user
+                body: JSON.stringify({
+                    date: formData.date,
+                    amount: formData.amount,
+                    description: formData.description,
+                    note: formData.note,
+                    // Potentially add doc_flag if editable here
+                }),
+            });
+            const updateData = await updateRes.json();
+            if (!updateRes.ok) {
+                throw new Error(updateData.error || updateData.description || `Failed to update transaction (status ${updateRes.status})`);
+            }
+            console.log("Transaction data updated successfully.");
+
+            // --- 2. Add New Tags (Using IDs) ---
+            if (addedTags && addedTags.length > 0) {
+                console.log("Attempting to add tags with IDs:", addedTags);
+                for (const tagIdToAdd of addedTags) {
+                    // Validate if it's a usable ID (e.g., a number)
+                    if (typeof tagIdToAdd !== 'number' || tagIdToAdd === null || typeof tagIdToAdd === 'undefined') {
+                        console.warn("Skipping invalid tag ID found in addedTags:", tagIdToAdd);
+                        continue;
+                    }
+                    console.log(`Processing add for tag ID: ${tagIdToAdd}`);
+                    const addTagRes = await fetch(`${BASE_URL}/transactions/${transactionIdToUpdate}/tags`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", },
+                        body: JSON.stringify({ tag_id: tagIdToAdd }),
+                    });
+                    const addTagData = await addTagRes.json();
+                    if (!addTagRes.ok) {
+                        // Check if error is just "already associated" - treat as success-like
+                        if (addTagRes.status !== 409 && !(addTagData.message || addTagData.error || '').includes("already associated")) {
+                            throw new Error(addTagData.error || addTagData.description || `Failed to add tag ID ${tagIdToAdd} (status ${addTagRes.status})`);
+                        } else {
+                            console.log(`Tag ID ${tagIdToAdd} was already associated or add operation handled gracefully.`);
+                        }
+                    } else {
+                         console.log(`Tag ID ${tagIdToAdd} added successfully.`);
+                    }
+                }
+                successMessage = "Transaction and tags updated successfully.";
+            }
+
+            // --- 3. Remove Existing Tags (Using IDs) ---
+            if (removedTags && removedTags.length > 0) {
+                console.log("Attempting to remove tags with IDs:", removedTags);
+                for (const tagIdToRemove of removedTags) {
+                     if (typeof tagIdToRemove !== 'number' || tagIdToRemove === null || typeof tagIdToRemove === 'undefined') {
+                        console.warn("Skipping invalid tag ID found in removedTags:", tagIdToRemove);
+                        continue;
+                    }
+                    console.log(`Processing remove for tag ID: ${tagIdToRemove}`);
+                    const removeTagRes = await fetch(`${BASE_URL}/transactions/${transactionIdToUpdate}/tags/${tagIdToRemove}`, {
+                        method: "DELETE",
+                    });
+
+                    // Treat 404 (tag not found on transaction) as success-like for removal
+                    if (!removeTagRes.ok && removeTagRes.status !== 404) {
+                         let errorData = {};
+                        try {
+                             errorData = await removeTagRes.json();
+                        } catch(e) { /* Ignore if no body */ }
+                        throw new Error(errorData.error || errorData.description || `Failed to remove tag ID ${tagIdToRemove} (status ${removeTagRes.status})`);
+                    }
+                     console.log(`Tag ID ${tagIdToRemove} removed successfully or was already removed.`);
+                }
+                 successMessage = "Transaction and tags updated successfully.";
+            }
+
+            // --- 4. Success Handling ---
+            toaster.create({
+                title: "Success!",
+                description: successMessage,
+                type: "success",
+                duration: 2000,
+                placement: "top-center",
+            });
+            console.log("All operations completed successfully.");
+            setSaveError('');
+            handleClose(); // Close modal on success
+            refreshTransactions((prev) => prev + 1); // Refresh list
+
+        } catch (error) {
+            // --- 5. Error Handling ---
+            toaster.create({
+                title: "An error occurred.",
+                description: error.message,
+                type: "error",
+                duration: 4000,
+                placement: "top-center",
+            });
+            console.error('Error saving transaction changes:', error);
+            setSaveError(error.message); // Display error in modal if desired
+
+        } finally {
+            // --- 6. Cleanup ---
+            setIsSaving(false);
+        }
+    }, [
+        // Keep all dependencies used inside handleSave
+        formData, // Includes the transaction ID and user changes
+        addedTags,
+        removedTags,
+        refreshTransactions,
+        // Removed unused dependencies like selectedTransac, setIsSaving, setSaveError, handleClose, toaster, BASE_URL
+        // because they are either stable functions/objects or handled directly inside.
+        // Add back if eslint complains and verify necessity.
+    ]);
+
+
+    return (
+        <Dialog.Root lazyMount open={open} onOpenChange={(e) => {if (!e.open) handleClose()}}>
+
+            <Dialog.Trigger asChild>
+                <Button
+                    size="sm"
+                    colorPalette="yellow"
+                    rounded="sm"
+                    width={20}
+                    onClick={handleOpen}
+                    // Disable if no transaction OBJECT is selected
+                    disabled={!selectedTransacAtomValue}
+                >
+                    Edit
+                </Button>
+            </Dialog.Trigger>
+
+            <Portal>
+                <Toaster />
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                <Dialog.Content>
+                    <Dialog.Header><Dialog.Title>Edit Transaction</Dialog.Title></Dialog.Header>
+                    <Dialog.Body>
+                        <Stack direction="column" gap="6">
+
+                            <Stack direction={{ base: "column", md: "row" }} gap="8" width="100%" textStyle="xs" fontWeight="semibold">
+                                {/* Display formatted dates safely */}
+                                <Text>Created at: {formData.created_at ? new Date(formData.created_at).toLocaleDateString("pt-BR") : 'N/A'}</Text>
+                                <Text>Updated at: {formData.updated_at ? new Date(formData.updated_at).toLocaleDateString("pt-BR") : 'N/A'}</Text>
+                            </Stack>
+
+                            <Stack direction={ "row" } gap="4" width="100%">
+                                {/*Left: Date*/}
+                                <Field.Root>
+                                    <Field.Label>Date:</Field.Label>
+                                    <Input
+                                        name="date"
+                                        type="date"
+                                        value={formData.date}
+                                        onChange={handleChange}
+                                        disabled={isSaving} // Disable input during saving
+                                    />
+                                </Field.Root>
+
+                                {/*Right: Amount*/}
+                                <Field.Root>
+                                    <Field.Label>Amount:</Field.Label>
+                                    <Input
+                                        placeholder="R$ 0.00"
+                                        name="amount"
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.amount}
+                                        onChange={handleChange}
+                                        disabled={isSaving}
+                                    />
+                                </Field.Root>
+                            </Stack>
+
+                            {/*Description*/}
+                            <Field.Root>
+                                <Field.Label>Description:</Field.Label>
+                                <Textarea
+                                    autoresize
+                                    size="md"
+                                    placeholder="Enter description"
+                                    resize="none"
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    disabled={isSaving}
+                                />
+                            </Field.Root>
+
+                            {/*Note*/}
+                            <Field.Root>
+                                <Field.Label>Note:</Field.Label>
+                                <Textarea
+                                    autoresize
+                                    size="md"
+                                    placeholder="Enter note"
+                                    resize="none"
+                                    name="note"
+                                    value={formData.note}
+                                    onChange={handleChange}
+                                    disabled={isSaving}
+                                />
+                            </Field.Root>
+
+                            {/*Tags*/}
+                            <Stack direction={"row"} gap="4" width="100%">
+
+
+                                <Stack direction={ "column" } gap="4">
+                                    <p>Tags:</p>
+                                     {/* Pass necessary state and setters to EditTransactionTagsModal */}
+                                    <EditTransactionTagsModal
+                                        transacData={formData}
+                                        setTransacData={setFormData}
+                                        existingTags={formData.tags}
+                                        selectedTagIds={selectedTagIds}
+                                        setSelectedTagIds={setSelectedTagIds}
+                                        addedTags={addedTags}
+                                        setAddedTags={setAddedTags}
+                                        removedTags={removedTags}
+                                        setRemovedTags={setRemovedTags}
+                                        
+                                    />
+                                </Stack>
+
+                                <Box borderWidth="1px" p="4" width="100%">
+                                    <VStack spacing={4} align="stretch" > {/* Adjusted spacing */}
+                                         {/* Ensure formData.tags exists and is an array before mapping */}
+                                         {Array.isArray(formData.tags) && formData.tags.length > 0 ? (
+                                            formData.tags.map((tag) => (
+                                                <Flex
+                                                    key={tag.id}
+                                                    direction={'row'}
+                                                    align={{ base: 'start', md: 'center' }}
+                                                    gap={4}
+                                                    wrap="wrap"
+                                                >
+                                                    {/* Left: Details */}
+                                                    <VStack align="start" spacing={1} flex="1">
+                                                        <HStack spacing={3} wrap="wrap">
+                                                            {/* Safely access nested tag_group */}
+                                                            <Text fontSize="sm" color="gray.500">
+                                                            {tag.tag_group?.name || 'No Group'}
+                                                            </Text>
+                                                        </HStack>
+                                                    </VStack>
+
+                                                    <Fragment key={tag.name}>
+                                                        <TagCard key={tag.id} tag={tag} />
+                                                    </Fragment>
+                                                </Flex>
+                                            ))
+                                        ) : (
+                                            <Text fontSize="sm" color="gray.500">No tags assigned.</Text>
+                                        )}
+                                    </VStack>
+                                </Box>
+
+                            </Stack>
+
+                        </Stack>
+                        {saveError && <Text color="red.500" fontSize="sm" mt={2}>{saveError}</Text>}
+                    </Dialog.Body>
+
+                    {/* Cancel and Save buttons */}
+                    <Dialog.Footer gap={3}> {/* Added gap */}
+                        <Button
+                            variant="outline" // Changed from surface for consistency
+                            onClick={handleClose}
+                            disabled={isSaving}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            colorPalette="teal" // Added color palette for consistency
+                            onClick={handleSave}
+                            isLoading={isSaving} // Use isLoading prop
+                            loadingText="Saving..." // Added loading text
+                            disabled={isSaving}
+                        >
+                            Save
+                        </Button>
+                        {/* <Button
+                            onClick={handleLog}
+                            disabled={isSaving} // Also disable log button when saving
+                            variant="outline"
+                            size="sm"
+                        >
+                            Log
+                        </Button> */}
+                    </Dialog.Footer>
+
+                    {/* Position close button */}
+                    <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
+                        <CloseButton size="sm" onClick={handleClose} disabled={isSaving} />
+                    </Dialog.CloseTrigger>
+                </Dialog.Content>
+                </Dialog.Positioner>
+            </Portal>
+    </Dialog.Root>
+    );
+};

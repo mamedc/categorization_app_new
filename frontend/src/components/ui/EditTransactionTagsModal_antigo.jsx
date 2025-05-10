@@ -1,5 +1,4 @@
 // frontend/src/components/ui/EditTransactionTagsModal.jsx
-// novo
 
 import { useState, useEffect } from "react"; // Added useEffect
 import { BASE_URL } from "../../App"
@@ -184,12 +183,12 @@ export default function EditTransactionTagsModal ({
                 <Button
                     size="xs"
                     colorPalette="cyan"
-                    rounded="xs"
+                    rounded="xl"
                     width={20}
                     onClick={handleOpen}
                     disabled={isDisabled}
                 >
-                    Edit Tags {/* Changed Button Text */}
+                    Edit Tags
                 </Button>
             </Dialog.Trigger>
 

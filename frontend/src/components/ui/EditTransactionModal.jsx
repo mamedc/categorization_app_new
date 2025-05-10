@@ -13,7 +13,9 @@ import TagCard from "./TagCard";
 import { BASE_URL } from "../../App";
 import { formatBrazilianCurrency } from "../../utils/currency";
 
-export default function EditTransactionModal() {
+export default function EditTransactionModal ({
+}) {
+
     const refreshTransactions = useSetAtom(refreshTransactionsAtom);
     const [selectedTransacAtomValue, setSelectedTransacAtom] = useAtom(selectedTransaction);
     const { state: transactionState, data: allTransactionsData } = useAtomValue(ldbTransactionsAtom);
@@ -251,8 +253,7 @@ export default function EditTransactionModal() {
                                             type="date"
                                             value={formData.date}
                                             onChange={handleChange}
-                                            disabled={isSaving}
-                                            isReadOnly={isParentTransaction} // Keep prop for Chakra component
+                                            disabled={isSaving || isParentTransaction}
                                         />
                                         {isParentTransaction && (
                                             <Field.HelperText>Date cannot be changed for parent transactions.</Field.HelperText>
@@ -269,8 +270,7 @@ export default function EditTransactionModal() {
                                             step="0.01"
                                             value={formData.amount}
                                             onChange={handleChange}
-                                            disabled={isSaving}
-                                            isReadOnly={isParentTransaction} // Keep prop for Chakra component
+                                            disabled={isSaving || isParentTransaction}
                                         />
                                         {isParentTransaction && (
                                             transactionState === 'loading' ? <Spinner size="xs" /> :
@@ -294,8 +294,7 @@ export default function EditTransactionModal() {
                                         name="description"
                                         value={formData.description}
                                         onChange={handleChange}
-                                        disabled={isSaving}
-                                        isReadOnly={isParentTransaction} // Keep prop for Chakra component
+                                        disabled={isSaving || isParentTransaction}
                                     />
                                     {isParentTransaction && (
                                         <Field.HelperText>Description cannot be changed for parent transactions.</Field.HelperText>
@@ -317,68 +316,64 @@ export default function EditTransactionModal() {
                                     />
                                 </Field.Root>
 
-                                {/* Tags Section */}
+                                {/*Tags*/}
                                 <Stack direction={"row"} gap="4" width="100%">
-                                     {/* *** FIX START *** */}
-                                    <Field.Root width="100%"> {/* Wrap the entire Tags section including display box */}
-                                         <Flex direction="row" gap="4" width="100%">
-                                             {/* Left side: Button and potential helper text */}
-                                            <Stack direction={"column"} gap="2" flexShrink={0}> {/* Reduced gap */}
-                                                 {/* Use Field.Label instead of <p> for accessibility */}
-                                                <Field.Label mb={2}>Tags:</Field.Label>
-                                                <EditTransactionTagsModal
-                                                    transacData={formData}
-                                                    setTransacData={setFormData}
-                                                    existingTags={formData.tags}
-                                                    selectedTagIds={selectedTagIds}
-                                                    setSelectedTagIds={setSelectedTagIds}
-                                                    addedTags={addedTags}
-                                                    setAddedTags={setAddedTags}
-                                                    removedTags={removedTags}
-                                                    setRemovedTags={setRemovedTags}
-                                                    isDisabled={isParentTransaction}
-                                                />
-                                                 {/* Conditional Helper Text now correctly inside Field.Root */}
-                                                {isParentTransaction && (
-                                                    <Field.HelperText mt={1}> {/* Added margin top */}
-                                                        Tags cannot be changed for parent transactions.
-                                                    </Field.HelperText>
-                                                )}
-                                            </Stack>
-
-                                             {/* Right side: Tag display box */}
-                                             <Box borderWidth="1px" p="4" flexGrow={1} minH="80px"> {/* Use flexGrow */}
-                                                <VStack spacing={4} align="stretch" >
-                                                    {Array.isArray(formData.tags) && formData.tags.length > 0 ? (
-                                                        formData.tags.map((tag) => (
-                                                            <Flex
-                                                                key={tag.id}
-                                                                direction={'row'}
-                                                                align={{ base: 'start', md: 'center' }}
-                                                                gap={4}
-                                                                wrap="wrap"
-                                                            >
-                                                                <VStack align="start" spacing={1} flex="1">
-                                                                    <HStack spacing={3} wrap="wrap">
-                                                                        <Text fontSize="sm" color="gray.500">
-                                                                            {tag.tag_group?.name || 'No Group'}
-                                                                        </Text>
-                                                                    </HStack>
-                                                                </VStack>
-                                                                <Fragment key={tag.name}>
-                                                                    <TagCard key={tag.id} tag={tag} />
-                                                                </Fragment>
-                                                            </Flex>
-                                                        ))
-                                                    ) : (
-                                                        <Text fontSize="sm" color="gray.500">No tags assigned.</Text>
-                                                    )}
-                                                </VStack>
-                                            </Box>
-                                        </Flex>
-                                     </Field.Root>
-                                     {/* *** FIX END *** */}
+                                    
+                                    
+                                <Stack direction={ "column" } gap="4">
+                                    <p>Tags:</p>
+                                     {/* Pass necessary state and setters to EditTransactionTagsModal */}
+                                    <EditTransactionTagsModal
+                                        //transacData={formData}
+                                        setTransacData={setFormData}
+                                        existingTags={formData.tags}
+                                        selectedTagIds={selectedTagIds}
+                                        setSelectedTagIds={setSelectedTagIds}
+                                        addedTags={addedTags}
+                                        setAddedTags={setAddedTags}
+                                        removedTags={removedTags}
+                                        setRemovedTags={setRemovedTags}
+                                        isDisabled={isSaving || isParentTransaction}
+                                    />
+                                    {/* Conditional Helper Text now correctly inside Field.Root */}
+                                    {isParentTransaction && (
+                                        <Text mt={1}> {/* Added margin top */}
+                                            Tags cannot be changed for parent transactions.
+                                        </Text>
+                                    )}
                                 </Stack>
+
+                                {/* Right side: Tag display box */}
+                                <Box borderWidth="1px" p="4" flexGrow={1} minH="80px">
+                                    <VStack spacing={4} align="stretch" >
+                                        {Array.isArray(formData.tags) && formData.tags.length > 0 ? (
+                                            formData.tags.map((tag) => (
+                                                <Flex
+                                                    key={tag.id}
+                                                    direction={'row'}
+                                                    align={{ base: 'start', md: 'center' }}
+                                                    gap={4}
+                                                    wrap="wrap"
+                                                >
+                                                    <VStack align="start" spacing={1} flex="1">
+                                                        <HStack spacing={3} wrap="wrap">
+                                                            <Text fontSize="sm" color="gray.500">
+                                                                {tag.tag_group?.name || 'No Group'}
+                                                            </Text>
+                                                        </HStack>
+                                                    </VStack>
+                                                    <Fragment key={tag.name}>
+                                                        <TagCard key={tag.id} tag={tag} />
+                                                    </Fragment>
+                                                </Flex>
+                                            ))
+                                        ) : (
+                                            <Text fontSize="sm" color="gray.500">No tags assigned.</Text>
+                                        )}
+                                    </VStack>
+                                </Box>
+                                        
+                            </Stack>
                             </Stack>
                             {saveError && <Text color="red.500" fontSize="sm" mt={2}>{saveError}</Text>}
                         </Dialog.Body>
