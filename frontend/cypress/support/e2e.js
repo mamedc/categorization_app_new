@@ -1,17 +1,12 @@
-// ***********************************************************
-// This example support/e2e.js is processed and
-// loaded automatically before your test files.
-//
-// This is a great place to put global configuration and
-// behavior that modifies Cypress.
-//
-// You can change the location of this file or turn off
-// automatically serving support files with the
-// 'supportFile' configuration option.
-//
-// You can read more here:
-// https://on.cypress.io/configuration
-// ***********************************************************
+// cypress/support/e2e.js
+import './commands';
 
-// Import commands.js using ES2015 syntax:
-import './commands'
+// Optional: Global beforeEach for all tests
+beforeEach(() => {
+    // Example: Reset database before each test to ensure a clean state
+    // This relies on a custom command, detailed in section 5.
+    cy.resetDatabase();
+
+    // Example: Visit the base URL
+    cy.visit('/');
+});
