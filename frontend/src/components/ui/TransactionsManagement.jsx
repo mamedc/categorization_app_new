@@ -206,7 +206,13 @@ export default function TransactionsManagement({
 
 
     return (
-        <Container maxW="container.lg" pt={0} pb={6}>
+        <Container 
+            maxW="container.lg"
+            pt={0}
+            pb={6}
+            maxW={{ base: "100%", md: "100%", xl: "1400px" }}
+            mx="auto"
+        >
             
             {/* --- Actions Bar - Sticky --- */}
             <Flex
@@ -219,7 +225,7 @@ export default function TransactionsManagement({
                 mt={"45px"}
                 wrap="wrap"
                 minH="60px"
-                bg="rgba(249, 249, 244, 1)"
+                bg="rgb(221, 221, 37)"
                 //backdropFilter="auto"
                 //backdropBlur="8px"
                 mb={4}
@@ -238,6 +244,8 @@ export default function TransactionsManagement({
                 borderBottomWidth="1px"
                 borderColor="gray.200"
             >
+                
+                
                 {/* --- Filter Controls --- */}
                 
                     

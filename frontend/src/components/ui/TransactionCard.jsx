@@ -63,6 +63,9 @@ export default function TransactionCard ({
             // boxShadow={isSelected ? 'outline' : 'sm'} // Example: add outline shadow when selected
             outline={isSelected ? '1px solid' : 'none'}
             outlineColor={isSelected ? 'teal.500' : 'transparent'}
+
+            //maxW={{ base: "100%", md: "100%", xl: "100%" }}
+            //mx="auto"
         >
             <Flex
                 direction={{ base: 'column', md: 'row' }}
