@@ -13,41 +13,60 @@ Please improve the prompt so I can go on with the component improvement.
 # 1. Context
 
 You are contributing to a React application that helps users manage and classify financial transactions. \
-The application uses Chakra UI v3 for all styling and UI components. The main layout includes a top \
-navigation bar with four sections:
+The app uses Chakra UI v3 for UI components and is composed of multiple sections: Transactions, Tags, \
+Import, and Settings. Transactions are grouped by date, with running balances displayed.
 
-* Transactions: Displays a list of all financial transactions along with their associated tags.
-* Tags: Lists all existing tag groups and their respective tags.
-* Import: Allows users to import transactions from a CSV file.
-* Settings: Provides configuration options for the application.
-
-In the Transactions section, transactions are currently grouped by date, with each group having a \
-date-based header. The running balance for each transaction group is also displayed in the group header.
+A new feature called "Documents" needs to be implemented. This feature allows users to attach documents \
+to a transaction, which will keep this document referenced to it. Each document must be refereced to one transaction. \
+A transaction may have multiple documents attached to it.
 
 ---
 
-# 2. Task
+# 2. Documents Functionality Behavior
 
-Your task is to help me define an automated testing strategy using Cypress/E2E.
+**Entry Point:**
+- "Attach Document" section after the "Tags" section inside "EditTransactionModal.jsx" component.
+- "Add Doc" button to the user can select and upload the documment from their devise \
+(use "FileUpload" component from Chakra UI v3).
 
-# 3. Reference Components
+**Upon confirmation:**
+- The selected file will be added to the transaction documents list
+- The user will be able to see all documents attached to the transaction.
+
+**Managing Documents:**
+- Deleting a document will remove it from the "Attach Document" section, as well from the database.
+- Displaying the document will open a new tab in the browser so the user can inspect that.
+- Downloading the document will download it to the user device.
+- In the "Transaction Grid", a "Doc" badge must be displayed whenever a transaction has a document attached to it.
+
+---
+
+# 3. Task:
+
+Your task is to implement the **Documents** functionality.
+
+---
+
+# 4. Reference Components
 
 Use the current implementation of the components (enclosed between triple backticks) as a base:
 
-**"files_presented" to be pasted here**
+{files_presented}
 
-# 4. Chakra UI v3 Documentation
+---
+
+# 5. Chakra UI v3 Documentation
 
 Refer to the official Chakra UI v3 documentation for component usage, styling, and best practices:
 
-**"docs_presented" to be pasted here**
+{docs_presented}
 
-# 5. Guidelines
+---
 
-- Use only **Chakra UI v3** components.
+# 6. Guidelines
+
 - Preserve the existing structure and behavior of the app.
 - Follow clean code principles: clarity, simplicity, maintainability.
 - Use **4-space indentation**.
-- Avoid introducing third-party libraries or custom CSS; rely solely on Chakra UI capabilities.
 
 """
