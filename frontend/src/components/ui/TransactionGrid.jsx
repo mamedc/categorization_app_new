@@ -411,15 +411,17 @@ export default function TransactionGrid ({
 
             {/* Render the grid only if not loading, no errors, and there are display groups */}
             {!isLoading && !isLoadingInitialBalance && !hasTransactionsError && !hasInitialBalanceError && displayGroupedTransactions.length > 0 && (
-                <VStack spacing={6} align="stretch" pt="120px">
+                <VStack spacing={6} align="stretch" pt="100px">
                     {displayGroupedTransactions.map((group) => (
                         <Fragment key={group.date}>
                              <Box
+                                //bg="rgb(158, 158, 53)"
                                 fontSize="sm"
                                 fontWeight="semibold"
                                 color="gray.600"
                                 pb={2}
                                 pt={2}
+                                pl={2}
                                 borderBottomWidth="1px"
                                 borderColor="gray.200"
                              >

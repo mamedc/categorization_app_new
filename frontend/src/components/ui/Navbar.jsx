@@ -22,7 +22,7 @@ export default function Navbar({ activeView, setActiveView }) {
                     {/* Transactions Navigation Item */}
                     <Text
                         fontSize="sm"
-                        fontWeight={activeView === 'transactions' ? "bold" : "medium"}
+                        fontWeight="medium"
                         color={activeView === 'transactions' ? "teal.600" : "gray.700"} // Adjusted colors slightly
                         borderBottom={activeView === 'transactions' ? "2px solid" : "2px solid"}
                         borderColor={activeView === 'transactions' ? "teal.500" : "transparent"}
@@ -38,7 +38,7 @@ export default function Navbar({ activeView, setActiveView }) {
                     {/* Tags Navigation Item */}
                     <Text
                         fontSize="sm"
-                        fontWeight={activeView === 'tags' ? "bold" : "medium"}
+                        fontWeight="medium"
                         color={activeView === 'tags' ? "teal.600" : "gray.700"} // Adjusted colors slightly
                         borderBottom={activeView === 'tags' ? "2px solid" : "2px solid"}
                         borderColor={activeView === 'tags' ? "teal.500" : "transparent"}
@@ -53,7 +53,7 @@ export default function Navbar({ activeView, setActiveView }) {
                     {/* Import Transactions Navigation Item */}
                     <Text
                         fontSize="sm"
-                        fontWeight={activeView === 'import' ? "bold" : "medium"}
+                        fontWeight="medium"
                         color={activeView === 'import' ? "teal.600" : "gray.700"} // Adjusted colors slightly
                         borderBottom={activeView === 'tags' ? "2px solid" : "2px solid"}
                         borderColor={activeView === 'import' ? "teal.500" : "transparent"}

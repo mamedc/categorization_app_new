@@ -210,8 +210,10 @@ export default function TransactionsManagement({
             
             {/* --- Actions Bar - Sticky --- */}
             <Flex
-                direction={{ base: 'column', md: 'row' }}
-                align={{ base: 'stretch', md: 'center' }}
+                // direction={{ base: 'column', md: 'row' }}
+                direction={'row'}
+                // align={{ base: 'stretch', md: 'center' }}
+                align={'stretch'}
                 h="80px"
                 gap={4}
                 mt={"45px"}
@@ -223,8 +225,8 @@ export default function TransactionsManagement({
                 mb={4}
                 pt={4}
                 pb={4}
-                pl={14}
-                pr={14}
+                pl={0}
+                pr={0}
                 //borderRadius="md"
                 //position="sticky"
                 position="fixed"
@@ -237,19 +239,22 @@ export default function TransactionsManagement({
                 borderColor="gray.200"
             >
                 {/* --- Filter Controls --- */}
+                
+                    
+                {/* Sorting Control */}
+                <Tooltip.Root positioning={{ placement: "bottom" }} openDelay={200} closeDelay={100}>
+                    <Tooltip.Trigger asChild>
+                        <IconButton
+                            size="sm" aria-label={sortTooltipLabel} onClick={toggleSortOrder}
+                            variant="outline" colorPalette="teal" _hover={{ bg: "teal.500", color: "white" }}
+                        >
+                            {sortIcon}
+                        </IconButton>
+                    </Tooltip.Trigger>
+                    <Portal><Tooltip.Positioner><Tooltip.Content>{sortTooltipLabel}</Tooltip.Content></Tooltip.Positioner></Portal>
+                </Tooltip.Root>
+
                 <Flex wrap="wrap" gap={4} align="center" flexGrow={{ base: 1, md: 0 }}>
-                    {/* Sorting Control */}
-                    <Tooltip.Root positioning={{ placement: "bottom" }} openDelay={200} closeDelay={100}>
-                        <Tooltip.Trigger asChild>
-                            <IconButton
-                                size="sm" aria-label={sortTooltipLabel} onClick={toggleSortOrder}
-                                variant="outline" colorPalette="teal" _hover={{ bg: "teal.500", color: "white" }}
-                            >
-                                {sortIcon}
-                            </IconButton>
-                        </Tooltip.Trigger>
-                        <Portal><Tooltip.Positioner><Tooltip.Content>{sortTooltipLabel}</Tooltip.Content></Tooltip.Positioner></Portal>
-                    </Tooltip.Root>
 
                     {/* Filter Type Select - Using Collection */}
                     <Field.Root id="filterTypeSelect" minW="150px" flexShrink={0}>
