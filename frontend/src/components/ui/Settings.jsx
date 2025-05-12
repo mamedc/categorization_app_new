@@ -1,8 +1,8 @@
-// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\ui\Settings.jsx
-// Settings.jsx
+// .\frontend\src\components\ui\Settings.jsx
 
 import React, { useState, useEffect } from 'react';
 import { useAtom, useSetAtom } from 'jotai';
+import { CiSettings } from "react-icons/ci";
 import {
     Button,
     CloseButton,
@@ -12,12 +12,11 @@ import {
     Stack,
     Field,
     Input,
-    Spinner
+    Spinner,
+    IconButton
 } from "@chakra-ui/react";
-// Import the base atom, not the loadable one for setting
 import { initialBalanceAtom, ldbInitialBalanceAtom } from '../../context/atoms';
 import { Toaster, toaster } from "@/components/ui/toaster"
-import { BASE_URL } from '../../App';
 
 export default function Settings() {
     const [open, setOpen] = useState(false);
@@ -115,17 +114,9 @@ export default function Settings() {
     return (
         <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
             <Dialog.Trigger asChild>
-                <Text
-                    fontSize="lg"
-                    fontWeight="bold"
-                    color="teal.700"
-                    cursor="pointer"
-                    _hover={{ color: "teal.500" }}
-                    onClick={handleOpen}
-                    display={{ base: "none", md: "block" }}
-                >
-                    Settings
-                </Text>
+                <IconButton size="md" variant="ghost" onClick={handleOpen}>
+                    <CiSettings />
+                </IconButton>
             </Dialog.Trigger>
 
             <Portal>

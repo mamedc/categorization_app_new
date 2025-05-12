@@ -1,5 +1,4 @@
-// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\ui\TransactionGrid.jsx
-// TransactionGrid.jsx
+// .\frontend\src\components\ui\TransactionGrid.jsx
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
@@ -412,7 +411,7 @@ export default function TransactionGrid ({
 
             {/* Render the grid only if not loading, no errors, and there are display groups */}
             {!isLoading && !isLoadingInitialBalance && !hasTransactionsError && !hasInitialBalanceError && displayGroupedTransactions.length > 0 && (
-                <VStack spacing={6} align="stretch" >
+                <VStack spacing={6} align="stretch" pt="120px">
                     {displayGroupedTransactions.map((group) => (
                         <Fragment key={group.date}>
                              <Box

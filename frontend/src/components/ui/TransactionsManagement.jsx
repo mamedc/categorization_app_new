@@ -1,7 +1,4 @@
-// File path: frontend/src/components/ui/TransactionsManagement.jsx
-// src/components/ui/TransactionsManagement.jsx
-// *** Includes changes from previous steps (Select value display fix) ***
-// *** Plus new changes for Phase 2 Split Transaction ***
+// ./frontend/src/components/ui/TransactionsManagement.jsx
 
 import { useState, useMemo, useEffect } from "react";
 import { useAtomValue } from "jotai"; // Import useAtomValue directly
@@ -209,23 +206,33 @@ export default function TransactionsManagement({
 
 
     return (
-        <Container maxW="container.lg" pt={6} pb={8}>
+        <Container maxW="container.lg" pt={0} pb={6}>
+            
             {/* --- Actions Bar - Sticky --- */}
             <Flex
                 direction={{ base: 'column', md: 'row' }}
                 align={{ base: 'stretch', md: 'center' }}
+                h="80px"
                 gap={4}
+                mt={"45px"}
                 wrap="wrap"
                 minH="60px"
-                bg="rgba(249, 249, 244, 0.85)"
-                backdropFilter="auto"
-                backdropBlur="8px"
-                mb={6}
-                p={4}
-                borderRadius="md"
-                position="sticky"
-                top={0}
-                zIndex="sticky"
+                bg="rgba(249, 249, 244, 1)"
+                //backdropFilter="auto"
+                //backdropBlur="8px"
+                mb={4}
+                pt={4}
+                pb={4}
+                pl={14}
+                pr={14}
+                //borderRadius="md"
+                //position="sticky"
+                position="fixed"
+                top={17}
+                left={0}
+                right={0}
+                //zIndex="sticky"
+                zIndex={10}
                 borderBottomWidth="1px"
                 borderColor="gray.200"
             >
