@@ -131,7 +131,7 @@ export default function TransactionCard ({
                                 Sub-item
                             </Badge>
                         )}
-                        {/* Existing Doc Flag Badge */}
+                        {/* Doc Flag Badge */}
                         {transaction.doc_flag && (
                             <Badge colorPalette="blue" variant="subtle" fontSize="xs">
                                 Doc

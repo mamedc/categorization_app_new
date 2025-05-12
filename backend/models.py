@@ -3,7 +3,7 @@
 from app import db
 from sqlalchemy.sql import func
 import decimal
-
+import uuid # For generating unique filenames for stored documents
 
 
 # --- Association Table ---
@@ -19,6 +19,31 @@ transaction_tags = db.Table('transaction_tags',
 
 # --- Model Definitions ---
 
+
+class Document(db.Model):
+    """Represents a document attached to a transaction."""
+    __tablename__ = 'document'
+
+    id = db.Column(db.Integer, primary_key=True)
+    original_filename = db.Column(db.String(255), nullable=False)
+    stored_filename = db.Column(db.String(255), unique=True, nullable=False) # e.g., UUID.ext
+    mimetype = db.Column(db.String(255), nullable=False)
+    transaction_id = db.Column(db.Integer, db.ForeignKey('transaction.id', ondelete='CASCADE'), nullable=False, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = db.Column(db.DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'original_filename': self.original_filename,
+            'mimetype': self.mimetype,
+            'transaction_id': self.transaction_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            # We don't expose stored_filename directly to client, URLs will handle it
+        }
+
+    def __repr__(self):
+        return f'<Document {self.id} | {self.original_filename} | tx_id={self.transaction_id}>'
 
 
 class Transaction(db.Model):
@@ -55,7 +80,15 @@ class Transaction(db.Model):
         back_populates='transactions'
     )
 
-    def to_json(self, include_tags=True):
+    # Relationship to Documents
+    documents = db.relationship(
+        'Document',
+        backref='transaction', # Allows document.transaction to access the Transaction object
+        lazy='subquery',       # Fetches documents when transaction.documents is accessed
+        cascade='all, delete-orphan' # If transaction is deleted, its documents are also deleted
+    )
+
+    def to_json(self, include_tags=True, include_documents=True):
         data = {
             'id': self.id,
             'date': self.date.isoformat() if self.date else None,
@@ -70,6 +103,8 @@ class Transaction(db.Model):
         }
         if include_tags:
             data['tags'] = [tag.to_json(include_group=True, include_transactions=False) for tag in self.tags]
+        if include_documents:
+            data['documents'] = [doc.to_json() for doc in self.documents]
         return data
 
     def __repr__(self):
@@ -77,7 +112,8 @@ class Transaction(db.Model):
         date_str = self.date.isoformat() if self.date else "None"
         parent_info = f", parent_id={self.parent_id}" if self.parent_id is not None else ""
         children_flag_info = ", children_flag=True" if self.children_flag else ""
-        return f'<Transaction {self.id} | {date_str} | {amount_str}{parent_info}{children_flag_info}>'
+        doc_flag_info = ", doc_flag=True" if self.doc_flag else ""
+        return f'<Transaction {self.id} | {date_str} | {amount_str}{parent_info}{children_flag_info}{doc_flag_info}>'
 
 
 

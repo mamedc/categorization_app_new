@@ -3,7 +3,11 @@
 // EditTransactionModal.jsx
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Button, CloseButton, Dialog, Portal, Text, VStack, Stack, Field, Input, Flex, Textarea, HStack, ColorSwatch, Box, Spinner } from "@chakra-ui/react";
+import { 
+    Button, CloseButton, Dialog, Portal, Text, VStack, Stack, Field, Input, FileUpload, 
+    Flex, Textarea, HStack, Box, Spinner, Link, IconButton, Heading, 
+} from "@chakra-ui/react";
+// import { Tooltip } from "@/components/ui/tooltip";
 import { Fragment } from "react";
 import { Toaster, toaster } from "@/components/ui/toaster";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -12,6 +16,39 @@ import EditTransactionTagsModal from "./EditTransactionTagsModal";
 import TagCard from "./TagCard";
 import { BASE_URL } from "../../App";
 import { formatBrazilianCurrency } from "../../utils/currency";
+import { LuDownload, LuEye, LuTrash2, LuUpload } from "react-icons/lu";
+
+
+// API utility functions
+const uploadDocumentAPI = async (transactionId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${BASE_URL}/transactions/${transactionId}/documents`, {
+        method: 'POST',
+        body: formData,
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Failed to upload document" }));
+        throw new Error(errorData.error || errorData.description || `HTTP error ${response.status}`);
+    }
+    return response.json();
+};
+
+const deleteDocumentAPI = async (documentId) => {
+    const response = await fetch(`${BASE_URL}/documents/${documentId}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Failed to delete document" }));
+        throw new Error(errorData.error || errorData.description || `HTTP error ${response.status}`);
+    }
+    // If backend returns 204 No Content, response.json() will fail.
+    // Check status and handle accordingly or expect a JSON message.
+    if (response.status === 204) return { message: "Document deleted successfully." };
+    return response.json();
+};
+
 
 export default function EditTransactionModal ({
 }) {
@@ -19,7 +56,7 @@ export default function EditTransactionModal ({
     const refreshTransactions = useSetAtom(refreshTransactionsAtom);
     const [selectedTransacAtomValue, setSelectedTransacAtom] = useAtom(selectedTransaction);
     const { state: transactionState, data: allTransactionsData } = useAtomValue(ldbTransactionsAtom);
-
+    
     const [open, setOpen] = useState(false);
     const initialFormState = {
         id: "",
@@ -28,14 +65,18 @@ export default function EditTransactionModal ({
         description: '',
         note: '',
         tags: [],
+        documents: [],
         tag_group: {},
         created_at: '',
         updated_at: '',
         children_flag: false,
+        doc_flag: false,
         parent_id: null,
     };
     const [formData, setFormData] = useState(initialFormState);
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploading, setIsUploading] = useState(false); // For document upload
+    const [deletingDocId, setDeletingDocId] = useState(null); // ID of document being deleted
     const [saveError, setSaveError] = useState('');
 
     const [selectedTagIds, setSelectedTagIds] = useState(new Set());
@@ -71,6 +112,8 @@ export default function EditTransactionModal ({
         setSaveError('');
         setAddedTags([]);
         setRemovedTags([]);
+        setIsUploading(false);
+        setDeletingDocId(null);
         try {
             setFormData({
                 id: currentSelectedTransaction.id ?? "",
@@ -79,6 +122,8 @@ export default function EditTransactionModal ({
                 description: currentSelectedTransaction.description ?? "",
                 note: currentSelectedTransaction.note ?? "",
                 tags: currentSelectedTransaction.tags ?? [],
+                documents: currentSelectedTransaction.documents ?? [],
+                doc_flag: currentSelectedTransaction.doc_flag ?? false,
                 created_at: currentSelectedTransaction.created_at ?? "",
                 updated_at: currentSelectedTransaction.updated_at ?? "",
                 parent_id: currentSelectedTransaction.parent_id ?? null,
@@ -102,12 +147,31 @@ export default function EditTransactionModal ({
         setAddedTags([])
         setRemovedTags([])
         setSelectedTagIds(new Set());
+        setDeletingDocId(null);
         setOpen(false);
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
+    };
+
+    // Helper to refetch and update transaction data (documents, doc_flag)
+    const refreshTransactionDocuments = async () => {
+        if (!formData.id) return;
+        try {
+            const updatedTransaction = await fetch(`${BASE_URL}/transactions/view/${formData.id}`).then(res => {
+                if (!res.ok) throw new Error('Failed to refetch transaction');
+                return res.json();
+            });
+            if (updatedTransaction) {
+                setFormData(prev => ({ ...prev, documents: updatedTransaction.documents, doc_flag: updatedTransaction.doc_flag }));
+                setSelectedTransacAtom(updatedTransaction); // Update global state
+            }
+        } catch (error) {
+            console.error("Error refreshing transaction documents:", error);
+            toaster.create({ title: "Data Sync Error", description: "Could not refresh document list.", type: "warning" });
+        }
     };
 
     const handleSave = useCallback(async () => {
@@ -129,6 +193,8 @@ export default function EditTransactionModal ({
             date: formData.date,
             description: formData.description,
             note: formData.note,
+                  // doc_flag is managed by document uploads/deletes, 
+                  // no need to send from here unless manual override is intended
         };
 
         if (!formData.children_flag) {
@@ -137,7 +203,6 @@ export default function EditTransactionModal ({
 
         try {
             // --- 1. Update Core Transaction Data ---
-            console.log("Updating transaction data for ID:", transactionIdToUpdate);
             const updateRes = await fetch(BASE_URL + "/transactions/update/" + transactionIdToUpdate, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json", },
@@ -147,11 +212,9 @@ export default function EditTransactionModal ({
             if (!updateRes.ok) {
                 throw new Error(updateData.error || updateData.description || `Failed to update transaction (status ${updateRes.status})`);
             }
-            console.log("Transaction data updated successfully.");
-
+            
             // --- 2. Add New Tags ---
             if (addedTags && addedTags.length > 0) {
-                console.log("Attempting to add tags with IDs:", addedTags);
                 for (const tagIdToAdd of addedTags) {
                     if (typeof tagIdToAdd !== 'number' || tagIdToAdd === null || typeof tagIdToAdd === 'undefined') {
                         console.warn("Skipping invalid tag ID found in addedTags:", tagIdToAdd);
@@ -174,7 +237,6 @@ export default function EditTransactionModal ({
 
             // --- 3. Remove Tags ---
             if (removedTags && removedTags.length > 0) {
-                console.log("Attempting to remove tags with IDs:", removedTags);
                 for (const tagIdToRemove of removedTags) {
                     if (typeof tagIdToRemove !== 'number' || tagIdToRemove === null || typeof tagIdToRemove === 'undefined') {
                         console.warn("Skipping invalid tag ID found in removedTags:", tagIdToRemove);
@@ -186,17 +248,18 @@ export default function EditTransactionModal ({
                         try { errorData = await removeTagRes.json(); } catch (e) { /* Ignore */ }
                         throw new Error(errorData.error || errorData.description || `Failed to remove tag ID ${tagIdToRemove} (status ${removeTagRes.status})`);
                     }
-                     console.log(`Tag ID ${tagIdToRemove} removed or already removed.`);
-                 successMessage = "Transaction and tags updated successfully.";
                 }
+                successMessage = "Transaction and tags updated successfully.";
             }
 
             // --- 4. Success Handling ---
             toaster.create({ title: "Success!", description: successMessage, type: "success", duration: 2000, placement: "top-center" });
-            console.log("All operations completed successfully.");
             setSaveError('');
-            handleClose();
             refreshTransactions((prev) => prev + 1);
+            // Fetch the updated transaction to ensure UI consistency
+            const newSelectedTx = await fetch(`${BASE_URL}/transactions/view/${transactionIdToUpdate}`).then(res => res.json());
+            setSelectedTransacAtom(newSelectedTx); // Update the global atom
+            handleClose();
 
         } catch (error) {
             // --- 5. Error Handling ---
@@ -209,6 +272,71 @@ export default function EditTransactionModal ({
             setIsSaving(false);
         }
     }, [formData, addedTags, removedTags, refreshTransactions, handleClose]); // Dependencies kept minimal
+
+
+    const handleFileUpload = async (fileDetails) => {
+            if (!fileDetails.acceptedFiles || fileDetails.acceptedFiles.length === 0) {
+                return;
+            }
+            const file = fileDetails.acceptedFiles[0];
+            setIsUploading(true);
+            try {
+                await uploadDocumentAPI(formData.id, file);
+                toaster.create({
+                    title: "Document Uploaded",
+                    description: `${file.name} has been attached.`,
+                    type: "success",
+                });
+                refreshTransactions((prev) => prev + 1); // Refresh data
+                // Refetch the specific transaction to update formData.documents
+                const updatedTransaction = await fetch(`${BASE_URL}/transactions/view/${formData.id}`).then(res => res.json());
+                if (updatedTransaction) {
+                     setFormData(prev => ({ ...prev, documents: updatedTransaction.documents, doc_flag: updatedTransaction.doc_flag }));
+                     setSelectedTransacAtom(updatedTransaction); // Update global state as well
+                }
+    
+            } catch (error) {
+                console.error("Error uploading document:", error);
+                toaster.create({
+                    title: "Upload Failed",
+                    description: error.message || "Could not upload document.",
+                    type: "error",
+                });
+            } finally {
+                setIsUploading(false);
+            }
+        };
+    
+    const handleDeleteDocument = async (documentId) => {
+        if (!formData.id) return;
+        if (!window.confirm("Are you sure you want to delete this document?")) return;
+
+        setDeletingDocId(documentId); // Mark this document as being deleted
+        try {
+            await deleteDocumentAPI(documentId);
+            toaster.create({
+                title: "Document Deleted",
+                description: `Document has been removed.`,
+                type: "success",
+            });
+            refreshTransactions((prev) => prev + 1); // Refresh data
+            await refreshTransactionDocuments(); // Local refresh
+            // Refetch the specific transaction to update formData.documents and doc_flag
+            // const updatedTransaction = await fetch(`${BASE_URL}/transactions/view/${formData.id}`).then(res => res.json());
+            // if (updatedTransaction) {
+            //     setFormData(prev => ({ ...prev, documents: updatedTransaction.documents, doc_flag: updatedTransaction.doc_flag }));
+            //     setSelectedTransacAtom(updatedTransaction); // Update global state
+            // }
+        } catch (error) {
+            console.error("Error deleting document:", error);
+            toaster.create({
+                title: "Delete Failed",
+                description: error.message || "Could not delete document.",
+                type: "error",
+            });
+        }
+    };
+    
 
     const isParentTransaction = formData.children_flag === true;
 
@@ -275,9 +403,8 @@ export default function EditTransactionModal ({
                                         {isParentTransaction && (
                                             transactionState === 'loading' ? <Spinner size="xs" /> :
                                             <Field.HelperText>
-                                                This is the original amount. The effective amount is{' '}
+                                                Original: {formatBrazilianCurrency(formData.amount)}. Effective: {' '}
                                                 {calculatedEffectiveAmount !== null ? formatBrazilianCurrency(calculatedEffectiveAmount) : 'Calculating...'}
-                                                {' '}based on its sub-transactions. Edit sub-transactions to change their individual amounts.
                                             </Field.HelperText>
                                         )}
                                     </Field.Root>
@@ -320,69 +447,151 @@ export default function EditTransactionModal ({
                                 <Stack direction={"row"} gap="4" width="100%">
                                     
                                     
-                                <Stack direction={ "column" } gap="4">
-                                    <p>Tags:</p>
-                                     {/* Pass necessary state and setters to EditTransactionTagsModal */}
-                                    <EditTransactionTagsModal
-                                        //transacData={formData}
-                                        setTransacData={setFormData}
-                                        existingTags={formData.tags}
-                                        selectedTagIds={selectedTagIds}
-                                        setSelectedTagIds={setSelectedTagIds}
-                                        addedTags={addedTags}
-                                        setAddedTags={setAddedTags}
-                                        removedTags={removedTags}
-                                        setRemovedTags={setRemovedTags}
-                                        isDisabled={isSaving || isParentTransaction}
-                                    />
-                                    {/* Conditional Helper Text now correctly inside Field.Root */}
-                                    {isParentTransaction && (
-                                        <Text mt={1}> {/* Added margin top */}
-                                            Tags cannot be changed for parent transactions.
-                                        </Text>
-                                    )}
-                                </Stack>
-
-                                {/* Right side: Tag display box */}
-                                <Box borderWidth="1px" p="4" flexGrow={1} minH="80px">
-                                    <VStack spacing={4} align="stretch" >
-                                        {Array.isArray(formData.tags) && formData.tags.length > 0 ? (
-                                            formData.tags.map((tag) => (
-                                                <Flex
-                                                    key={tag.id}
-                                                    direction={'row'}
-                                                    align={{ base: 'start', md: 'center' }}
-                                                    gap={4}
-                                                    wrap="wrap"
-                                                >
-                                                    <VStack align="start" spacing={1} flex="1">
-                                                        <HStack spacing={3} wrap="wrap">
-                                                            <Text fontSize="sm" color="gray.500">
-                                                                {tag.tag_group?.name || 'No Group'}
-                                                            </Text>
-                                                        </HStack>
-                                                    </VStack>
-                                                    <Fragment key={tag.name}>
-                                                        <TagCard key={tag.id} tag={tag} />
-                                                    </Fragment>
-                                                </Flex>
-                                            ))
-                                        ) : (
-                                            <Text fontSize="sm" color="gray.500">No tags assigned.</Text>
+                                    <Stack direction={ "column" } gap="4">
+                                        <p>Tags:</p>
+                                        {/* Pass necessary state and setters to EditTransactionTagsModal */}
+                                        <EditTransactionTagsModal
+                                            setTransacData={setFormData}
+                                            existingTags={formData.tags}
+                                            selectedTagIds={selectedTagIds}
+                                            setSelectedTagIds={setSelectedTagIds}
+                                            addedTags={addedTags}
+                                            setAddedTags={setAddedTags}
+                                            removedTags={removedTags}
+                                            setRemovedTags={setRemovedTags}
+                                            isDisabled={isSaving || isParentTransaction}
+                                        />
+                                        {/* Conditional Helper Text now correctly inside Field.Root */}
+                                        {isParentTransaction && (
+                                            <Text mt={1}> {/* Added margin top */}
+                                                Tags cannot be changed for parent transactions.
+                                            </Text>
                                         )}
-                                    </VStack>
-                                </Box>
+                                    </Stack>
+
+                                    {/* Right side: Tag display box */}
+                                    <Box borderWidth="1px" p="4" flexGrow={1} minH="80px">
+                                        <VStack spacing={4} align="stretch" >
+                                            {Array.isArray(formData.tags) && formData.tags.length > 0 ? (
+                                                formData.tags.map((tag) => (
+                                                    <Flex
+                                                        key={tag.id}
+                                                        direction={'row'}
+                                                        align={{ base: 'start', md: 'center' }}
+                                                        gap={4}
+                                                        wrap="wrap"
+                                                    >
+                                                        <VStack align="start" spacing={1} flex="1">
+                                                            <HStack spacing={3} wrap="wrap">
+                                                                <Text fontSize="sm" color="gray.500">
+                                                                    {tag.tag_group?.name || 'No Group'}
+                                                                </Text>
+                                                            </HStack>
+                                                        </VStack>
+                                                        <Fragment key={tag.name}>
+                                                            <TagCard key={tag.id} tag={tag} />
+                                                        </Fragment>
+                                                    </Flex>
+                                                ))
+                                            ) : (
+                                                <Text fontSize="sm" color="gray.500">No tags assigned.</Text>
+                                            )}
+                                        </VStack>
+                                    </Box>
                                         
-                            </Stack>
-                            </Stack>
+                                </Stack>
+                            
+
+                                {/* Attach Documents Section */}
+                                <VStack spacing={3} align="stretch">
+                                    <Heading size="sm" fontWeight="medium">Attach Documents</Heading>
+                                    <FileUpload.Root
+                                        onFileChange={handleFileUpload}
+                                        maxFiles={1} // Upload one by one for simplicity now
+                                        disabled={isUploading || isSaving}
+                                    >
+                                        <FileUpload.HiddenInput />
+                                        <FileUpload.Trigger asChild>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                leftIcon={<LuUpload />}
+                                                isLoading={isUploading}
+                                                loadingText="Uploading..."
+                                                disabled={isUploading || isSaving}
+                                            >
+                                                Add Document
+                                            </Button>
+                                        </FileUpload.Trigger>
+                                    </FileUpload.Root>
+
+                                    {formData.documents && formData.documents.length > 0 ? (
+                                        <VStack spacing={2} align="stretch" mt={2} borderWidth="1px" borderRadius="md" p={3}>
+                                            {formData.documents.map(doc => (
+                                                <Flex key={doc.id} justify="space-between" align="center" p={1.5} _hover={{bg: "gray.50"}} borderRadius="sm">
+                                                    <Text fontSize="sm" noOfLines={1} title={doc.original_filename}>
+                                                        {doc.original_filename}
+                                                    </Text>
+                                                    <HStack spacing={1}>
+
+                                                        <IconButton 
+                                                            as="a" // Render as anchor tag
+                                                            href={`${BASE_URL}/documents/${doc.id}/view`}
+                                                            target="_blank" // Open in new tab
+                                                            rel="noopener noreferrer"
+                                                            size="xs" 
+                                                            variant="subtle" 
+                                                            aria-label="View document"
+                                                        >
+                                                            <LuEye />
+                                                        </IconButton>
+
+                                                        <IconButton 
+                                                            as="a" // Render as anchor tag
+                                                            href={`${BASE_URL}/documents/${doc.id}/download`}
+                                                            target="_blank" // Open in new tab
+                                                            rel="noopener noreferrer"
+                                                            size="xs" 
+                                                            variant="subtle" 
+                                                            aria-label="Download document"
+                                                        >
+                                                            <LuDownload />
+                                                        </IconButton>
+
+                                                        <IconButton 
+                                                            // as="a" // Render as anchor tag
+                                                            // href={`${BASE_URL}/documents/${doc.id}/download`}
+                                                            // target="_blank" // Open in new tab
+                                                            // rel="noopener noreferrer"
+                                                            size="xs" 
+                                                            variant="subtle" 
+                                                            aria-label="Delete document"
+                                                            onClick={() => handleDeleteDocument(doc.id)}
+                                                            disabled={isUploading || isSaving}
+                                                        >
+                                                            <LuTrash2 />
+                                                        </IconButton>
+
+                                                    </HStack>
+                                                </Flex>
+                                            ))}
+                                        </VStack>
+                                    ) : (
+                                        <Text fontSize="sm" color="gray.500" mt={2}>No documents attached.</Text>
+                                    )}
+                                </VStack>
+                                {/* End Attach Documents Section */}
+                            
                             {saveError && <Text color="red.500" fontSize="sm" mt={2}>{saveError}</Text>}
+                            </Stack>
+                        
                         </Dialog.Body>
 
                         <Dialog.Footer gap={3}>
                             <Button
                                 variant="outline"
                                 onClick={handleClose}
-                                disabled={isSaving}
+                                disabled={isSaving || isUploading}
                             >
                                 Cancel
                             </Button>
@@ -391,14 +600,14 @@ export default function EditTransactionModal ({
                                 onClick={handleSave}
                                 isLoading={isSaving}
                                 loadingText="Saving..."
-                                disabled={isSaving}
+                                disabled={isSaving || isUploading}
                             >
                                 Save
                             </Button>
                         </Dialog.Footer>
 
                         <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
-                            <CloseButton size="sm" onClick={handleClose} disabled={isSaving} />
+                            <CloseButton size="sm" onClick={handleClose} disabled={isSaving || isUploading} />
                         </Dialog.CloseTrigger>
                     </Dialog.Content>
                 </Dialog.Positioner>

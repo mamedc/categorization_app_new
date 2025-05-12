@@ -1,15 +1,23 @@
 # File path: backend/routes.py
 
 from app import app, db
-from flask import request, jsonify, abort
-from models import Transaction, Tag, TagGroup, Setting
+from flask import request, jsonify, abort, send_from_directory
+from models import Transaction, Tag, TagGroup, Setting, Document
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 import decimal
 from werkzeug.exceptions import HTTPException
 import os
 import traceback
+from werkzeug.utils import secure_filename # For sanitizing filenames
+import uuid # For generating unique filenames
 
+
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx', 'xls', 'xlsx', 'csv'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.errorhandler(HTTPException)
@@ -90,7 +98,7 @@ def create_transaction():
         db.session.add(new_transaction)
         db.session.commit()
 
-        return jsonify(new_transaction.to_json(include_tags=True)), 201
+        return jsonify(new_transaction.to_json(include_tags=True, include_documents=True)), 201
 
     except HTTPException as e:
          raise e
@@ -115,7 +123,7 @@ def get_transactions():
         # The frontend will handle grouping children under parents using parent_id.
         # Default sort order by date desc.
         transactions = Transaction.query.order_by(Transaction.date.desc(), Transaction.id.asc()).all()
-        return jsonify([transaction.to_json(include_tags=True) for transaction in transactions])
+        return jsonify([transaction.to_json(include_tags=True, include_documents=True) for transaction in transactions])
     except Exception as e:
         app.logger.error(f"Error getting transactions: {e}", exc_info=True)
         abort(500, description="An error occurred while retrieving transactions.")
@@ -126,7 +134,7 @@ def get_transactions():
 @app.route('/api/transactions/view/<int:transaction_id>', methods=['GET'])
 def view_transaction(transaction_id):
     transaction = Transaction.query.get_or_404(transaction_id, description=f"Transaction {transaction_id} not found")
-    return jsonify(transaction.to_json(include_tags=True))
+    return jsonify(transaction.to_json(include_tags=True, include_documents=True))
 
 
 
@@ -179,8 +187,8 @@ def split_transaction(transaction_id):
         db.session.commit()
 
         return jsonify({
-            "parent": parent_transaction.to_json(include_tags=True),
-            "children": [child.to_json(include_tags=True) for child in new_child_transactions]
+            "parent": parent_transaction.to_json(include_tags=True, include_documents=True),
+            "children": [child.to_json(include_tags=True, include_documents=True) for child in new_child_transactions]
         }), 201
 
     except HTTPException as e:
@@ -206,11 +214,29 @@ def delete_transaction(transaction_id):
         if not transaction_to_delete:
             abort(404, description=f"Transaction {transaction_id} not found")
         
+        # If deleting a parent transaction, its documents (and children's documents via cascade)
+        # will be deleted.
+        # If deleting a child, only its documents are deleted.
+        # The actual file deletion for documents will be handled by Document model's cascade or 
+        # manual cleanup if not.
+        # For now, assuming SQLAlchemy cascade handles Document records, and we'll add explicit 
+        # file deletion later in document delete route.
+
+        # Clean up associated document files if transaction is deleted
+        for doc in transaction_to_delete.documents:
+            try:
+                doc_path = os.path.join(app.config['UPLOAD_FOLDER'], doc.stored_filename)
+                if os.path.exists(doc_path):
+                    os.remove(doc_path)
+            except Exception as file_e:
+                app.logger.error(f"Error deleting file {doc.stored_filename} for transaction {transaction_id}: {file_e}")
+                # Continue deleting transaction even if a file can't be removed
+
         # Check if the transaction to delete is a child and if it's the last one
         if transaction_to_delete.parent_id is not None:
             # It's a child, get the parent
             parent = db.session.get(Transaction, transaction_to_delete.parent_id)
-            
+
             if parent: 
                 # Count how many children this parent has currently in the DB.
                 num_current_children = db.session.query(Transaction.id)\
@@ -221,7 +247,7 @@ def delete_transaction(transaction_id):
                     parent.children_flag = False
                     db.session.add(parent) 
 
-        db.session.delete(transaction_to_delete) # Use the correct variable name
+        db.session.delete(transaction_to_delete)
         db.session.commit()
         return jsonify({'message': 'Transaction deleted successfully'}), 200
     
@@ -269,23 +295,23 @@ def update_transaction(transaction_id):
             transaction.description = data.get('description')
         if 'note' in data:
             transaction.note = data.get('note')
-        if 'children_flag' in data: # Allow updating children_flag if needed (e.g. un-splitting manually)
+        if 'children_flag' in data:
             if isinstance(data['children_flag'], bool):
                 transaction.children_flag = data['children_flag']
             else:
                 abort(400, description="'children_flag' must be a boolean.")
+        
+        # doc_flag is managed by document upload/delete routes, but allow override if 
+        # explicitly sent
         if 'doc_flag' in data:
             if isinstance(data['doc_flag'], bool):
                 transaction.doc_flag = data['doc_flag']
             else:
                 abort(400, description="'doc_flag' must be a boolean.")
-        # parent_id should generally not be updated via this generic endpoint directly,
-        # as it's managed by split/delete logic. Could add validation to prevent changing 
-        # parent_id.
-
+        
         db.session.commit()
 
-        return jsonify(transaction.to_json(include_tags=True)), 200
+        return jsonify(transaction.to_json(include_tags=True, include_documents=True)), 200
     
     except HTTPException as e:
          raise e
@@ -312,13 +338,11 @@ def check_transactions_duplicates_bulk():
         amount_str = tx_data.get('Amount')
         description = tx_data.get('Description')
 
-        # Basic validation for essential fields for a duplicate check
         if not date_str or amount_str is None:
             results.append(False)
             continue
         
         try:
-            # Assuming frontend sends date as 'YYYY-MM-DD' string
             parsed_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except (ValueError, TypeError):
             results.append(False) 
@@ -347,6 +371,108 @@ def check_transactions_duplicates_bulk():
             results.append(False)
             
     return jsonify(results), 200
+
+
+
+
+# --- Document Routes ---
+
+
+
+@app.route('/api/transactions/<int:transaction_id>/documents', methods=['POST'])
+def upload_document(transaction_id):
+    transaction = Transaction.query.get_or_404(transaction_id, description=f"Transaction {transaction_id} not found")
+
+    if 'file' not in request.files:
+        abort(400, description="No file part in the request.")
+    
+    file = request.files['file']
+    if file.filename == '':
+        abort(400, description="No selected file.")
+
+    if file and allowed_file(file.filename):
+        original_filename = secure_filename(file.filename) # Sanitize original filename for safety
+        file_ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else ''
+        stored_filename = f"{uuid.uuid4()}.{file_ext}"
+        
+        try:
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], stored_filename)
+            file.save(filepath)
+
+            new_document = Document(
+                original_filename=original_filename,
+                stored_filename=stored_filename,
+                mimetype=file.mimetype,
+                transaction_id=transaction.id
+            )
+            db.session.add(new_document)
+            
+            if not transaction.doc_flag:
+                transaction.doc_flag = True
+            
+            db.session.commit()
+            return jsonify(new_document.to_json()), 201
+        except Exception as e:
+            db.session.rollback()
+            # Attempt to delete partially saved file if error occurs after save but before commit
+            if 'filepath' in locals() and os.path.exists(filepath):
+                try:
+                    os.remove(filepath)
+                except Exception as file_del_err:
+                    app.logger.error(f"Error cleaning up file {filepath} after upload error: {file_del_err}")
+            app.logger.error(f"Error uploading document for transaction {transaction_id}: {e}", exc_info=True)
+            abort(500, description="Could not save document.")
+    else:
+        abort(400, description="File type not allowed.")
+
+
+@app.route('/api/documents/<int:document_id>/view', methods=['GET'])
+def view_document(document_id):
+    document = Document.query.get_or_404(document_id, description=f"Document {document_id} not found.")
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], document.stored_filename, as_attachment=False, mimetype=document.mimetype)
+    except FileNotFoundError:
+        abort(404, description="File not found on server.")
+    except Exception as e:
+        app.logger.error(f"Error serving document {document_id} for view: {e}", exc_info=True)
+        abort(500, description="Could not serve document.")
+
+
+@app.route('/api/documents/<int:document_id>/download', methods=['GET'])
+def download_document(document_id):
+    document = Document.query.get_or_404(document_id, description=f"Document {document_id} not found.")
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], document.stored_filename, as_attachment=True, download_name=document.original_filename)
+    except FileNotFoundError:
+        abort(404, description="File not found on server.")
+    except Exception as e:
+        app.logger.error(f"Error serving document {document_id} for download: {e}", exc_info=True)
+        abort(500, description="Could not serve document for download.")
+
+
+@app.route('/api/documents/<int:document_id>', methods=['DELETE'])
+def delete_document(document_id):
+    document = Document.query.get_or_404(document_id, description=f"Document {document_id} not found.")
+    transaction = document.transaction # Get associated transaction before deleting document
+
+    try:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], document.stored_filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        
+        db.session.delete(document)
+        
+        # Check if the transaction has any other documents left
+        if transaction and not transaction.documents: # This checks after the current document is marked for deletion
+            transaction.doc_flag = False
+        
+        db.session.commit()
+        return jsonify({"message": "Document deleted successfully."}), 200
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting document {document_id}: {e}", exc_info=True)
+        abort(500, description="Could not delete document.")
+
 
 
 
@@ -533,7 +659,7 @@ def add_tag_to_transaction(tx_id):
     try:
         tx.tags.append(tag)
         db.session.commit()
-        return jsonify(tx.to_json(include_tags=True)), 200
+        return jsonify(tx.to_json(include_tags=True, include_documents=True)), 200
     except SQLAlchemyError as e:
         db.session.rollback()
         app.logger.error(f"Database error adding tag {tag_id} to transaction {tx_id}: {e}", exc_info=True)
@@ -557,7 +683,7 @@ def remove_tag_from_transaction(tx_id, tag_id):
     try:
         tx.tags.remove(tag)
         db.session.commit()
-        return jsonify(tx.to_json(include_tags=True)), 200
+        return jsonify(tx.to_json(include_tags=True, include_documents=True)), 200
     except SQLAlchemyError as e:
         db.session.rollback()
         app.logger.error(f"Database error removing tag {tag_id} from transaction {tx_id}: {e}", exc_info=True)
@@ -619,12 +745,7 @@ def set_setting(setting_key):
             app.logger.error(f"Invalid value format for {setting_key}: {new_value_str} - {e}")
             abort(400, description=f"Invalid value format for {setting_key}. Expected a number.")
     else:
-        # If you intend to support other setting types (e.g., strings) in the future,
-        # you would add logic here. For now, we only support the decimal ones explicitly.
-        # If the key is not supported, maybe return an error or handle differently.
-        # For this task, we assume only decimal settings are being set via this endpoint for now.
-        # If other *types* of settings were needed, the model/logic might need adjustment.
-        if setting_key not in SUPPORTED_DECIMAL_SETTINGS: # Be explicit about what can be set
+        if setting_key not in SUPPORTED_DECIMAL_SETTINGS:
             abort(400, description=f"Setting key '{setting_key}' is not currently supported for updates via this endpoint.")
         parsed_value = str(new_value_str)
 
@@ -635,7 +756,7 @@ def set_setting(setting_key):
             setting.value = parsed_value
             app.logger.info(f"Updating setting '{setting_key}' to {parsed_value}")
         else:
-            if setting_key in SUPPORTED_DECIMAL_SETTINGS: # Only create supported settings
+            if setting_key in SUPPORTED_DECIMAL_SETTINGS:
                 setting = Setting(key=setting_key, value=parsed_value)
                 db.session.add(setting)
                 app.logger.info(f"Creating new setting '{setting_key}' with value {parsed_value}")
@@ -643,10 +764,9 @@ def set_setting(setting_key):
                  abort(400, description=f"Cannot create unsupported setting key '{setting_key}'.")
 
         db.session.commit()
-        if setting: # Should always be true if no abort
+        if setting:
             return jsonify(setting.to_json()), 200
         else:
-            # This case should ideally not be reached due to the aborts above, but for safety:
             abort(500, description=f"Failed to save setting '{setting_key}' due to an unexpected issue.")
 
     except SQLAlchemyError as e:
@@ -681,7 +801,7 @@ def reset_database_for_test():
 
     try:
         app.logger.info("Attempting to drop all tables...")
-        with app.app_context(): # Ensure operations are within app context
+        with app.app_context():
             db.drop_all() 
             app.logger.info("All tables dropped successfully.")
             
