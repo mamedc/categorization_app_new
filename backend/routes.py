@@ -7,6 +7,8 @@ from datetime import datetime
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 import decimal
 from werkzeug.exceptions import HTTPException
+import os
+import traceback
 
 
 
@@ -655,3 +657,50 @@ def set_setting(setting_key):
         db.session.rollback()
         app.logger.error(f"Unexpected error saving setting '{setting_key}': {e}", exc_info=True)
         abort(500, description=f"Could not save setting '{setting_key}'.")
+    
+
+
+
+    # --- Test Utility Routes ---
+
+
+
+@app.route('/api/test/reset-database', methods=['POST'])
+def reset_database_for_test():
+    """
+    Resets the database by dropping all tables and recreating them.
+    This endpoint is intended for E2E testing purposes only.
+    """
+    is_debug_mode = app.debug 
+    
+    if not is_debug_mode and os.environ.get('FLASK_ENV') == 'production':
+        app.logger.warning("Attempt to reset database (drop/create all) in a production-like environment denied.")
+        return jsonify({"error": "Resetting database by dropping tables is not allowed in this environment."}), 403
+
+    app.logger.info(f"Database reset request received. App debug mode: {is_debug_mode}")
+
+    try:
+        app.logger.info("Attempting to drop all tables...")
+        with app.app_context(): # Ensure operations are within app context
+            db.drop_all() 
+            app.logger.info("All tables dropped successfully.")
+            
+            app.logger.info("Attempting to create all tables...")
+            db.create_all()
+            app.logger.info("All tables created successfully.")
+        
+        app.logger.info("Database schema reset (dropped and recreated) successfully for testing.")
+        return jsonify({"message": "Database schema reset successfully for testing."}), 200
+
+    except Exception as e:
+        app.logger.error(f"Error during database reset: {str(e)}", exc_info=True)
+        
+        if app.debug:
+            tb_str = traceback.format_exc()
+            return jsonify({
+                "error": "Failed to reset database schema.", 
+                "details": str(e),
+                "traceback": tb_str
+            }), 500
+        else:
+            return jsonify({"error": "Failed to reset database schema. Check server logs for details."}), 500

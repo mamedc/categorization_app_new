@@ -6,7 +6,7 @@ import Settings from './Settings'; // Import the new Settings component
 
 export default function Navbar({ activeView, setActiveView }) {
     return (
-        <Box bg="white" px={4} py={2}>
+        <Box bg="white" px={4} py={2} as="nav">
             <Flex h="16" alignItems="center" justifyContent="space-between">
 
                 <Flex align="center" gap={6} display={{ base: "none", sm: "flex" }}>
@@ -22,6 +22,7 @@ export default function Navbar({ activeView, setActiveView }) {
                         transition="all 0.2s"
                         _hover={{ color: "teal.600", cursor: "pointer", borderColor: "teal.200" }}
                         onClick={() => setActiveView('transactions')}
+                        data-cy="nav-transactions"
                     >
                         Transactions
                     </Text>
@@ -37,6 +38,7 @@ export default function Navbar({ activeView, setActiveView }) {
                         transition="all 0.2s"
                         _hover={{ color: "teal.600", cursor: "pointer", borderColor: "teal.200" }}
                         onClick={() => setActiveView('tags')}
+                        data-cy="nav-tags"
                     >
                         Tags
                     </Text>
@@ -50,13 +52,14 @@ export default function Navbar({ activeView, setActiveView }) {
                         transition="all 0.2s"
                         _hover={{ color: "teal.600", cursor: "pointer", borderColor: "teal.200" }}
                         onClick={() => setActiveView('import')}
+                        data-cy="nav-import"
                     >
                         Import
                     </Text>
                 </Flex>
 
                 {/* Render the Settings component which includes its trigger */}
-                <Settings />
+                <Settings data-cy="nav-settings" />
 
             </Flex>
         </Box>

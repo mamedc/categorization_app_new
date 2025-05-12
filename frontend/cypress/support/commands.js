@@ -1,43 +1,73 @@
-// cypress/support/commands.js
+// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\cypress\support\commands.js
+
+// Helper function to ensure API_URL is valid
+function getApiUrl() {
+    const apiUrl = Cypress.env('API_URL');
+    if (!apiUrl || typeof apiUrl !== 'string' || !apiUrl.startsWith('http')) {
+        const envFromConfig = Cypress.config('env');
+        const directApiUrl = envFromConfig ? envFromConfig.API_URL : 'N/A';
+
+        console.error(
+            `Problem with API_URL. Value from Cypress.env('API_URL'): "${apiUrl}". Type: "${typeof apiUrl}". ` +
+            `Value from Cypress.config('env').API_URL: "${directApiUrl}".`
+        );
+        throw new Error(
+            `API_URL ("${apiUrl}") is not a valid, fully qualified URL. ` +
+            "Please check your cypress.config.js `env` block (ensure it's at the project root, not inside the 'cypress' folder) " +
+            "or system environment variables (e.g., CYPRESS_API_URL), and ensure the Cypress Test Runner has been restarted if changes were made."
+        );
+    }
+    return apiUrl;
+}
 
 // Command to reset the database via an API call
 Cypress.Commands.add('resetDatabase', () => {
-    cy.request('POST', `${Cypress.env('API_URL')}/test/reset-database`)
+    const apiUrl = getApiUrl();
+    
+    cy.request('POST', `${apiUrl}/test/reset-database`)
       .its('status')
       .should('eq', 200);
-    // Optionally seed initial data like settings here if not done by reset endpoint
-    cy.request('POST', `${Cypress.env('API_URL')}/settings/initial_balance`, { value: '0.00' });
+      
+    // Seed initial balance after reset
+    cy.request({
+        method: 'POST',
+        url: `${apiUrl}/settings/initial_balance`,
+        body: { value: '0.00' },
+        failOnStatusCode: false 
+    }).then((response) => {
+        expect(response.status).to.be.oneOf([200, 201]);
+    });
 });
 
 // Command to create a transaction via API for test setup
 Cypress.Commands.add('createTransactionAPI', (transactionData) => {
-    cy.request('POST', `${Cypress.env('API_URL')}/transactions/new`, transactionData)
-      .its('body'); // Returns the created transaction
+    const apiUrl = getApiUrl();
+    cy.request('POST', `${apiUrl}/transactions/new`, transactionData)
+      .its('body'); 
 });
 
 // Command to create a tag group via API
 Cypress.Commands.add('createTagGroupAPI', (name) => {
-    cy.request('POST', `${Cypress.env('API_URL')}/tag-groups`, { name })
+    const apiUrl = getApiUrl();
+    cy.request('POST', `${apiUrl}/tag-groups`, { name })
       .its('body');
 });
 
 // Command to create a tag via API
 Cypress.Commands.add('createTagAPI', (tagData) => {
-    cy.request('POST', `${Cypress.env('API_URL')}/tags`, tagData)
+    const apiUrl = getApiUrl();
+    cy.request('POST', `${apiUrl}/tags`, tagData)
       .its('body');
 });
 
 // Command to navigate to a specific section
 Cypress.Commands.add('navigateTo', (sectionName) => {
-    cy.contains('nav text', sectionName, { matchCase: false }).click();
-    // Verify active view based on URL or a UI element unique to the view
-    // For example, if URLs are like /transactions, /tags:
-    // cy.url().should('include', `/${sectionName.toLowerCase()}`);
+    cy.get('nav').contains('div > p, div > span', new RegExp(`^${sectionName}$`, 'i')).click();
 });
 
 // Helper for Chakra UI v3 Select components
-Cypress.Commands.add('selectChakraV3Option', (selectTriggerText, optionText) => {
-    cy.contains('button', selectTriggerText).click({ force: true }); // Find trigger
-    cy.get('[role="listbox"]').should('be.visible'); // Wait for content to appear
+Cypress.Commands.add('selectChakraV3Option', (selectTriggerPlaceholder, optionText) => {
+    cy.contains('[role="combobox"]', selectTriggerPlaceholder, { matchCase: false }).click({ force: true });
+    cy.get('[role="listbox"]', { timeout: 10000 }).should('be.visible');
     cy.get('[role="option"]').contains(optionText).click();
 });
