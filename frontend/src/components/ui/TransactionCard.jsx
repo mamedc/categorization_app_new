@@ -4,6 +4,7 @@
 import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer } from '@chakra-ui/react'
 import { Fragment } from "react";
 import TagCard from "./TagCard";
+import { IoDocumentsOutline } from "react-icons/io5";
 
 // Helper function to format number as currency (e.g., BRL)
 const formatBrazilianCurrency = (value) => {
@@ -89,9 +90,9 @@ export default function TransactionCard ({
                 {/* Left: Details */}
                 <VStack align="start" spacing={1} flex="2">
                     <Text
-                        fontSize="sm"
+                        fontSize="xs"
                         fontWeight="medium"
-                        color="gray.700"
+                        color="gray.500"
                         opacity={isParent ? 0.5 : 1} // Slightly fade children? Optional.
                         noOfLines={2}
                     >
@@ -100,12 +101,13 @@ export default function TransactionCard ({
                 </VStack>
 
                 {/* Tags */}
+                <Spacer display={{ base: 'none', md: 'block' }} />
                 <Flex
                     direction={{ base: 'column', md: 'row' }}
-                    align="start"
-                    gap={2}
+                    align="center"
+                    gap={1}
                     wrap="wrap"
-                    flex="3"
+                    flex="1"
                 >
                     {transaction.tags.map((tag) => (
                         <Fragment key={tag.id}> {/* Use tag.id for key */}
@@ -114,47 +116,59 @@ export default function TransactionCard ({
                     ))}
                 </Flex>
 
-                {/* Spacer pushes the value to the end in horizontal layouts */}
+                {/* Right: Flags */}
                 <Spacer display={{ base: 'none', md: 'block' }} />
-
-                {/* Right: Value + Flags */}
-                <HStack align="end" spacing={1}>
-                    
-                    {/* --- Badges Section --- */}
-                    <HStack spacing={2} wrap="wrap" justify="end">
-                        {/* Parent Badge */}
-                        {isParent && (
-                            <Badge colorPalette={ parseFloat(transaction.amount) === 0 ? "gray" : "red" } variant="subtle" fontSize="xs">
+                <HStack align="center" spacing={1}>
+                    {/* Parent Badge */}
+                    {isParent && (
+                            <Badge 
+                                colorPalette={"gray"}
+                                variant="subtle"
+                                fontSize="xs"
+                                w={50}
+                                h={3}
+                                alignItems="center"    // Vertically centers the content
+                                justifyContent="center" // Horizontally centers the content
+                            >
                                 Split
                             </Badge>
                         )}
                         {/* Child Badge */}
                         {isChild && (
-                            <Badge colorPalette="gray" variant="subtle" fontSize="xs">
+                            <Badge 
+                                colorPalette="gray"
+                                variant="subtle"
+                                fontSize="xs"
+                                alignItems="center"    // Vertically centers the content
+                                justifyContent="center" // Horizontally centers the content
+                            >
                                 Sub-item
                             </Badge>
                         )}
                         {/* Doc Flag Badge */}
                         {transaction.doc_flag && (
-                            <Badge colorPalette="blue" variant="subtle" fontSize="xs">
-                                Doc
+                            <Badge
+                                colorPalette="gray"
+                                variant="subtle"
+                                fontSize="xs"
+                                alignItems="center"    // Vertically centers the content
+                                justifyContent="center" // Horizontally centers the content
+                            >
+                                <IoDocumentsOutline />
                             </Badge>
                         )}
-                        {/* Remove the old childrenFlag badge if it existed */}
-                        {/* {transaction.childrenFlag && ( ... )} */}
-                    </HStack>
-                    {/* --- End Badges Section --- */}
+                </HStack>
 
+                {/* Right: amount */}
+                <Spacer display={{ base: 'none', md: 'block' }} />
+                <HStack align="end" spacing={1}>
                     <Text
-                        fontSize="sm"
+                        fontSize="xs"
                         fontWeight="bold"
-                        // Use parseFloat for comparison as amount might be string "0.00"
-                        //color={parseFloat(transaction.amount) >= 0 ? 'green.600' : 'red.600'}
                         color={finalColor}
                     >
                         {formatBrazilianCurrency(transaction.amount)}
                     </Text>
-                    
                 </HStack>
             </Flex>
         </Box>

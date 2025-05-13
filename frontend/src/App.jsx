@@ -19,7 +19,10 @@ export default function App() {
     //const [count, setCount] = useAtom(counterAtom);
 
     return (
-        <Stack minH="100vh" bg="#f9f9f4" spacing={0}>
+        <Stack 
+            minH="100vh" 
+            bg="#f9f9f4" // grid background color
+            spacing={0}>
 
             {/* 'activeView' and 'setActiveView' props to control Navbar style and set current activeView*/}
             <Navbar

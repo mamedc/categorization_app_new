@@ -77,8 +77,9 @@ export default function CreateTransactionModal ({
             
             <Dialog.Trigger asChild>
                 <Button 
-                    size="sm" 
-                    colorPalette="cyan" 
+                    size="xs" 
+                    colorPalette="blue" 
+                    variant="subtle"
                     rounded="sm" 
                     width={20} 
                     onClick={handleOpen}

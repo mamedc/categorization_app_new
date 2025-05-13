@@ -49,7 +49,7 @@ const getDateNDaysAgoString = (days) => {
 
 // Define filter options data structure for the collection
 const filterOptionsData = [
-    { label: "All Time", value: "all" },
+    { label: "All", value: "all" },
     { label: "Last 30 Days", value: "last30Days" },
     { label: "Month/Year", value: "monthYear" },
     { label: "Date Range", value: "dateRange" },
@@ -218,20 +218,23 @@ export default function TransactionsManagement({
                 // direction={{ base: 'column', md: 'row' }}
                 direction={'row'}
                 // align={{ base: 'stretch', md: 'center' }}
-                align={'stretch'}
+                //align={'stretch'}
+                align={'center'}
                 h="80px"
                 gap={4}
                 mt={"45px"}
                 wrap="wrap"
                 minH="60px"
-                bg="rgb(224, 224, 40)"
+                //bg="rgb(224, 224, 40)"
+                //bg="#f9f9f4"
+                bg="white"
                 //backdropFilter="auto"
                 //backdropBlur="8px"
                 mb={4}
                 pt={4}
                 pb={4}
-                pl={{ base: "16px", md: "16px", xl: "calc(16px + (100vw - 1400px) / 2)" }} 
-                pr={{ base: "16px", md: "16px", xl: "calc(16px + (100vw - 1400px) / 2)" }} 
+                pl={{ base: "16px", md: "32px", xl: "calc(80px + (100vw - 1512px) / 2)" }} 
+                pr={{ base: "16px", md: "32px", xl: "calc(80px + (100vw - 1512px) / 2)" }} 
                 //borderRadius="md"
                 //position="sticky"
                 position="fixed"
@@ -245,40 +248,49 @@ export default function TransactionsManagement({
             >
                                     
                 {/* Sorting Control */}
-                <Tooltip.Root positioning={{ placement: "bottom" }} openDelay={200} closeDelay={100}>
-                    <Tooltip.Trigger asChild>
-                        <IconButton
-                            size="sm" aria-label={sortTooltipLabel} onClick={toggleSortOrder}
-                            variant="outline" colorPalette="teal" _hover={{ bg: "teal.500", color: "white" }}
-                        >
-                            {sortIcon}
-                        </IconButton>
-                    </Tooltip.Trigger>
-                    <Portal><Tooltip.Positioner><Tooltip.Content>{sortTooltipLabel}</Tooltip.Content></Tooltip.Positioner></Portal>
-                </Tooltip.Root>
-
+                <IconButton
+                    size="xs"
+                    aria-label={sortTooltipLabel}
+                    onClick={toggleSortOrder}
+                    variant="ghost"
+                    colorPalette="teal"
+                    _hover={{ bg: "teal.500", color: "white" }}
+                >
+                    {sortIcon}
+                </IconButton>
+                
                 {/* --- Filter Controls --- */}
-                <Flex wrap="wrap" gap={4} align="center" flexGrow={{ base: 1, md: 0 }}>
+                <Flex 
+                    direction={'row'} 
+                    //wrap="wrap" 
+                    wrap={{ base: 'wrap', md: 'wrap', xl: 'nowrap' }}
+                    gap={4} 
+                    align="center" 
+                    flexGrow={{ base: 1, md: 0 }}
+                >
 
                     {/* Filter Type Select - Using Collection */}
-                    <Field.Root id="filterTypeSelect" minW="150px" flexShrink={0}>
+                    <Field.Root id="filterTypeSelect" w="140px" flexShrink={0}>
                         <Field.Label srOnly>Filter by</Field.Label>
                         <Select.Root
                             // Use the collection prop with the created collection
                             collection={filterOptionsCollection}
                             value={[filterType]}
                             onValueChange={(details) => setFilterType(details.value[0] || 'all')}
-                            size="sm"
+                            size="xs"
                             positioning={{ sameWidth: true, gutter: 2 }}
+                            variant="outline" // "subtle"
                         >
                             <Select.HiddenSelect />
+                            
                             <Select.Control>
-                                <Select.Trigger bg="white" variant="outline">
+                                <Select.Trigger bg="white">
                                     {/* ValueText will now display the label of the selected item */}
                                     <Select.ValueText placeholder="Filter by..." />
                                     <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
                                 </Select.Trigger>
                             </Select.Control>
+                            
                             <Portal>
                                 <Select.Positioner>
                                     <Select.Content>
@@ -292,6 +304,7 @@ export default function TransactionsManagement({
                                     </Select.Content>
                                 </Select.Positioner>
                             </Portal>
+
                         </Select.Root>
                     </Field.Root>
 
@@ -300,11 +313,12 @@ export default function TransactionsManagement({
                         <HStack spacing={2}>
                             <Field.Root id="startDate">
                                 <Field.Label srOnly>Start Date</Field.Label>
-                                <Input size="sm" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} maxW="150px" bg="white" />
+                                <Input size="xs" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} w="110px" bg="white" />
                             </Field.Root>
+                            
                             <Field.Root id="endDate">
                                 <Field.Label srOnly>End Date</Field.Label>
-                                <Input size="sm" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} maxW="150px" bg="white" min={startDate} />
+                                <Input size="xs" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} w="110px" bg="white" min={startDate} />
                             </Field.Root>
                         </HStack>
                     )}
@@ -312,14 +326,15 @@ export default function TransactionsManagement({
                     {/* Month/Year Selects (Conditional) - Using Collections */}
                     {filterType === 'monthYear' && (
                         <HStack spacing={2}>
+                            
                             {/* Month Select */}
-                            <Field.Root id="selectMonth" minW="120px">
+                            <Field.Root id="selectMonth"  w="110px">
                                 <Field.Label srOnly>Month</Field.Label>
                                 <Select.Root
                                     collection={monthsCollection} // Use month collection
                                     value={[selectedMonth]}
                                     onValueChange={(details) => setSelectedMonth(details.value[0] || '')}
-                                    size="sm" positioning={{ sameWidth: true, gutter: 2 }}
+                                    size="xs" positioning={{ sameWidth: true, gutter: 2 }}
                                 >
                                     <Select.HiddenSelect />
                                     <Select.Control>
@@ -344,13 +359,13 @@ export default function TransactionsManagement({
                             </Field.Root>
 
                             {/* Year Select */}
-                            <Field.Root id="selectYear" minW="100px">
+                            <Field.Root id="selectYear"  w="110px">
                                 <Field.Label srOnly>Year</Field.Label>
                                 <Select.Root
                                     collection={availableYearsCollection} // Use year collection
                                     value={[selectedYear]}
                                     onValueChange={(details) => setSelectedYear(details.value[0] || '')}
-                                    size="sm" positioning={{ sameWidth: true, gutter: 2 }}
+                                    size="xs" positioning={{ sameWidth: true, gutter: 2 }}
                                     disabled={availableYearsCollection.items.length === 0}
                                 >
                                     <Select.HiddenSelect />
@@ -382,44 +397,38 @@ export default function TransactionsManagement({
 
                 {/* --- Action Buttons --- */}
                 <HStack spacing={2} mt={{ base: 4, md: 0 }} width={{ base: "100%", md: "auto"}} justifyContent={{ base: "flex-end", md: "initial"}}>
+                    
                     <CreateTransactionModal />
+                    
                     <EditTransactionModal />
+                    
                     {/* --- Split Button --- */}
                     <Button
-                        size="sm"
+                        size="xs"
                         colorPalette="orange"
-                        variant="outline"
+                        variant="subtle"
                         rounded="sm"
                         width={20}
                         onClick={handleOpenSplitModal}
-                        // Disable if no transaction selected OR if selected transaction is already a child
                         disabled={!selectedTransacAtomValue || selectedTransacAtomValue.parent_id !== null}
                         aria-label="Split selected transaction"
                     >
                         Split
                     </Button>
-                    {/* --- End Split Button --- */}
+                    
                     <DeleteTransactionModal />
+                
                 </HStack>
 
             </Flex>
                         
             {/* --- Transaction Grid --- */}
-            <Box
-                //mt="64px"  // Pushes content below fixed bar
-                //pt="50px"
-                height={`calc(100vh - 50px)`}
-                overflowY="auto"
-                //flex="1"
-            >
-                <TransactionGrid
-                    filteredTransactions={filteredTransactions}
-                    sortOrder={sortOrder}
-                />
-            </Box>
-
+            <TransactionGrid
+                filteredTransactions={filteredTransactions}
+                sortOrder={sortOrder}
+            />
+        
             {/* --- Render Split Transaction Modal --- */}
-            {/* Ensure transactionToSplit has data before rendering */}
             {currentTransactionToSplit && (
                 <SplitTransactionModal
                     isOpen={isSplitModalOpen}
@@ -427,7 +436,6 @@ export default function TransactionsManagement({
                     transactionToSplit={currentTransactionToSplit}
                 />
             )}
-             {/* --- End Render Split Modal --- */}
 
         </Container>
     );

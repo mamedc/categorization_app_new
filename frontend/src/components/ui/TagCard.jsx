@@ -11,13 +11,18 @@ export default function TagCard ({
             direction={'row'}
             align={{ base: 'start', md: 'center' }}
             gap={4}
-            wrap="wrap"
         >
-            <Badge>
-                <ColorSwatch value={tag.color} boxSize="0.82em" />
+            <Badge 
+                variant="solid" 
+                size="xs"
+                bg={tag.color}
+                w={50}
+                h={3}
+                alignItems="center"    // Vertically centers the content
+                justifyContent="center" // Horizontally centers the content
+            >
                 {tag.name}
             </Badge>
-
         </Flex>
     );
 };

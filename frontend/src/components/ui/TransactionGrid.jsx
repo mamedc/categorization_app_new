@@ -12,6 +12,7 @@ import { BASE_URL } from "../../App";
 import { VStack, Spinner, Text, Flex, StackSeparator, Box, Spacer, HStack } from "@chakra-ui/react";
 import TransactionCard from "./TransactionCard";
 
+
 // Helper function to format date string into a user-friendly format
 const formatDateHeader = (dateString) => {
     // If dateString is already 'Invalid Date', return it directly
@@ -22,13 +23,14 @@ const formatDateHeader = (dateString) => {
         console.warn("Invalid date encountered in formatDateHeader:", dateString);
         return "Invalid Date";
     }
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat('en-GB', {
         year: 'numeric',
-        month: 'long',
+        month: 'short',
         day: 'numeric',
         timeZone: 'UTC' // Use UTC for consistency since dates are stored as date only
     }).format(date);
 };
+
 
 // Helper function to format number as currency (e.g., BRL)
 const formatCurrency = (value) => {
@@ -383,7 +385,7 @@ export default function TransactionGrid ({
             )}
 
             {(hasTransactionsError || hasInitialBalanceError) && (
-                 <Flex justify="center" mt={8} p={6} bg="red.100" borderRadius="md">
+                 <Flex justify="center" mt={28} p={6} bg="red.100" borderRadius="md">
                     <Text fontSize="sm" color="red.700">
                         {hasTransactionsError ? "Error loading transactions." : "Error loading initial balance."}
                         Please try refreshing the page or check your connection.
@@ -393,7 +395,7 @@ export default function TransactionGrid ({
 
             {/* Message when data is loaded but filtered list is empty */}
              {!isLoading && !isLoadingInitialBalance && !hasTransactionsError && !hasInitialBalanceError && filteredTransactions.length === 0 && allTransactionsData?.length > 0 && (
-                 <Flex justify="center" mt={8} p={6} bg="#f9f9f4" borderRadius="md">
+                 <Flex justify="center" mt={28} p={6} bg="#f9f9f4" borderRadius="md">
                      <Text fontSize="sm" color="gray.500">
                          No transactions match the current filters.
                      </Text>
@@ -402,7 +404,7 @@ export default function TransactionGrid ({
 
              {/* Message when data is loaded but there are simply no transactions at all */}
              {!isLoading && !isLoadingInitialBalance && !hasTransactionsError && !hasInitialBalanceError && allTransactionsData?.length === 0 && (
-                 <Flex justify="center" mt={8} p={6} bg="#f9f9f4" borderRadius="md">
+                 <Flex justify="center" mt={28} p={6} bg="#f9f9f4" borderRadius="md">
                      <Text fontSize="sm" color="gray.500">
                          No transactions found. Add or import some transactions to get started.
                      </Text>
@@ -416,8 +418,6 @@ export default function TransactionGrid ({
                     align="stretch" 
                     pt="100px"
 
-                    //maxW={{ base: "100%", md: "100%", xl: "100%" }}
-                    //mx="auto"
                 >
                     {displayGroupedTransactions.map((group) => (
                         <Fragment key={group.date}>
@@ -425,7 +425,7 @@ export default function TransactionGrid ({
                                 //bg="rgb(158, 158, 53)"
                                 fontSize="sm"
                                 fontWeight="semibold"
-                                color="gray.600"
+                                color="gray.500"
                                 pb={2}
                                 pt={2}
                                 pl={2}
@@ -437,10 +437,10 @@ export default function TransactionGrid ({
                                     <Spacer />
                                      {/* Display the running balance calculated for the end of this day */}
                                      <Box
-                                        fontSize="sm"
+                                        fontSize="xs"
                                         marginRight={4}
                                     >
-                                        <HStack gap={4}>
+                                        <HStack gap={1}>
                                             <Text color="gray.600" >Balance:</Text>
                                             <Text
                                                 fontWeight="bold"

@@ -114,9 +114,9 @@ export default function DeleteTransactionModal() {
         <Dialog.Root lazyMount open={open} onOpenChange={(e) => { if (!e.open) handleClose() }}>
             <Dialog.Trigger asChild>
                 <Button
-                    size="sm"
+                    size="xs"
                     colorPalette="red"
-                    variant="outline"
+                    variant="subtle"
                     rounded="sm"
                     width={20}
                     onClick={handleOpen}

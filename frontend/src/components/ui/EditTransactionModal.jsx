@@ -345,9 +345,9 @@ export default function EditTransactionModal ({
 
             <Dialog.Trigger asChild>
                 <Button
-                    size="sm"
+                    size="xs"
                     colorPalette="yellow"
-                    variant="outline"
+                    variant="subtle"
                     rounded="sm"
                     width={20}
                     onClick={handleOpen}
