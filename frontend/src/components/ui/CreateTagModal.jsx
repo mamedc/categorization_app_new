@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BASE_URL } from "../../App"
-import { Button, CloseButton, Dialog, Portal, Text, HStack, Stack,Field, Input, ColorPicker } from "@chakra-ui/react";
+import { Button, CloseButton, Dialog, Portal, Text, HStack, Stack,Field, Input, ColorPicker, Box } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { useAtom, useSetAtom } from "jotai";
 import { ldbTagGroupsAtom, selectedTagGroupId, selectedTagId, refreshTagGroupsAtom } from "../../context/atoms";
@@ -27,6 +27,10 @@ function rgbaToHex(rgbaString) {
     );
 };
 
+const swatches = ["red", "green", "blue", "purple", "orange", "pink"];
+ 
+
+
 export default function CreateTagModal ({}) {
     
     const [open, setOpen] = useState(false);
@@ -50,19 +54,24 @@ export default function CreateTagModal ({}) {
         }
         return undefined;
     };
-
-
+    
+    const colorGroups = {
+        reds: ["#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5"],
+        oranges: ["#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74"],
+        yellows: ["#ca8a04", "#eab308", "#facc15", "#fde047", "#fef08a"],
+        greens: ["#15803d", "#16a34a", "#22c55e", "#4ade80", "#bbf7d0"],
+        blues: ["#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd"],
+        purples: ["#6d28d9", "#7c3aed", "#8b5cf6", "#a78bfa", "#ddd6fe"],
+        browns: ["#78350f", "#92400e", "#b45309", "#d97706", "#fcd34d"],
+        tealsCyans: ["#0f766e", "#0d9488", "#14b8a6", "#2dd4bf", "#a5f3fc"],
+        pinks: ["#be185d", "#db2777", "#ec4899", "#f472b6", "#fbcfe8"],
+        grays: ["#374151", "#6b7280", "#9ca3af", "#d1d5db", "#f3f4f6"]
+    };
 
     const handleOpen = () => {
         setOpen(true);
         setTagData(initialTagState);
         setSaveError(''); // Clear any previous error
-        console.log('tagGroupData')
-        console.log(tagGroupData)
-        console.log('tagData')
-        console.log(tagData)
-        console.log('tagGroupData.id')
-        console.log(tagGroupData.id)
     };
     const handleClose = () => {
         setTagData(initialTagState);
@@ -74,7 +83,6 @@ export default function CreateTagModal ({}) {
         setTagData({ ...tagData, [name]: value });
         //console.log(tagData)
     };
-
 
     // --- New Color Change Handler ---
     const handleColorChange = (details) => {
@@ -159,8 +167,8 @@ export default function CreateTagModal ({}) {
                         <Stack direction="column" gap="6">
                             <Stack direction={{ base: "column", md: "row" }} gap="4" width="100%">
                                 
-                                {/*Left: Date*/}
-                                <Field.Root>
+                                {/*Left: Name*/}
+                                <Field.Root maxW="150px">
                                     <Field.Label>Tag Name:</Field.Label>
                                     <Input
                                         name="name"
@@ -170,22 +178,22 @@ export default function CreateTagModal ({}) {
                                     />
                                 </Field.Root>  
 
-                                {/*Right: color*/}
-                                <ColorPicker.Root 
-                                    open 
-                                    name="color"
-                                    onValueChange={handleColorChange}
-                                >
+                                <ColorPicker.Root alignItems="flex-start" name="color" onValueChange={handleColorChange}>
                                     <ColorPicker.HiddenInput />
-                                    <ColorPicker.Content animation="none" shadow="none" padding="0">
-                                        <ColorPicker.Area />
-                                        <HStack>
-                                            <ColorPicker.EyeDropper display="none" size="sm" variant="outline" />
-                                            <ColorPicker.Sliders />
-                                            <ColorPicker.ValueSwatch size="xl" />
-                                        </HStack>
-                                    </ColorPicker.Content>
+                                    {/* <ColorPicker.Label></ColorPicker.Label> */}
+                                    <ColorPicker.SwatchGroup>
+                                        <Box display="grid" gridTemplateColumns="repeat(auto-fill, minmax(24px, 1fr))" gap="2" maxW="180px">
+                                            {Object.values(colorGroups).flat().map((color) => (
+                                                <ColorPicker.SwatchTrigger key={color} value={color}>
+                                                <ColorPicker.Swatch value={color}>
+                                                    <ColorPicker.SwatchIndicator boxSize="3" bg="white" />
+                                                </ColorPicker.Swatch>
+                                                </ColorPicker.SwatchTrigger>
+                                            ))}
+                                        </Box>
+                                    </ColorPicker.SwatchGroup>
                                 </ColorPicker.Root>
+                            
                             </Stack>
 
                         </Stack>

@@ -125,7 +125,7 @@ export default function TransactionCard ({
 
 
                 {/* 4. Split/Sub-item, Document and Notes Badges */}
-                <GridItem colSpan={9}>
+                <GridItem colSpan={7}>
                     <HStack
                         spacing={1}
                         justifyContent={{ base: 'start', md: 'start' }} // Center in its column on md
@@ -209,7 +209,7 @@ export default function TransactionCard ({
                 </GridItem>
                 
                 {/* 5. Amount */}
-                <GridItem colSpan={5}>
+                <GridItem colSpan={7}>
                     <HStack
                         justifySelf={{ base: 'flex-start', md: 'flex-end' }} // Align this cell's content to the end on md
                         gridColumn={{ base: "2 / -1", md: "auto" }} // Align with description on base, auto on md
