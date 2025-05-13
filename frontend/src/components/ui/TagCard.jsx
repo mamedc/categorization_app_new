@@ -10,7 +10,10 @@ export default function TagCard ({
         <Flex
             direction={'row'}
             align={{ base: 'start', md: 'center' }}
+            alignItems="center" 
+            justifyContent="center"
             gap={4}
+            h="100%"
         >
             <Badge 
                 variant="solid" 
@@ -21,7 +24,7 @@ export default function TagCard ({
                 alignItems="center"    // Vertically centers the content
                 justifyContent="center" // Horizontally centers the content
             >
-                {tag.name}
+                <Text>{tag.name}</Text>
             </Badge>
         </Flex>
     );

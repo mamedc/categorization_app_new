@@ -1,22 +1,18 @@
 // ./frontend/src/components/ui/TransactionCard.jsx
 
-import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer, HoverCard, Portal } from '@chakra-ui/react'
+import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Grid, Portal, HoverCard, GridItem } from '@chakra-ui/react' // Changed Spacer to Grid
 import { Fragment } from "react";
 import TagCard from "./TagCard";
 import { IoDocumentsOutline } from "react-icons/io5";
 import { SlPencil } from "react-icons/sl";
-import { useState } from "react"
+// Removed useState as hoverOpen was not used in the final return for HoverCard logic
 
 // Helper function to format number as currency (e.g., BRL)
 const formatBrazilianCurrency = (value) => {
-    // Value might be a string (e.g., "0.00") or a number
     const number = parseFloat(value);
-
     if (isNaN(number)) {
-      return "Invalid Number"; // Or handle the error as you see fit
+      return "Invalid Number";
     }
-
-    // Always display with 2 decimal places
     return number.toLocaleString('pt-BR', {
         style: 'currency',
         currency: 'BRL',
@@ -30,16 +26,11 @@ export default function TransactionCard ({
     transaction,
     isSelected,
     onSelect,
-    isParent, // <-- New prop
-    isChild   // <-- New prop
+    isParent,
+    isChild
 }) {
 
-    // Determine the base color based on the amount
     const baseColor = parseFloat(transaction.amount) >= 0 ? 'green.600' : 'red.600';
-    // const finalColor = isParent ? `${baseColor}/50` : baseColor; // Apply 50% opacity if it's a parent transaction
-
-    const [hoverOpen, setHoverOpen] = useState(false)
-
     let finalColor;
     if (isParent && parseFloat(transaction.amount) === 0) {
         finalColor = "gray.300";
@@ -51,160 +42,189 @@ export default function TransactionCard ({
 
     return (
         <Box
-            //bg="white"
             bg={isParent ? "#f1eee5" : "white"}
             borderRadius="lg"
             p={4}
-            ml={isChild ? 2 : 0}  // Adds left margin
+            ml={isChild ? 2 : 0}
             borderLeftWidth={4}
-            borderLeftColor={isSelected ? "teal.500" : (isParent ? "gray.300" : "#bcdbdb")} // Example: gray border for children
-            //transition="all 0.1s"
-            //opacity={isParent ? 0.75 : 1} // Slightly fade children? Optional.
-            //pl={isChild ? 16 : 4} // Indent children slightly? Optional.
-            // _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
+            borderLeftColor={isSelected ? "teal.500" : (isParent ? "gray.300" : "#bcdbdb")}
             _hover={{ outline: '1px solid', outlineColor: '#bcdbdb' }}
-            // Optionally add more visual feedback for selection
-            // boxShadow={isSelected ? 'outline' : 'sm'} // Example: add outline shadow when selected
             outline={isSelected ? '1px solid' : 'none'}
             outlineColor={isSelected ? 'teal.500' : 'transparent'}
-
-            //maxW={{ base: "100%", md: "100%", xl: "100%" }}
-            //mx="auto"
+            //minH={"100px"}
         >
-            <Flex
-                direction={{ base: 'column', md: 'row' }}
-                align={{ base: 'start', md: 'center' }}
-                gap={4}
-                wrap="wrap"
+            <Grid
+                // Define columns: Checkbox, Description, Tags, Split/Sub, Docs/Notes, Amount
+                // Adjust fractions/widths as needed for your desired proportions
+                templateColumns={{
+                    base: "auto 1fr", // On small screens, checkbox then everything else
+                    // md: "minmax(16px, 16px) minmax(150px, 300px) minmax(300px, 300px) minmax(200px, 200px) minmax(100px, auto)"
+                    md: "repeat(50, 1fr)"
+                }}
+                gap={{ base: 2, md: 4 }} // Spacing between columns
+                alignItems="center" // Vertically align items in each cell
+                width="100%"
             >
-                {/*Checkbox*/}
-                <Checkbox.Root
-                    variant="outline"
-                    size="sm"
-                    colorPalette="cyan"
-                    mt={{ base: 1, md: 0 }}
-                    checked={isSelected}
-                    onCheckedChange={onSelect}
-                >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control />
-                </Checkbox.Root>
 
-                {/* Left: Details */}
-                <VStack align="start" spacing={1} flex="2">
+                {/* 1. Checkbox */}
+                <GridItem colSpan={1}>
+                    <Flex
+                        alignItems="center" // Vertically center the Checkbox.Root within this Flex container
+                        justifyContent="center" // Horizontally center (optional, but good for completeness)
+                        h="100%" // Make this Flex wrapper take the full height of its grid cell
+                        // This Flex becomes the direct child of the Grid, i.e., the grid item.
+                    >
+                        <Checkbox.Root
+                            variant="outline"
+                            size="sm"
+                            colorPalette="cyan"
+                            //alignItems="center"
+                            isChecked={isSelected} // Correct prop for Ark UI Checkbox
+                            onCheckedChange={onSelect}
+                        >
+                            <Checkbox.Control />
+                            <Checkbox.HiddenInput />
+                        </Checkbox.Root>
+                    </Flex>
+                </GridItem>
+
+
+                {/* 2. Description */}
+                <GridItem colSpan={20}>
                     <Text
                         fontSize="xs"
                         fontWeight="medium"
                         color="gray.500"
-                        opacity={isParent ? 0.5 : 1} // Slightly fade children? Optional.
+                        opacity={isParent ? 0.5 : 1}
                         noOfLines={2}
+                        maxW={"400px"}
+                        title={transaction.description} // Good for accessibility if text is truncated
                     >
                         {transaction.description}
                     </Text>
-                </VStack>
+                </GridItem>
 
-                {/* Tags */}
-                <Spacer display={{ base: 'none', md: 'block' }} />
-                <Flex
-                    direction={{ base: 'column', md: 'row' }}
-                    align="center"
-                    gap={1}
-                    wrap="wrap"
-                    flex="1"
-                >
-                    {transaction.tags.map((tag) => (
-                        <Fragment key={tag.id}> {/* Use tag.id for key */}
-                            <TagCard tag={tag} />
-                        </Fragment>
-                    ))}
-                </Flex>
 
-                {/* Right: Flags */}
-                <Spacer display={{ base: 'none', md: 'block' }} />
-                <HStack align="center" spacing={1}>
-                    
-                    {/* Parent Badge */}
-                    {isParent && (
-                        <Badge 
-                            colorPalette={"gray"}
-                            variant="subtle"
-                            fontSize="xs"
-                            w={50}
-                            h={3}
-                            alignItems="center"    // Vertically centers the content
-                            justifyContent="center" // Horizontally centers the content
-                        >
-                            Split
-                        </Badge>
+                {/* 3. Tag Badges */}
+                <GridItem colSpan={15}>
+                    <Flex
+                        direction={{ base: 'row', md: 'row' }} // Keep as row for tags
+                        alignItems="center"
+                        gap={1}
+                        wrap="wrap" // Allow tags to wrap
+                        justifyContent={{ base: 'flex-start', md: 'flex-start' }} // Align tags to the start of their cell
+                        gridColumn={{ base: "2 / -1", md: "auto" }} // Span remaining on base, auto on md
+                        mt={{base: 2, md: 0}} // Add some margin top on base if description is above
+                        h="100%"
+                    >
+                        {transaction.tags.map((tag) => (
+                            <Fragment key={tag.id}><TagCard tag={tag} /></Fragment>
+                        ))}
+                    </Flex>
+                </GridItem>
+
+
+                {/* 4. Split/Sub-item, Document and Notes Badges */}
+                <GridItem colSpan={9}>
+                    <HStack
+                        spacing={1}
+                        justifyContent={{ base: 'start', md: 'start' }} // Center in its column on md
+                        gridColumn={{ base: "1 / -1", md: "auto" }} // Takes full width on base (below others), auto on md
+                        mt={{base: 2, md: 0}}
+                    >
+                        {isParent && (
+                            <Badge
+                                //colorScheme={"gray"} // Chakra v3 uses colorScheme
+                                colorPalette="gray"
+                                variant="outline"
+                                fontSize="xs"
+                                size="xs"
+                                // minW="50px" // Use minW instead of w for flexibility
+                                textAlign="center"
+                            >
+                                Split
+                            </Badge>
+                        )}
+                        {isChild && (
+                            <Badge
+                                colorPalette="gray"
+                                variant="outline"
+                                fontSize="xs"
+                                size="xs"
+                                textAlign="center"
+                            >
+                                Sub-item
+                            </Badge>
                         )}
                     
-                    {/* Child Badge */}
-                    {isChild && (
-                        <Badge 
-                            colorPalette="gray"
-                            variant="subtle"
-                            fontSize="xs"
-                            alignItems="center"    // Vertically centers the content
-                            justifyContent="center" // Horizontally centers the content
+                        <HStack
+                            spacing={1}
+                            justifyContent={{ base: 'start', md: 'start' }} // Center in its column on md
+                            gridColumn={{ base: "1 / -1", md: "auto" }} // Takes full width on base (below others), auto on md
+                            mt={{base: 2, md: 0}}
                         >
-                            Sub-item
-                        </Badge>
-                    )}
-                    
-                    {/* Doc Flag Badge */}
-                    {transaction.doc_flag && (
-                        <Badge
-                            colorPalette="gray"
-                            variant="subtle"
-                            fontSize="xs"
-                            alignItems="center"    // Vertically centers the content
-                            justifyContent="center" // Horizontally centers the content
-                        >
-                            <IoDocumentsOutline />
-                        </Badge>
-                    )}
-
-                    {/* Note Badge */}
-                    {transaction.note && (
-                        <HoverCard.Root size="sm">
-                            <HoverCard.Trigger asChild>
+                            {transaction.doc_flag && (
                                 <Badge
                                     colorPalette="gray"
-                                    variant="subtle"
+                                    variant="outline"
                                     fontSize="xs"
-                                    alignItems="center"    // Vertically centers the content
-                                    justifyContent="center" // Horizontally centers the content
+                                    size="xs"
+                                    display="flex" // To center icon inside badge
+                                    alignItems="center"
+                                    justifyContent="center"
                                 >
-                                    <SlPencil />
+                                    <IoDocumentsOutline />
                                 </Badge>
-                            </HoverCard.Trigger>
-                            <Portal>
-                                <HoverCard.Positioner>
-                                    <HoverCard.Content maxWidth="240px">
-                                        <HoverCard.Arrow />
-                                        <Box>
-                                            {transaction.note}
-                                        </Box>
-                                    </HoverCard.Content>
-                                </HoverCard.Positioner>
-                            </Portal>
-                        </HoverCard.Root>
-                    )}
-
-                </HStack>
-
-                {/* Right: amount */}
-                <Spacer display={{ base: 'none', md: 'block' }} />
-                <HStack align="end" spacing={1}>
-                    <Text
-                        fontSize="xs"
-                        fontWeight="bold"
-                        color={finalColor}
+                            )}
+                            {transaction.note && (
+                                <HoverCard.Root openDelay={200} closeDelay={100} size="sm">
+                                    <HoverCard.Trigger asChild>
+                                        <Badge
+                                            as="button" // Make it interactive
+                                            colorPalette="gray"
+                                            variant="outline"
+                                            fontSize="xs"
+                                            size="xs"
+                                            display="flex"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            cursor="default" // Or "pointer" if you want it to look more clickable
+                                        >
+                                            <SlPencil />
+                                        </Badge>
+                                    </HoverCard.Trigger>
+                                    <Portal>
+                                        <HoverCard.Positioner>
+                                            <HoverCard.Content maxWidth="240px">
+                                                <HoverCard.Arrow />
+                                                <Box p={2} fontSize="xs">{transaction.note}</Box>
+                                            </HoverCard.Content>
+                                        </HoverCard.Positioner>
+                                    </Portal>
+                                </HoverCard.Root>
+                            )}
+                            {/* If neither, this HStack will be empty, but the grid column still exists */}
+                        </HStack>
+                    </HStack>
+                </GridItem>
+                
+                {/* 5. Amount */}
+                <GridItem colSpan={5}>
+                    <HStack
+                        justifySelf={{ base: 'flex-start', md: 'flex-end' }} // Align this cell's content to the end on md
+                        gridColumn={{ base: "2 / -1", md: "auto" }} // Align with description on base, auto on md
+                        mt={{base: 1, md: 0}}
                     >
-                        {formatBrazilianCurrency(transaction.amount)}
-                    </Text>
-                </HStack>
-            </Flex>
+                        <Text
+                            fontSize="xs"
+                            fontWeight="bold"
+                            color={finalColor}
+                        >
+                            {formatBrazilianCurrency(transaction.amount)}
+                        </Text>
+                    </HStack>
+                </GridItem>
+            </Grid>
         </Box>
     );
 };
