@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, Fragment } from "react"; // Added Fragment
 import { BASE_URL } from "../../App";
-import { VStack, Spinner, Text, Flex, StackSeparator } from "@chakra-ui/react";
+import { HStack, Spinner, Text, Flex, StackSeparator } from "@chakra-ui/react";
 import TagCard from "./TagCard";
 
 
@@ -41,12 +41,6 @@ export default function TagsGroupsGrid ({
         getGroupTags();
     }, []);
 
-    // const handleSelectTagGroup = (groupId) => {
-    //     setSelectedTagGroupId((prevSelectedId) =>
-    //         prevSelectedId === groupId ? null : groupId
-    //     );
-    // };
-
     return (
         <>
             {isLoading && (
@@ -56,24 +50,22 @@ export default function TagsGroupsGrid ({
             )}
 
             {!isLoading && groupTags.length === 0 && (
-                <Flex justify="center" mt={8} p={6} bg="#f9f9f4" borderRadius="md">
-                    <Text fontSize="sm" color="gray.500">
-                        No tags found.
+                <Flex justify="center" mt={0} p={6} borderRadius="md">
+                    <Text fontSize="xs" color="gray.500">
+                        No tags.
                     </Text>
                 </Flex>
             )}
 
             {!isLoading && groupTags.length > 0 && (
-                <VStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
+                <HStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
                     {groupTags.map((tag) => (
                         <TagCard 
                             key={tag.id}
                             tag={tag}
-                            //isSelectedTag={isSelectedTag}
-                            //onSelectTag={onSelectTag}
                         />
                     ))}
-                </VStack>
+                </HStack>
             )}
         </>
     );

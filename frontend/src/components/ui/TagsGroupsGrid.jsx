@@ -33,7 +33,7 @@ export default function TagsGroupsGrid ({}) {
             )}
 
             {!isLoading && groupsData.data.length > 0 && (
-                <VStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
+                <VStack spacing={6} align="stretch" pt="100px"> {/* Add spacing between date groups */}
                     {groupsData.data.map((tGroup) => (
                         <TagGroupCard
                             key={tGroup.id}

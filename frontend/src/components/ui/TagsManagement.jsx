@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { BASE_URL } from "../../App";
-import { Box, Flex, IconButton, Spacer, Tooltip, Portal } from "@chakra-ui/react"; // Removed Container
+import { Box, Flex, IconButton, Spacer, Tooltip, Portal, Container } from "@chakra-ui/react"; // Removed Container
 import { LuArrowUp } from "react-icons/lu";
 import TagsGroupsGrid from "./TagsGroupsGrid";
 import CreateTagsGroupModal from "./CreateTagsGroupModal";
@@ -25,48 +25,47 @@ export default function TagsManagement ({
     // Note: The outer Container is now handled in App.jsx
     // Removed the inner Container component
     return (
-        <Box> {/* Use Box or Fragment instead of Container */}
+        <Container 
+            pt={0}
+            pb={6}
+            maxW={{ base: "100%", md: "100%", xl: "1400px" }} // Controls Transaction Card width behaviour
+            mx="auto"
+        >
 
             {/* Actions Bar - Made Sticky */}
             <Flex
-                direction={{ base: 'column', md: 'row' }}
-                align={{ base: 'start', md: 'center' }}
+                // direction={{ base: 'column', md: 'row' }}
+                direction={'row'}
+                // align={{ base: 'stretch', md: 'center' }}
+                //align={'stretch'}
+                align={'center'}
+                h="80px"
                 gap={4}
+                mt={"45px"}
                 wrap="wrap"
                 minH="60px"
-                bg="rgba(249, 249, 244, 0.85)" // Use page background to hide content scrolling under
-                backdropFilter="auto"
-                backdropBlur="8px" 
-                mb={6}
-                p={4}
-                borderRadius="md"
-                position="sticky" // <<< Make the actions bar sticky
-                top={0}           // <<< Stick to the top of its scroll container
-                zIndex="sticky"   // <<< Ensure it stays above scrolling content
-                borderBottomWidth="1px" // Optional: Add subtle separator
-                borderColor="gray.200" // Optional: Separator color
+                //bg="rgb(224, 224, 40)"
+                //bg="#f9f9f4"
+                bg="white"
+                //backdropFilter="auto"
+                //backdropBlur="8px"
+                mb={4}
+                pt={4}
+                pb={4}
+                pl={{ base: "16px", md: "32px", xl: "calc(80px + (100vw - 1512px) / 2)" }} 
+                pr={{ base: "16px", md: "32px", xl: "calc(80px + (100vw - 1512px) / 2)" }} 
+                //borderRadius="md"
+                //position="sticky"
+                position="fixed"
+                top={17}
+                left={0}
+                right={0}
+                //zIndex="sticky"
+                zIndex={10}
+                borderBottomWidth="1px"
+                borderColor="gray.200"
             >
-                {/* Sorting Control */}
-                <Tooltip.Root positioning={{ placement: "bottom" }} openDelay={200} closeDelay={100}>
-                    <Tooltip.Trigger asChild>
-                        <IconButton
-                            size="sm"
-                            aria-label="Toggle sort order by date" // Consider a more relevant label for tags
-                            variant="outline"
-                            colorPalette="teal" // Changed from teal.500
-                            _hover={{ bg: "teal.500", color: "white" }} // Added color on hover
-                            isDisabled // Disable sorting for now if not implemented
-                        >
-                            {sortIcon}
-                        </IconButton>
-                    </Tooltip.Trigger>
-                    <Portal> {/* Ensure Tooltip content renders in the body */}
-                        <Tooltip.Positioner>
-                            {/* Update tooltip content */}
-                            <Tooltip.Content>Sort Alphabetically</Tooltip.Content>
-                        </Tooltip.Positioner>
-                    </Portal>
-                </Tooltip.Root>
+                
 
                 <Spacer />
 
@@ -83,6 +82,6 @@ export default function TagsManagement ({
             {/* Tags Groups Grid - Will scroll under the sticky Actions Bar */}
             <TagsGroupsGrid />
 
-        </Box>
+        </Container>
     );
 };
