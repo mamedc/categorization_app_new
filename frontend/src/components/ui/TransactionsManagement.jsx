@@ -207,10 +207,9 @@ export default function TransactionsManagement({
 
     return (
         <Container 
-            maxW="container.lg"
             pt={0}
             pb={6}
-            maxW={{ base: "100%", md: "100%", xl: "1400px" }}
+            maxW={{ base: "100%", md: "100%", xl: "1400px" }} // Controls Transaction Card width behaviour
             mx="auto"
         >
             
@@ -225,14 +224,14 @@ export default function TransactionsManagement({
                 mt={"45px"}
                 wrap="wrap"
                 minH="60px"
-                bg="rgb(221, 221, 37)"
+                bg="rgb(224, 224, 40)"
                 //backdropFilter="auto"
                 //backdropBlur="8px"
                 mb={4}
                 pt={4}
                 pb={4}
-                pl={0}
-                pr={0}
+                pl={{ base: "16px", md: "16px", xl: "calc(16px + (100vw - 1400px) / 2)" }} 
+                pr={{ base: "16px", md: "16px", xl: "calc(16px + (100vw - 1400px) / 2)" }} 
                 //borderRadius="md"
                 //position="sticky"
                 position="fixed"
@@ -244,11 +243,7 @@ export default function TransactionsManagement({
                 borderBottomWidth="1px"
                 borderColor="gray.200"
             >
-                
-                
-                {/* --- Filter Controls --- */}
-                
-                    
+                                    
                 {/* Sorting Control */}
                 <Tooltip.Root positioning={{ placement: "bottom" }} openDelay={200} closeDelay={100}>
                     <Tooltip.Trigger asChild>
@@ -262,6 +257,7 @@ export default function TransactionsManagement({
                     <Portal><Tooltip.Positioner><Tooltip.Content>{sortTooltipLabel}</Tooltip.Content></Tooltip.Positioner></Portal>
                 </Tooltip.Root>
 
+                {/* --- Filter Controls --- */}
                 <Flex wrap="wrap" gap={4} align="center" flexGrow={{ base: 1, md: 0 }}>
 
                     {/* Filter Type Select - Using Collection */}
@@ -302,11 +298,11 @@ export default function TransactionsManagement({
                     {/* Date Range Inputs (Conditional) */}
                     {filterType === 'dateRange' && (
                         <HStack spacing={2}>
-                             <Field.Root id="startDate">
+                            <Field.Root id="startDate">
                                 <Field.Label srOnly>Start Date</Field.Label>
                                 <Input size="sm" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} maxW="150px" bg="white" />
-                             </Field.Root>
-                             <Field.Root id="endDate">
+                            </Field.Root>
+                            <Field.Root id="endDate">
                                 <Field.Label srOnly>End Date</Field.Label>
                                 <Input size="sm" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} maxW="150px" bg="white" min={startDate} />
                             </Field.Root>
@@ -316,36 +312,36 @@ export default function TransactionsManagement({
                     {/* Month/Year Selects (Conditional) - Using Collections */}
                     {filterType === 'monthYear' && (
                         <HStack spacing={2}>
-                             {/* Month Select */}
-                             <Field.Root id="selectMonth" minW="120px">
-                                 <Field.Label srOnly>Month</Field.Label>
-                                 <Select.Root
-                                     collection={monthsCollection} // Use month collection
-                                     value={[selectedMonth]}
-                                     onValueChange={(details) => setSelectedMonth(details.value[0] || '')}
-                                     size="sm" positioning={{ sameWidth: true, gutter: 2 }}
+                            {/* Month Select */}
+                            <Field.Root id="selectMonth" minW="120px">
+                                <Field.Label srOnly>Month</Field.Label>
+                                <Select.Root
+                                    collection={monthsCollection} // Use month collection
+                                    value={[selectedMonth]}
+                                    onValueChange={(details) => setSelectedMonth(details.value[0] || '')}
+                                    size="sm" positioning={{ sameWidth: true, gutter: 2 }}
                                 >
                                     <Select.HiddenSelect />
                                     <Select.Control>
                                         <Select.Trigger bg="white" variant="outline">
-                                             <Select.ValueText placeholder="Month" />
-                                             <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
+                                            <Select.ValueText placeholder="Month" />
+                                            <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
                                         </Select.Trigger>
                                     </Select.Control>
-                                     <Portal>
+                                    <Portal>
                                         <Select.Positioner>
                                             <Select.Content>
                                                 {monthsCollection.items.map((m) => ( // Iterate collection
-                                                     <Select.Item item={m} key={m.value}>
+                                                    <Select.Item item={m} key={m.value}>
                                                         {m.label}
                                                         <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
                                                     </Select.Item>
                                                 ))}
                                             </Select.Content>
-                                         </Select.Positioner>
-                                     </Portal>
+                                        </Select.Positioner>
+                                    </Portal>
                                 </Select.Root>
-                             </Field.Root>
+                            </Field.Root>
 
                             {/* Year Select */}
                             <Field.Root id="selectYear" minW="100px">
@@ -357,25 +353,25 @@ export default function TransactionsManagement({
                                     size="sm" positioning={{ sameWidth: true, gutter: 2 }}
                                     disabled={availableYearsCollection.items.length === 0}
                                 >
-                                     <Select.HiddenSelect />
-                                     <Select.Control>
+                                    <Select.HiddenSelect />
+                                    <Select.Control>
                                         <Select.Trigger bg="white" variant="outline">
-                                             <Select.ValueText placeholder="Year" />
-                                             <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
-                                         </Select.Trigger>
-                                     </Select.Control>
-                                     <Portal>
-                                         <Select.Positioner>
-                                             <Select.Content>
-                                                 {availableYearsCollection.items.map((y) => ( // Iterate collection
-                                                     <Select.Item item={y} key={y.value}>
-                                                         {y.label}
-                                                         <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
-                                                     </Select.Item>
-                                                 ))}
-                                             </Select.Content>
-                                         </Select.Positioner>
-                                     </Portal>
+                                            <Select.ValueText placeholder="Year" />
+                                            <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
+                                        </Select.Trigger>
+                                    </Select.Control>
+                                    <Portal>
+                                        <Select.Positioner>
+                                            <Select.Content>
+                                                {availableYearsCollection.items.map((y) => ( // Iterate collection
+                                                    <Select.Item item={y} key={y.value}>
+                                                        {y.label}
+                                                        <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
+                                                    </Select.Item>
+                                                ))}
+                                            </Select.Content>
+                                        </Select.Positioner>
+                                    </Portal>
                                 </Select.Root>
                             </Field.Root>
                         </HStack>
@@ -385,7 +381,7 @@ export default function TransactionsManagement({
                 <Spacer display={{ base: 'none', md: 'block' }}/>
 
                 {/* --- Action Buttons --- */}
-                 <HStack spacing={2} mt={{ base: 4, md: 0 }} width={{ base: "100%", md: "auto"}} justifyContent={{ base: "flex-end", md: "initial"}}>
+                <HStack spacing={2} mt={{ base: 4, md: 0 }} width={{ base: "100%", md: "auto"}} justifyContent={{ base: "flex-end", md: "initial"}}>
                     <CreateTransactionModal />
                     <EditTransactionModal />
                     {/* --- Split Button --- */}
@@ -402,17 +398,25 @@ export default function TransactionsManagement({
                     >
                         Split
                     </Button>
-                     {/* --- End Split Button --- */}
+                    {/* --- End Split Button --- */}
                     <DeleteTransactionModal />
                 </HStack>
 
             </Flex>
-
+                        
             {/* --- Transaction Grid --- */}
-            <TransactionGrid
-                filteredTransactions={filteredTransactions}
-                sortOrder={sortOrder}
-            />
+            <Box
+                //mt="64px"  // Pushes content below fixed bar
+                //pt="50px"
+                height={`calc(100vh - 50px)`}
+                overflowY="auto"
+                //flex="1"
+            >
+                <TransactionGrid
+                    filteredTransactions={filteredTransactions}
+                    sortOrder={sortOrder}
+                />
+            </Box>
 
             {/* --- Render Split Transaction Modal --- */}
             {/* Ensure transactionToSplit has data before rendering */}
