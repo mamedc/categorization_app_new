@@ -1,10 +1,11 @@
-// File path: frontend/src/components/ui/TransactionCard.jsx
-// TransactionCard.jsx
+// ./frontend/src/components/ui/TransactionCard.jsx
 
-import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer } from '@chakra-ui/react'
+import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Spacer, HoverCard, Portal } from '@chakra-ui/react'
 import { Fragment } from "react";
 import TagCard from "./TagCard";
 import { IoDocumentsOutline } from "react-icons/io5";
+import { SlPencil } from "react-icons/sl";
+import { useState } from "react"
 
 // Helper function to format number as currency (e.g., BRL)
 const formatBrazilianCurrency = (value) => {
@@ -36,6 +37,8 @@ export default function TransactionCard ({
     // Determine the base color based on the amount
     const baseColor = parseFloat(transaction.amount) >= 0 ? 'green.600' : 'red.600';
     // const finalColor = isParent ? `${baseColor}/50` : baseColor; // Apply 50% opacity if it's a parent transaction
+
+    const [hoverOpen, setHoverOpen] = useState(false)
 
     let finalColor;
     if (isParent && parseFloat(transaction.amount) === 0) {
@@ -119,44 +122,75 @@ export default function TransactionCard ({
                 {/* Right: Flags */}
                 <Spacer display={{ base: 'none', md: 'block' }} />
                 <HStack align="center" spacing={1}>
+                    
                     {/* Parent Badge */}
                     {isParent && (
-                            <Badge 
-                                colorPalette={"gray"}
-                                variant="subtle"
-                                fontSize="xs"
-                                w={50}
-                                h={3}
-                                alignItems="center"    // Vertically centers the content
-                                justifyContent="center" // Horizontally centers the content
-                            >
-                                Split
-                            </Badge>
+                        <Badge 
+                            colorPalette={"gray"}
+                            variant="subtle"
+                            fontSize="xs"
+                            w={50}
+                            h={3}
+                            alignItems="center"    // Vertically centers the content
+                            justifyContent="center" // Horizontally centers the content
+                        >
+                            Split
+                        </Badge>
                         )}
-                        {/* Child Badge */}
-                        {isChild && (
-                            <Badge 
-                                colorPalette="gray"
-                                variant="subtle"
-                                fontSize="xs"
-                                alignItems="center"    // Vertically centers the content
-                                justifyContent="center" // Horizontally centers the content
-                            >
-                                Sub-item
-                            </Badge>
-                        )}
-                        {/* Doc Flag Badge */}
-                        {transaction.doc_flag && (
-                            <Badge
-                                colorPalette="gray"
-                                variant="subtle"
-                                fontSize="xs"
-                                alignItems="center"    // Vertically centers the content
-                                justifyContent="center" // Horizontally centers the content
-                            >
-                                <IoDocumentsOutline />
-                            </Badge>
-                        )}
+                    
+                    {/* Child Badge */}
+                    {isChild && (
+                        <Badge 
+                            colorPalette="gray"
+                            variant="subtle"
+                            fontSize="xs"
+                            alignItems="center"    // Vertically centers the content
+                            justifyContent="center" // Horizontally centers the content
+                        >
+                            Sub-item
+                        </Badge>
+                    )}
+                    
+                    {/* Doc Flag Badge */}
+                    {transaction.doc_flag && (
+                        <Badge
+                            colorPalette="gray"
+                            variant="subtle"
+                            fontSize="xs"
+                            alignItems="center"    // Vertically centers the content
+                            justifyContent="center" // Horizontally centers the content
+                        >
+                            <IoDocumentsOutline />
+                        </Badge>
+                    )}
+
+                    {/* Note Badge */}
+                    {transaction.note && (
+                        <HoverCard.Root size="sm">
+                            <HoverCard.Trigger asChild>
+                                <Badge
+                                    colorPalette="gray"
+                                    variant="subtle"
+                                    fontSize="xs"
+                                    alignItems="center"    // Vertically centers the content
+                                    justifyContent="center" // Horizontally centers the content
+                                >
+                                    <SlPencil />
+                                </Badge>
+                            </HoverCard.Trigger>
+                            <Portal>
+                                <HoverCard.Positioner>
+                                    <HoverCard.Content maxWidth="240px">
+                                        <HoverCard.Arrow />
+                                        <Box>
+                                            {transaction.note}
+                                        </Box>
+                                    </HoverCard.Content>
+                                </HoverCard.Positioner>
+                            </Portal>
+                        </HoverCard.Root>
+                    )}
+
                 </HStack>
 
                 {/* Right: amount */}
