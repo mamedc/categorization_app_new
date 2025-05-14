@@ -17,6 +17,7 @@ import TagCard from "./TagCard";
 import { BASE_URL } from "../../App";
 import { formatBrazilianCurrency } from "../../utils/currency";
 import { LuDownload, LuEye, LuTrash2, LuUpload } from "react-icons/lu";
+import { IoIosAttach } from "react-icons/io";
 
 
 // API utility functions
@@ -375,7 +376,7 @@ export default function EditTransactionModal ({
                                 <Stack direction={"row"} gap="4" width="100%">
                                     {/* Date Field */}
                                     <Field.Root>
-                                        <Field.Label>Date:</Field.Label>
+                                        <Field.Label fontSize="xs">Date:</Field.Label>
                                         <Input
                                             name="date"
                                             type="date"
@@ -383,14 +384,11 @@ export default function EditTransactionModal ({
                                             onChange={handleChange}
                                             disabled={isSaving || isParentTransaction}
                                         />
-                                        {isParentTransaction && (
-                                            <Field.HelperText>Date cannot be changed for parent transactions.</Field.HelperText>
-                                        )}
                                     </Field.Root>
 
                                     {/* Amount Field */}
                                     <Field.Root>
-                                        <Field.Label>Amount:</Field.Label>
+                                        <Field.Label fontSize="xs">Amount:</Field.Label>
                                         <Input
                                             placeholder="R$ 0.00"
                                             name="amount"
@@ -412,7 +410,7 @@ export default function EditTransactionModal ({
 
                                 {/* Description Field */}
                                 <Field.Root>
-                                    <Field.Label>Description:</Field.Label>
+                                    <Field.Label fontSize="xs">Description:</Field.Label>
                                     <Textarea
                                         autoresize
                                         size="md"
@@ -423,14 +421,11 @@ export default function EditTransactionModal ({
                                         onChange={handleChange}
                                         disabled={isSaving || isParentTransaction}
                                     />
-                                    {isParentTransaction && (
-                                        <Field.HelperText>Description cannot be changed for parent transactions.</Field.HelperText>
-                                    )}
                                 </Field.Root>
 
                                 {/* Note Field */}
                                 <Field.Root>
-                                    <Field.Label>Note:</Field.Label>
+                                    <Field.Label fontSize="xs">Note:</Field.Label>
                                     <Textarea
                                         autoresize
                                         size="md"
@@ -444,12 +439,11 @@ export default function EditTransactionModal ({
                                 </Field.Root>
 
                                 {/*Tags*/}
-                                <Stack direction={"row"} gap="4" width="100%">
-                                    
-                                    
-                                    <Stack direction={ "column" } gap="4">
-                                        <p>Tags:</p>
-                                        {/* Pass necessary state and setters to EditTransactionTagsModal */}
+                                <Stack direction={"column"} gap="1" width="100%">
+
+                                    {/* Tags section title and edit button */}
+                                    <Stack direction={ "row" } gap="0" align="center">
+                                        <Text fontSize="xs">Tags:</Text>
                                         <EditTransactionTagsModal
                                             setTransacData={setFormData}
                                             existingTags={formData.tags}
@@ -461,17 +455,11 @@ export default function EditTransactionModal ({
                                             setRemovedTags={setRemovedTags}
                                             isDisabled={isSaving || isParentTransaction}
                                         />
-                                        {/* Conditional Helper Text now correctly inside Field.Root */}
-                                        {isParentTransaction && (
-                                            <Text mt={1}> {/* Added margin top */}
-                                                Tags cannot be changed for parent transactions.
-                                            </Text>
-                                        )}
                                     </Stack>
 
-                                    {/* Right side: Tag display box */}
-                                    <Box borderWidth="1px" p="4" flexGrow={1} minH="80px">
-                                        <VStack spacing={4} align="stretch" >
+                                    {/* Tags display box */}
+                                    <Box borderWidth="1px" p="2" flexGrow={1} minH="80px" borderRadius="md">
+                                        <VStack spacing={0} gap={0} p={0} align="stretch" >
                                             {Array.isArray(formData.tags) && formData.tags.length > 0 ? (
                                                 formData.tags.map((tag) => (
                                                     <Flex
@@ -482,89 +470,93 @@ export default function EditTransactionModal ({
                                                         wrap="wrap"
                                                     >
                                                         <VStack align="start" spacing={1} flex="1">
-                                                            <HStack spacing={3} wrap="wrap">
-                                                                <Text fontSize="sm" color="gray.500">
+                                                            <HStack spacing={1} wrap="wrap">
+                                                                <Text fontSize="xs" color="gray.500">
                                                                     {tag.tag_group?.name || 'No Group'}
                                                                 </Text>
                                                             </HStack>
                                                         </VStack>
+
                                                         <Fragment key={tag.name}>
                                                             <TagCard key={tag.id} tag={tag} />
                                                         </Fragment>
                                                     </Flex>
                                                 ))
                                             ) : (
-                                                <Text fontSize="sm" color="gray.500">No tags assigned.</Text>
+                                                <Text fontSize="xs" color="gray.500">No tags assigned.</Text>
                                             )}
                                         </VStack>
-                                    </Box>
-                                        
+                                    </Box>     
                                 </Stack>
                             
-
                                 {/* Attach Documents Section */}
                                 <VStack spacing={3} align="stretch">
-                                    <Heading size="sm" fontWeight="medium">Attach Documents</Heading>
-                                    <FileUpload.Root
-                                        onFileChange={handleFileUpload}
-                                        maxFiles={1} // Upload one by one for simplicity now
-                                        disabled={isUploading || isSaving}
-                                    >
-                                        <FileUpload.HiddenInput />
-                                        <FileUpload.Trigger asChild>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                leftIcon={<LuUpload />}
-                                                isLoading={isUploading}
-                                                loadingText="Uploading..."
-                                                disabled={isUploading || isSaving}
-                                            >
-                                                Add Document
-                                            </Button>
-                                        </FileUpload.Trigger>
-                                    </FileUpload.Root>
+                                    
+                                    {/* Documents section title and add button */}
+                                    <Stack direction={ "row" } gap="0" align="center">
+                                        <Text fontSize="xs">Documents:</Text>
+                                        <FileUpload.Root
+                                            onFileChange={handleFileUpload}
+                                            maxFiles={1}
+                                            disabled={isUploading || isSaving}
+                                        >
+                                            <FileUpload.HiddenInput />
+                                            <FileUpload.Trigger asChild>
+                                                <IconButton 
+                                                    size="xs"
+                                                    colorPalette="cyan"
+                                                    variant={"ghost"}
+                                                    onClick={handleOpen}
+                                                    disabled={isUploading || isSaving}
+                                                    isLoading={isUploading}
+                                                    loadingText="Uploading..."
+                                                >
+                                                    <IoIosAttach />
+                                                </IconButton>
+                                            </FileUpload.Trigger>
+                                        </FileUpload.Root>
+                                    </Stack>
 
+                                    {/* Documents display box */}
                                     {formData.documents && formData.documents.length > 0 ? (
-                                        <VStack spacing={2} align="stretch" mt={2} borderWidth="1px" borderRadius="md" p={3}>
+                                        <VStack spacing={2} align="stretch" mt={0} borderWidth="1px" borderRadius="md" p={2} gap={1}>
                                             {formData.documents.map(doc => (
-                                                <Flex key={doc.id} justify="space-between" align="center" p={1.5} _hover={{bg: "gray.50"}} borderRadius="sm">
-                                                    <Text fontSize="sm" noOfLines={1} title={doc.original_filename}>
+                                                <Flex key={doc.id} justify="space-between" align="center" p={0} _hover={{bg: "gray.50"}} borderRadius="sm">
+                                                    <Text fontSize="xs" noOfLines={1} title={doc.original_filename}>
                                                         {doc.original_filename}
                                                     </Text>
-                                                    <HStack spacing={1}>
+                                                    <HStack spacing={1} gap={1}>
 
                                                         <IconButton 
+                                                            colorPalette="cyan"
                                                             as="a" // Render as anchor tag
                                                             href={`${BASE_URL}/documents/${doc.id}/view`}
                                                             target="_blank" // Open in new tab
                                                             rel="noopener noreferrer"
-                                                            size="xs" 
-                                                            variant="subtle" 
+                                                            size="2xs" 
+                                                            variant="ghost" 
                                                             aria-label="View document"
                                                         >
                                                             <LuEye />
                                                         </IconButton>
 
                                                         <IconButton 
+                                                            colorPalette="cyan"
                                                             as="a" // Render as anchor tag
                                                             href={`${BASE_URL}/documents/${doc.id}/download`}
                                                             target="_blank" // Open in new tab
                                                             rel="noopener noreferrer"
-                                                            size="xs" 
-                                                            variant="subtle" 
+                                                            size="2xs" 
+                                                            variant="ghost" 
                                                             aria-label="Download document"
                                                         >
                                                             <LuDownload />
                                                         </IconButton>
 
                                                         <IconButton 
-                                                            // as="a" // Render as anchor tag
-                                                            // href={`${BASE_URL}/documents/${doc.id}/download`}
-                                                            // target="_blank" // Open in new tab
-                                                            // rel="noopener noreferrer"
-                                                            size="xs" 
-                                                            variant="subtle" 
+                                                            colorPalette="cyan"
+                                                            size="2xs" 
+                                                            variant="ghost" 
                                                             aria-label="Delete document"
                                                             onClick={() => handleDeleteDocument(doc.id)}
                                                             disabled={isUploading || isSaving}
@@ -589,6 +581,7 @@ export default function EditTransactionModal ({
 
                         <Dialog.Footer gap={3}>
                             <Button
+                                size="xs"
                                 variant="outline"
                                 onClick={handleClose}
                                 disabled={isSaving || isUploading}
@@ -596,6 +589,7 @@ export default function EditTransactionModal ({
                                 Cancel
                             </Button>
                             <Button
+                                size="xs"
                                 colorPalette="teal"
                                 onClick={handleSave}
                                 isLoading={isSaving}

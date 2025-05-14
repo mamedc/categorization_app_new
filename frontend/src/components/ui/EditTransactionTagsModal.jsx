@@ -1,12 +1,11 @@
 // frontend/src/components/ui/EditTransactionTagsModal.jsx
-// novo
 
 import { useState, useEffect } from "react"; // Added useEffect
 import { BASE_URL } from "../../App"
-import { Button, CloseButton, Dialog, Portal, Text, HStack, Stack, Flex, Spinner, VStack, Box, Checkbox, Spacer, ColorSwatch } from "@chakra-ui/react";
+import { Button, CloseButton, Dialog, Portal, Text, HStack, Stack, Flex, Spinner, VStack, Box, Checkbox, IconButton, ColorSwatch } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { useAtom, useSetAtom } from "jotai";
-// Removed selectedTagId from imports as it's not needed for multi-select editing
+import { CiEdit } from "react-icons/ci";
 import { ldbTagGroupsAtom, selectedTagGroupId, refreshTagGroupsAtom } from "../../context/atoms";
 
 
@@ -181,16 +180,17 @@ export default function EditTransactionTagsModal ({
     return (
         <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
             <Dialog.Trigger asChild>
-                <Button
+
+                <IconButton 
                     size="xs"
                     colorPalette="cyan"
-                    rounded="xs"
-                    width={20}
+                    variant={"ghost"}
                     onClick={handleOpen}
                     disabled={isDisabled}
                 >
-                    Edit Tags {/* Changed Button Text */}
-                </Button>
+                    <CiEdit />
+                </IconButton>
+
             </Dialog.Trigger>
 
             <Portal>
@@ -223,15 +223,11 @@ export default function EditTransactionTagsModal ({
                                                 p={4}
                                                 borderWidth={1}
                                                 borderColor="gray.200"
-                                                borderLeftWidth={4}
-                                                borderLeftColor={selectedGroup === tGroup.id ? "teal.500" : "#bcdbdb"}
-                                                // Removed hover/outline effects tied to single selection logic if not desired
                                             >
-                                                <Flex direction={'row'} align={'start'} gap={4}>
+                                                <Flex direction={'row'} align={'start'} gap={0}>
                                                     {/* Group Header */}
                                                     <HStack spacing={3} wrap="wrap" minWidth="100px"> {/* Ensure group name doesn't squash */}
-                                                        {/* <Text fontSize="sm" color="gray.500">{tGroup.id}</Text> */}
-                                                        <Text fontSize="sm" fontWeight="medium" color="gray.600">{tGroup.name}</Text>
+                                                        <Text fontSize="xs" fontWeight="medium" color="gray.600">{tGroup.name}</Text>
                                                     </HStack>
 
                                                     {/* Tags within the group */}
@@ -248,9 +244,9 @@ export default function EditTransactionTagsModal ({
                                                                     key={tag.id}
                                                                     direction={'row'}
                                                                     align={'center'}
-                                                                    gap={3}
+                                                                    gap={2}
                                                                     wrap="nowrap"
-                                                                    p={1.5} // Reduced padding a bit
+                                                                    p={0} // Reduced padding a bit
                                                                     borderRadius="md"
                                                                     // Removed hover effects and background tied to single selection
                                                                     // Removed onClick from Flex - handled by Checkbox now
@@ -261,11 +257,8 @@ export default function EditTransactionTagsModal ({
                                                                         size="sm"
                                                                         colorPalette="cyan"
                                                                         id={`tag-checkbox-${tag.id}`} // Added id for label association
-                                                                        // Checked state directly reflects if the ID is in our selection Set
                                                                         checked={isChecked}
-                                                                        // Update selection state when checkbox changes
                                                                         onCheckedChange={(e) => handleTagSelectionChange(tag.id, e.checked)}
-                                                                        //aria-label={`Select tag ${tag.name}`}
                                                                         aria-label={`Select tag ${tag.name ?? 'Unnamed Tag'}`} // Defensive fallback
                                                                         disabled={isSaving} // Disable during save
                                                                     >
@@ -277,7 +270,7 @@ export default function EditTransactionTagsModal ({
                                                                     <Text
                                                                         as="label" // Associate label with checkbox
                                                                         htmlFor={`tag-checkbox-${tag.id}`} // Match checkbox id
-                                                                        fontSize="sm"
+                                                                        fontSize="xs"
                                                                         color="gray.700" // Normal color
                                                                         flex="1"
                                                                         isTruncated
@@ -287,7 +280,7 @@ export default function EditTransactionTagsModal ({
                                                                     </Text>
 
                                                                     {/* Color Swatch */}
-                                                                    <ColorSwatch value={tag.color || '#cccccc'} size="xs" borderRadius="sm" />
+                                                                    <ColorSwatch value={tag.color || '#cccccc'} size="xs" borderRadius="lg"/>
                                                                 </Flex>
                                                             ); // End return tag
                                                         })}
@@ -305,6 +298,7 @@ export default function EditTransactionTagsModal ({
                     {/* Footer Buttons */}
                     <Dialog.Footer>
                         <Button
+                            size="xs"
                             variant="outline" // Changed variant
                             onClick={handleClose}
                             disabled={isSaving}
@@ -313,6 +307,7 @@ export default function EditTransactionTagsModal ({
                             Cancel
                         </Button>
                         <Button
+                            size="xs"
                             onClick={handleUpdateParent}
                             isLoading={isSaving} // Use isLoading prop
                             loadingText="Saving..."
