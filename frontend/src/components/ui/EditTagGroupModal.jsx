@@ -59,8 +59,9 @@ export default function EditTagGroupModal ({}) {
             <Dialog.Root lazyMount open={open} onOpenChange={(e) => setOpen(e.open)}>
                 <Toaster />
                 <Button
-                    size="sm"
-                    colorPalette="blue"
+                    size="xs"
+                    colorPalette="yellow"
+                    variant="subtle"
                     rounded="sm"
                     width={20}
                     onClick={handleOpen}

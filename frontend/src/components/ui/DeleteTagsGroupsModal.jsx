@@ -66,8 +66,9 @@ export default function DeleteTagsGroupsModal ({
             
             <Dialog.Trigger asChild>
                 <Button 
-                    size="sm" 
+                    size="xs" 
                     colorPalette="red" 
+                    variant="subtle"
                     rounded="sm" 
                     width={20} 
                     onClick={handleOpen}

@@ -79,8 +79,9 @@ export default function CreateTagsGroupModal ({
             
             <Dialog.Trigger asChild>
                 <Button 
-                    size="sm" 
+                    size="xs" 
                     colorPalette="cyan" 
+                    variant="subtle"
                     rounded="sm" 
                     width={20} 
                     onClick={handleOpen}

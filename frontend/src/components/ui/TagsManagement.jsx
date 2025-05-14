@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { BASE_URL } from "../../App";
-import { Box, Flex, IconButton, Spacer, Tooltip, Portal, Container } from "@chakra-ui/react"; // Removed Container
+import { Box, Flex, IconButton, Spacer, Tooltip, Portal, Container, HStack } from "@chakra-ui/react"; // Removed Container
 import { LuArrowUp } from "react-icons/lu";
 import TagsGroupsGrid from "./TagsGroupsGrid";
 import CreateTagsGroupModal from "./CreateTagsGroupModal";
@@ -34,33 +34,23 @@ export default function TagsManagement ({
 
             {/* Actions Bar - Made Sticky */}
             <Flex
-                // direction={{ base: 'column', md: 'row' }}
                 direction={'row'}
-                // align={{ base: 'stretch', md: 'center' }}
-                //align={'stretch'}
                 align={'center'}
                 h="80px"
                 gap={4}
                 mt={"45px"}
                 wrap="wrap"
                 minH="60px"
-                //bg="rgb(224, 224, 40)"
-                //bg="#f9f9f4"
                 bg="white"
-                //backdropFilter="auto"
-                //backdropBlur="8px"
                 mb={4}
                 pt={4}
                 pb={4}
                 pl={{ base: "16px", md: "32px", xl: "calc(80px + (100vw - 1512px) / 2)" }} 
                 pr={{ base: "16px", md: "32px", xl: "calc(80px + (100vw - 1512px) / 2)" }} 
-                //borderRadius="md"
-                //position="sticky"
                 position="fixed"
                 top={17}
                 left={0}
                 right={0}
-                //zIndex="sticky"
                 zIndex={10}
                 borderBottomWidth="1px"
                 borderColor="gray.200"
@@ -69,14 +59,19 @@ export default function TagsManagement ({
 
                 <Spacer />
 
-                {/* Existing Action Buttons */}
-                <CreateTagsGroupModal />
+                {/* --- Action Buttons --- */}
+                <HStack spacing={2} mt={{ base: 4, md: 0 }} width={{ base: "100%", md: "auto"}} justifyContent={{ base: "flex-end", md: "initial"}}>
+                
+                    {/* Existing Action Buttons */}
+                    <CreateTagsGroupModal />
 
-                {/* Edit Button */}
-                <EditTagGroupModal>Edit</EditTagGroupModal>
+                    {/* Edit Button */}
+                    <EditTagGroupModal>Edit</EditTagGroupModal>
 
-                {/* Delete Button */}
-                <DeleteTagsGroupsModal />
+                    {/* Delete Button */}
+                    <DeleteTagsGroupsModal />
+
+                </HStack>
             </Flex>
 
             {/* Tags Groups Grid - Will scroll under the sticky Actions Bar */}

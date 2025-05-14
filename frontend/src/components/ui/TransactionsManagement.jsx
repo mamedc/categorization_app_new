@@ -215,33 +215,23 @@ export default function TransactionsManagement({
             
             {/* --- Actions Bar - Sticky --- */}
             <Flex
-                // direction={{ base: 'column', md: 'row' }}
                 direction={'row'}
-                // align={{ base: 'stretch', md: 'center' }}
-                //align={'stretch'}
                 align={'center'}
                 h="80px"
                 gap={4}
                 mt={"45px"}
                 wrap="wrap"
                 minH="60px"
-                //bg="rgb(224, 224, 40)"
-                //bg="#f9f9f4"
                 bg="white"
-                //backdropFilter="auto"
-                //backdropBlur="8px"
                 mb={4}
                 pt={4}
                 pb={4}
                 pl={{ base: "16px", md: "32px", xl: "calc(80px + (100vw - 1512px) / 2)" }} 
                 pr={{ base: "16px", md: "32px", xl: "calc(80px + (100vw - 1512px) / 2)" }} 
-                //borderRadius="md"
-                //position="sticky"
                 position="fixed"
                 top={17}
                 left={0}
                 right={0}
-                //zIndex="sticky"
                 zIndex={10}
                 borderBottomWidth="1px"
                 borderColor="gray.200"
