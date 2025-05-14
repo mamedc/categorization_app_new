@@ -21,7 +21,8 @@ export default function App() {
     return (
         <Stack 
             minH="100vh" 
-            bg="#f9f9f4" // grid background color
+            //bg="#f9f9f4" // grid background color
+            bg="#f4f4ec"
             spacing={0}>
 
             {/* 'activeView' and 'setActiveView' props to control Navbar style and set current activeView*/}

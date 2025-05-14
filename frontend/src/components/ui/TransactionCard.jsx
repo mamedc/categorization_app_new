@@ -1,10 +1,13 @@
 // ./frontend/src/components/ui/TransactionCard.jsx
 
-import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Grid, Portal, HoverCard, GridItem } from '@chakra-ui/react' // Changed Spacer to Grid
+import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Grid, Portal, HoverCard, GridItem, IconButton } from '@chakra-ui/react' // Changed Spacer to Grid
 import { Fragment } from "react";
 import TagCard from "./TagCard";
 import { IoDocumentsOutline } from "react-icons/io5";
 import { SlPencil } from "react-icons/sl";
+import { TiFlowChildren } from "react-icons/ti";
+import { FaChildDress } from "react-icons/fa6";
+import { LiaChildSolid } from "react-icons/lia";
 // Removed useState as hoverOpen was not used in the final return for HoverCard logic
 
 // Helper function to format number as currency (e.g., BRL)
@@ -42,20 +45,17 @@ export default function TransactionCard ({
 
     return (
         <Box
-            bg={isParent ? "#f1eee5" : "white"}
-            borderRadius="lg"
+            bg={isParent ? "gray.100" : "white"} //#f1eee5
+            borderRadius="sm"
             p={4}
             ml={isChild ? 2 : 0}
             borderLeftWidth={4}
-            borderLeftColor={isSelected ? "teal.500" : (isParent ? "gray.300" : "#bcdbdb")}
-            _hover={{ outline: '1px solid', outlineColor: '#bcdbdb' }}
+            borderLeftColor={isSelected ? "gray.500" : (isParent ? "red.300" : "gray.300")} //"#bcdbdb"
+            _hover={{ outline: '1px solid', outlineColor: 'gray.300' }} //#bcdbdb
             outline={isSelected ? '1px solid' : 'none'}
-            outlineColor={isSelected ? 'teal.500' : 'transparent'}
-            //minH={"100px"}
+            outlineColor={isSelected ? 'gray.500' : 'transparent'}
         >
             <Grid
-                // Define columns: Checkbox, Description, Tags, Split/Sub, Docs/Notes, Amount
-                // Adjust fractions/widths as needed for your desired proportions
                 templateColumns={{
                     base: "auto 1fr", // On small screens, checkbox then everything else
                     // md: "minmax(16px, 16px) minmax(150px, 300px) minmax(300px, 300px) minmax(200px, 200px) minmax(100px, auto)"
@@ -77,8 +77,7 @@ export default function TransactionCard ({
                         <Checkbox.Root
                             variant="outline"
                             size="sm"
-                            colorPalette="cyan"
-                            //alignItems="center"
+                            colorPalette="gray"
                             isChecked={isSelected} // Correct prop for Ark UI Checkbox
                             onCheckedChange={onSelect}
                         >
@@ -117,9 +116,146 @@ export default function TransactionCard ({
                         mt={{base: 2, md: 0}} // Add some margin top on base if description is above
                         h="100%"
                     >
+                        
+                        {/* Tags */}
                         {transaction.tags.map((tag) => (
                             <Fragment key={tag.id}><TagCard tag={tag} /></Fragment>
                         ))}
+                        
+                        {/* Is Parent */}
+                        {isParent && (
+                            // <Badge
+                            //     //colorScheme={"gray"} // Chakra v3 uses colorScheme
+                            //     colorPalette="gray"
+                            //     variant="outline"
+                            //     fontSize="xs"
+                            //     size="xs"
+                            //     // minW="50px" // Use minW instead of w for flexibility
+                            //     textAlign="center"
+                            // >
+                            //     Split
+                            // </Badge>
+                            <HoverCard.Root openDelay={200} closeDelay={100} size="sm">
+                                <HoverCard.Trigger asChild>
+                                    <IconButton 
+                                        size="2xs"
+                                        colorPalette="gray"
+                                        variant={"ghost"}
+                                    >
+                                        <TiFlowChildren />
+                                    </IconButton>
+                                </HoverCard.Trigger>
+                                <Portal>
+                                    <HoverCard.Positioner>
+                                        <HoverCard.Content maxWidth="240px">
+                                            <HoverCard.Arrow />
+                                            <Box p={2} fontSize="xs">Split</Box>
+                                        </HoverCard.Content>
+                                    </HoverCard.Positioner>
+                                </Portal>
+                            </HoverCard.Root>
+                        )}
+
+                        {/* Is Child (Split) */}
+                        {isChild && (
+                            // <Badge
+                            //     colorPalette="gray"
+                            //     variant="outline"
+                            //     fontSize="xs"
+                            //     size="xs"
+                            //     textAlign="center"
+                            // >
+                            //     Sub-item
+                            // </Badge>
+                            <HoverCard.Root openDelay={200} closeDelay={100} size="sm">
+                                <HoverCard.Trigger asChild>
+                                    <IconButton 
+                                        size="2xs"
+                                        colorPalette="gray"
+                                        variant={"ghost"}
+                                    >
+                                        <FaChildDress />
+                                    </IconButton>
+                                </HoverCard.Trigger>
+                                <Portal>
+                                    <HoverCard.Positioner>
+                                        <HoverCard.Content maxWidth="240px">
+                                            <HoverCard.Arrow />
+                                            <Box p={2} fontSize="xs">Child</Box>
+                                        </HoverCard.Content>
+                                    </HoverCard.Positioner>
+                                </Portal>
+                            </HoverCard.Root>
+                        )}
+
+                        {/* Document */}
+                        {transaction.doc_flag && (
+                            // <Badge
+                            //     colorPalette="gray"
+                            //     variant="outline"
+                            //     fontSize="xs"
+                            //     size="xs"
+                            //     display="flex" // To center icon inside badge
+                            //     alignItems="center"
+                            //     justifyContent="center"
+                            // >
+                            //     <IoDocumentsOutline />
+                            // </Badge>
+                            <HoverCard.Root openDelay={200} closeDelay={100} size="sm">
+                                <HoverCard.Trigger asChild>
+                                    <IconButton 
+                                        size="2xs"
+                                        colorPalette="gray"
+                                        variant={"ghost"}
+                                    >
+                                        <IoDocumentsOutline />
+                                    </IconButton>
+                                </HoverCard.Trigger>
+                                <Portal>
+                                    <HoverCard.Positioner>
+                                        <HoverCard.Content maxWidth="240px">
+                                            <HoverCard.Arrow />
+                                            <Box p={2} fontSize="xs">Document</Box>
+                                        </HoverCard.Content>
+                                    </HoverCard.Positioner>
+                                </Portal>
+                            </HoverCard.Root>
+                        )}
+
+                        {/* Note */}
+                        {transaction.note && (
+                            // <Badge
+                            //     colorPalette="gray"
+                            //     variant="outline"
+                            //     fontSize="xs"
+                            //     size="xs"
+                            //     display="flex" // To center icon inside badge
+                            //     alignItems="center"
+                            //     justifyContent="center"
+                            // >
+                            //     <IoDocumentsOutline />
+                            // </Badge>
+                            <HoverCard.Root openDelay={200} closeDelay={100} size="sm">
+                                <HoverCard.Trigger asChild>
+                                    <IconButton 
+                                        size="2xs"
+                                        colorPalette="gray"
+                                        variant={"ghost"}
+                                    >
+                                        <SlPencil />
+                                    </IconButton>
+                                </HoverCard.Trigger>
+                                <Portal>
+                                    <HoverCard.Positioner>
+                                        <HoverCard.Content maxWidth="240px">
+                                            <HoverCard.Arrow />
+                                            <Box p={2} fontSize="xs">{transaction.note}</Box>
+                                        </HoverCard.Content>
+                                    </HoverCard.Positioner>
+                                </Portal>
+                            </HoverCard.Root>
+                        )}
+
                     </Flex>
                 </GridItem>
 
@@ -176,6 +312,7 @@ export default function TransactionCard ({
                                     <IoDocumentsOutline />
                                 </Badge>
                             )}
+
                             {transaction.note && (
                                 <HoverCard.Root openDelay={200} closeDelay={100} size="sm">
                                     <HoverCard.Trigger asChild>

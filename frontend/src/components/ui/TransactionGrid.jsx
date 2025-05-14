@@ -417,24 +417,26 @@ export default function TransactionGrid ({
                     spacing={6} 
                     align="stretch" 
                     pt="100px"
-
                 >
                     {displayGroupedTransactions.map((group) => (
                         <Fragment key={group.date}>
                              <Box
-                                //bg="rgb(158, 158, 53)"
+                                //bg="rgb(179, 179, 179)"
                                 fontSize="sm"
                                 fontWeight="semibold"
                                 color="gray.500"
-                                pb={2}
-                                pt={2}
+                                pb={1}
+                                pt={4}
                                 pl={2}
+                                //mb={0}
                                 borderBottomWidth="1px"
                                 borderColor="gray.200"
                              >
+                                {/* Balance */}
                                 <Flex justify="space-between" align="center">
                                     <Box>{formatDateHeader(group.date)}</Box>
                                     <Spacer />
+                                     
                                      {/* Display the running balance calculated for the end of this day */}
                                      <Box
                                         fontSize="xs"
@@ -452,7 +454,7 @@ export default function TransactionGrid ({
                                     </Box>
                                 </Flex>
                             </Box>
-                            <VStack spacing={4} align="stretch">
+                            <VStack spacing={4} align="stretch" gap={"2px"}>
                                 {group.transactions.map((transaction) => (
                                     <TransactionCard
                                         key={transaction.id}
