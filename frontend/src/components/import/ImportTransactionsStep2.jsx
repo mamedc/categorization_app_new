@@ -1,5 +1,5 @@
-// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\import\ImportTransactionsStep2.jsx
-// src/components/import/ImportTransactionsStep2.jsx
+// .\frontend\src\components\import\ImportTransactionsStep2.jsx
+
 import {
     Stack, Text, Box, Table, Alert, Badge, Code, Field, VStack, Input,
 } from "@chakra-ui/react"; // Removed HStack as it's not directly used after changes
@@ -65,22 +65,6 @@ export default function ImportTransactionsStep2({
         return indices;
     }, [dateColumnLetter, descriptionColumnLetter, amountColumnLetter]);
 
-    // Effect to adjust firstRow/lastRow if they become invalid due to parsedData changes (e.g., new file uploaded)
-    // This is now primarily handled in the parent, but a local check can be useful for immediate input feedback
-    // However, parent's useEffect on parsedData should be the source of truth.
-    // This local effect might be redundant if parent handles it well. For now, let's rely on parent.
-    /*
-    useEffect(() => {
-        const newFirst = Math.max(1, Math.min(firstRow, numParsedRows || 1));
-        let newLast = Math.max(1, Math.min(lastRow, numParsedRows || 1));
-        if (newFirst > newLast) newLast = newFirst;
-
-        if (newFirst !== firstRow || newLast !== lastRow) {
-            setFilterSettings(prev => ({...prev, firstRow: newFirst, lastRow: newLast}));
-        }
-    }, [numParsedRows, firstRow, lastRow, setFilterSettings]);
-    */
-
 
     const headers = Array.isArray(csvHeaders) ? csvHeaders : [];
 
@@ -129,26 +113,38 @@ export default function ImportTransactionsStep2({
     };
 
     return (
-        <Stack direction="column" spacing={6}>
-            <Text fontSize="lg" fontWeight="semibold" textAlign="center">
+        <Stack direction="column" spacing={6} gap={4}>
+
+            {/* Step Title */}
+            <Text fontSize="md" fontWeight="semibold" textAlign="center">
                 {items[step].title}: {items[step].description}
             </Text>
 
+            {/* Selected file infos */}
             {fileName && (
-                 <Text fontSize="sm" color="gray.600" textAlign="center">
-                    File: <Code>{fileName}</Code>
-                    Found <Badge colorScheme="green">{headers.length}</Badge> columns
-                    and <Badge colorScheme="blue">{numParsedRows}</Badge> data rows.
-                    Displaying <Badge colorScheme="purple">{csvPreviewTableData.length}</Badge> rows in this preview.
+                 <Text fontSize="sm" bg="#f4f4ec" color="gray.600" textAlign="center">
+                    File: <Code fontWeight="semibold">{fileName}</Code>
+                    -> <Badge fontWeight="semibold" colorScheme="green">{headers.length}</Badge> columns
+                    and <Badge fontWeight="semibold" colorScheme="blue">{numParsedRows}</Badge> rows.
                  </Text>
             )}
+
+            {/* Importing config */}
             <Stack direction={{base: "column", md: "row"}} spacing={6} height="570px"> {/* Changed to column for base */}
-                <Box borderWidth="1px" borderRadius="md" p={4} bg="white" minWidth={{ base: "100%", md: "250px"}}>
+                <Box 
+                    borderWidth="1px" 
+                    borderRadius="md" 
+                    p={4} 
+                    bg="white" 
+                    maxWidth="160px"
+                >
                     <VStack gap="10" width="full">
+                        
+                        {/* Rows range */}
                         <VStack gap="2" width="full" alignItems="left">
-                            <Text fontSize="sm" color="black" fontWeight="semibold">Rows range to import:</Text>
+                            <Text fontSize="xs" color="black" fontWeight="semibold">Rows range:</Text>
                             <Field.Root>
-                                <Field.Label>First row</Field.Label>
+                                <Field.Label fontSize="xs">First row:</Field.Label>
                                 <Input 
                                     placeholder="1"
                                     value={firstRow} // From filterSettings
@@ -162,7 +158,7 @@ export default function ImportTransactionsStep2({
                                 />
                             </Field.Root>
                             <Field.Root>
-                                <Field.Label>Last row</Field.Label>
+                                <Field.Label fontSize="xs">Last row:</Field.Label>
                                 <Input 
                                     placeholder={(numParsedRows > 0 ? numParsedRows : 1).toString()} 
                                     value={lastRow} // From filterSettings
@@ -177,8 +173,9 @@ export default function ImportTransactionsStep2({
                             </Field.Root>
                         </VStack>
 
+                        {/* Date format */}
                         <Field.Root width="full">
-                            <Field.Label>Date format:</Field.Label>
+                            <Field.Label fontSize="xs">Date format:</Field.Label>
                             <Input
                                 placeholder="DD/MM/YYYY"
                                 value={dateFormat} // From filterSettings
@@ -189,10 +186,11 @@ export default function ImportTransactionsStep2({
                             />
                         </Field.Root> 
 
+                        {/* Columns Mapping */}
                         <VStack gap="2" width="full" alignItems="left">
-                            <Text fontSize="sm" color="black" fontWeight="semibold">Columns mapping:</Text>
+                            <Text fontSize="xs" color="black" fontWeight="semibold">Columns mapping:</Text>
                             <Field.Root>
-                                <Field.Label>Date</Field.Label>
+                                <Field.Label fontSize="xs">Date:</Field.Label>
                                 <Input 
                                     value={dateColumnLetter} // From filterSettings
                                     name="date_column"
@@ -205,7 +203,7 @@ export default function ImportTransactionsStep2({
                                 />
                             </Field.Root>
                             <Field.Root>
-                                <Field.Label>Description</Field.Label>
+                                <Field.Label fontSize="xs">Description:</Field.Label>
                                 <Input 
                                     value={descriptionColumnLetter} // From filterSettings
                                     name="descr_column" 
@@ -218,7 +216,7 @@ export default function ImportTransactionsStep2({
                                 />
                             </Field.Root>
                             <Field.Root>
-                                <Field.Label>Amount</Field.Label>
+                                <Field.Label fontSize="xs">Amount:</Field.Label>
                                 <Input 
                                     value={amountColumnLetter} // From filterSettings
                                     name="amount_column" 
@@ -234,6 +232,7 @@ export default function ImportTransactionsStep2({
                     </VStack>   
                 </Box>
             
+                {/* Table Preview */}
                 {(!csvPreviewTableData || csvPreviewTableData.length === 0) ? (
                     <Alert status="warning" borderRadius="md" flex="1">
                     No data found in the file or parsing failed.
@@ -250,13 +249,22 @@ export default function ImportTransactionsStep2({
                                 <Table.Header>
                                     <Table.Row bg="gray.200">
                                         <Table.ColumnHeader
-                                            key="corner-letter" width="60px" minWidth="60px" textAlign="center" fontWeight="medium" color="gray.500"
-                                            borderBottomWidth="1px" borderColor="inherit" fontSize="xs"
+                                            key="corner-letter"
+                                            width="60px"
+                                            minWidth="60px"
+                                            textAlign="center"
+                                            fontWeight="medium"
+                                            color="gray.500"
+                                            borderBottomWidth="1px"
+                                            borderColor="inherit"
+                                            fontSize="xs"
                                         />
+                                        
+                                        {/* Columns Identification (A, B, C...) */}
                                         {headers.map((_, colIndex) => {
                                             const isColSelected = selectedColumnIndices.has(colIndex);
                                             const letterHeaderProps = isColSelected 
-                                                ? { bg: "blue.400", fontWeight: "bold", color: "white" } 
+                                                ? { bg: "blue.300", fontWeight: "bold", color: "white" } 
                                                 : {};
                                             return (
                                                 <Table.ColumnHeader
@@ -269,13 +277,15 @@ export default function ImportTransactionsStep2({
                                             );
                                         })}
                                     </Table.Row>
+
+                                    {/* Header */}
                                     <Table.Row bg="gray.400">
                                         <Table.ColumnHeader key="corner-header" width="60px" minWidth="60px" textAlign="center" fontSize="xs" />
                                         {headers.map((header, colIndex) => {
                                             const isColSelected = selectedColumnIndices.has(colIndex);
                                             const actualHeaderProps = isColSelected 
-                                                ? { bg: "blue.500", fontWeight: "bold", color: "white" } 
-                                                : {};
+                                                ? { bg: "blue.400", fontWeight: "bold", color: "white" } 
+                                                : {bg: "gray.400", color: "gray.600" };
                                             return (
                                                 <Table.ColumnHeader
                                                     key={`${header}-${colIndex}`} whiteSpace="normal" wordBreak="break-word" fontWeight="semibold" fontSize="xs"
@@ -287,7 +297,8 @@ export default function ImportTransactionsStep2({
                                         })}
                                     </Table.Row>
                                 </Table.Header>
-                                <Table.Body>
+                                
+                                <Table.Body bg="white">
                                     {csvPreviewTableData.map((row, rowIndex) => { // Iterate over csvPreviewTableData
                                         const currentRowNumberInOriginalData = rowIndex + 1; // This is row number in the preview table
                                                                                             // To check against filterSettings, need original row index if parsedData was sliced
@@ -297,30 +308,44 @@ export default function ImportTransactionsStep2({
                                                                                             // Here, we highlight rows in this preview table that fall within the global filter settings.
                                         
                                         const isRowInGlobalFilterRange = currentRowNumberInOriginalData >= firstRow && currentRowNumberInOriginalData <= lastRow;
-                                        const tableRowProps = isRowInGlobalFilterRange ? { bg: "yellow.100" } : { opacity: 0.5 };
+                                        const tableRowProps = isRowInGlobalFilterRange ? { bg: "blue.200", fontWeight: "medium" } : { color: "gray.500" };
                                         
                                         let rowNumberCellSpecificProps = {};
                                         if (isRowInGlobalFilterRange) {
-                                            rowNumberCellSpecificProps = { bg: "blue.500", color: "white", fontWeight: "bold" };
+                                            rowNumberCellSpecificProps = { bg: "blue.400", color: "white", fontWeight: "bold" };
                                         }
 
                                         return (
                                             <Table.Row key={`row-${rowIndex}`} {...tableRowProps}>
                                                 <Table.Cell
-                                                    key={`rownum-${rowIndex}`} textAlign="center" fontWeight="medium" color="white"
-                                                    bg="gray.500" {...rowNumberCellSpecificProps} width="60px" minWidth="60px" py={2}
-                                                    borderRightWidth="1px" borderColor="inherit" fontSize="xs"
+                                                    key={`rownum-${rowIndex}`} 
+                                                    textAlign="center" 
+                                                    fontWeight="medium" 
+                                                    color="white"
+                                                    bg="gray.500"
+                                                    {...rowNumberCellSpecificProps} 
+                                                    width="60px" 
+                                                    minWidth="60px" 
+                                                    py={2}
+                                                    borderRightWidth="1px" 
+                                                    borderColor="inherit" 
+                                                    fontSize="xs"
                                                 >
                                                     {rowIndex + 1} {/* Display 1-based index of preview table */}
                                                 </Table.Cell>
+
                                                 {headers.map((header, colIndex) => {
                                                     const isColumnSelected = selectedColumnIndices.has(colIndex);
-                                                    const cellSpecificProps = !isColumnSelected ? { opacity: 0.75, bg: "white" } : {}; 
+                                                    const cellSpecificProps = !isColumnSelected ? { opacity: 1, bg: "white", color: "gray.500"} : {}; 
                                                     
                                                     return (
                                                         <Table.Cell
-                                                            key={`${header}-${rowIndex}-${colIndex}`} whiteSpace="normal" wordBreak="break-word"
-                                                            py={2} fontSize="xs" {...cellSpecificProps}
+                                                            key={`${header}-${rowIndex}-${colIndex}`} 
+                                                            whiteSpace="normal" 
+                                                            wordBreak="break-word"
+                                                            py={2} 
+                                                            fontSize="xs"
+                                                            {...cellSpecificProps}
                                                         >
                                                             {row[header] !== undefined && row[header] !== null ? String(row[header]) : ''}
                                                         </Table.Cell>

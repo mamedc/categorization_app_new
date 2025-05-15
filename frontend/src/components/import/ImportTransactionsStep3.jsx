@@ -1,5 +1,4 @@
-// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\import\ImportTransactionsStep3.jsx
-// src/components/import/ImportTransactionsStep3.jsx
+// .\frontend\src\components\import\ImportTransactionsStep3.jsx
 
 import { useState, useMemo } from "react"; // Added useMemo
 import { Stack, Text, Box, Alert, Table, CloseButton, Badge, Spinner, Flex } from "@chakra-ui/react"; // Added Badge, Spinner, Flex
@@ -48,48 +47,68 @@ export default function ImportTransactionsStep3({
         return finalBalanceData.data + importAmountTotal;
     }, [finalBalanceData.state, finalBalanceData.data, importAmountTotal]); // Recalculate when balance or import total changes
 
+    const balanceDif = useMemo(() => {
+        if (finalBalanceData.state !== 'hasData' || projectedBalanceAfterImport === null) return null;
+        return projectedBalanceAfterImport - finalBalanceData.data;
+    }, [finalBalanceData.state, finalBalanceData.data, projectedBalanceAfterImport]);
 
     const isLoadingBalance = finalBalanceData.state === 'loading';
     const hasBalanceError = finalBalanceData.state === 'hasError';
 
     return (
-        <Stack direction="column" spacing={6}>
-            <Text fontSize="lg" fontWeight="semibold" textAlign="center">
+        <Stack direction="column" spacing={6} gap={4}>
+            
+            {/* Title */}
+            <Text fontSize="md" fontWeight="semibold" textAlign="center">
                 {items[step].title}: {items[step].description}
             </Text>
 
-            {/* --- Display Current and Projected Balances --- */}
-            <Box borderWidth="1px" borderRadius="md" p={4} bg="white">
-                 <Text fontSize="md" fontWeight="medium" mb={4}>Balance Overview</Text>
+            {/* Display Current and Projected Balances */}
+            <Box borderWidth="1px" borderRadius="md" p={4} bg="white" h="150px" gap="4">
+                 <Text fontSize="sm" fontWeight="bold" mb={4}>Balance Overview</Text>
+                 
                  {isLoadingBalance ? (
                      <Flex justify="center"><Spinner size="sm" /></Flex>
                  ) : hasBalanceError ? (
                     <Text color="red.500" fontSize="sm">Error loading current balance.</Text>
                  ) : (
                     <Stack direction={{ base: "column", md: "row" }} spacing={6} justify="space-around">
+                        
+                        {/* Current balance */}
                         <Box textAlign="center">
-                            <Text fontSize="sm" color="gray.500" mb={1}>Final Running Balance</Text>
-                            <Text fontSize="xl" fontWeight="bold" color="teal.600">
+                            <Text fontSize="sm" color="gray.500" mb={1}>Current Running Balance:</Text>
+                            <Text fontSize="lg" fontWeight="bold" color={finalBalanceData.data >= 0 ? "green.600" : "red.600"}>
                                 {formatCurrency(finalBalanceData.data ?? 0)}
                             </Text>
                         </Box>
+                        
+                        {/* Projected balance */}
                         <Box textAlign="center">
-                            <Text fontSize="sm" color="gray.500" mb={1}>Projected Balance After Import</Text>
-                            <Text fontSize="xl" fontWeight="bold" color={projectedBalanceAfterImport >= 0 ? "green.600" : "red.600"}>
+                            <Text fontSize="sm" color="gray.500" mb={1}>Projected Balance After Import:</Text>
+                            <Text fontSize="lg" fontWeight="bold" color={projectedBalanceAfterImport >= 0 ? "green.600" : "red.600"}>
                                 {formatCurrency(projectedBalanceAfterImport ?? 0)}
                             </Text>
                             <Text fontSize="xs" color="gray.500">
-                                (Based on {reviewData.filter(r => !r.isDuplicate).length} new transaction(s))
-                             </Text>
+                                Based on {reviewData.filter(r => !r.isDuplicate).length} new transaction(s)
+                            </Text>
                         </Box>
+
+                        {/* Balance difference */}
+                        <Box textAlign="center">
+                            <Text fontSize="sm" color="gray.500" mb={1}>Difference:</Text>
+                            <Text fontSize="lg" fontWeight="bold" color={balanceDif >= 0 ? "green.600" : "red.600"}>
+                                {formatCurrency(balanceDif ?? 0)}
+                            </Text> 
+                        </Box>
+
                     </Stack>
                  )}
             </Box>
-            {/* --- End Balance Display --- */}
+            
 
-
+            {/* Table */}
             <Box borderWidth="1px" borderRadius="md" p={4} bg="white">
-                 <Text fontSize="md" fontWeight="medium" mb={4}>Final Review</Text>
+                 <Text fontSize="sm" fontWeight="bold" mb={4}>Final Review</Text>
                  {!hasReviewData && isAlertOpen ? (
                     <Alert.Root status="warning">
                         <Alert.Indicator />
@@ -102,14 +121,20 @@ export default function ImportTransactionsStep3({
                         <CloseButton pos="relative" top="-2" insetEnd="-2" onClick={() => setIsAlertOpen(false)} />
                     </Alert.Root>
                  ) : hasReviewData ? (
-                    <Stack spacing={4}>
-                        <Text>
+                    <Stack spacing={4} gap={4}>
+                        <Text fontSize="xs" fontWeight="normal">
                             Displaying <Text as="b">{reviewData.length}</Text> records based on your selections in Step 2.
                              Transactions marked as duplicates will be <Text as="b" color="red.600">skipped</Text> during import.
                         </Text>
+                        
                         <Table.ScrollArea borderWidth="1px" rounded="md" maxHeight="500px">
-                            <Table.Root size="sm" variant="line" __css={{ tableLayout: 'auto', width: '100%' }}>
-                                <Table.Header bg="gray.100" stickyHeader>
+                            <Table.Root 
+                                size="sm" 
+                                variant="line" 
+                                __css={{ tableLayout: 'auto', width: '100%' }}
+                                stickyHeader
+                            >
+                                <Table.Header bg="gray.300">
                                     <Table.Row>
                                         {reviewHeaders.map(header => (
                                             <Table.ColumnHeader
@@ -131,7 +156,7 @@ export default function ImportTransactionsStep3({
                                     {reviewData.map((row, rowIndex) => (
                                         <Table.Row
                                             key={`review-row-${rowIndex}`}
-                                            _hover={{ bg: "gray.50" }}
+                                            //_hover={{ bg: "gray.50" }}
                                             bg={row.isDuplicate ? "red.50" : undefined} // Highlight duplicate rows
                                         >
                                             {reviewHeaders.map(header => (
@@ -147,7 +172,7 @@ export default function ImportTransactionsStep3({
                                                 >
                                                     {header.toLowerCase() === "duplicated" ? (
                                                         row.isDuplicate !== undefined ? (
-                                                            <Badge colorPalette={row.isDuplicate ? "red" : "green"} variant="subtle" size="sm">
+                                                            <Badge colorPalette={row.isDuplicate ? "red" : "green"} variant="solid" size="xs">
                                                                 {row.isDuplicate ? "Yes" : "No"}
                                                             </Badge>
                                                         ) : (
@@ -166,9 +191,9 @@ export default function ImportTransactionsStep3({
                                 </Table.Body>
                             </Table.Root>
                         </Table.ScrollArea>
-                        <Text fontSize="sm" color="gray.500" mt={2}>
+                        {/* <Text fontSize="sm" color="gray.500" mt={2}>
                             Click "Proceed to Import" above to confirm and import the non-duplicate transactions.
-                        </Text>
+                        </Text> */}
                     </Stack>
                  ) : (
                     <Text color="gray.500">No data to review.</Text> // Message if alert was dismissed

@@ -1,5 +1,4 @@
-// File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\import\ImportTransactions.jsx
-// src/components/import/ImportTransactions.jsx
+// .\frontend\src\components\import\ImportTransactions.jsx
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
@@ -7,7 +6,6 @@ import {
     useFileUpload, Alert, CloseButton, Dialog, Portal,  // Added useToast for performImport
 } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
-import { HiUpload } from "react-icons/hi";
 import Papa from 'papaparse';
 import { useAtom, useSetAtom } from "jotai";
 import { selectedTransaction, refreshTransactionsAtom } from "../../context/atoms";
@@ -26,7 +24,7 @@ const API_BASE_URL = 'http://localhost:5000'; // Adjusted from process.env for i
 
 const items = [
     { title: "Step 1", description: "Upload File" },
-    { title: "Step 2", description: "Map Columns & Preview" },
+    { title: "Step 2", description: "Select Rows & Map Columns" },
     { title: "Step 3", description: "Review & Import" },
 ];
 
@@ -452,12 +450,52 @@ export default function ImportTransactions({ }) {
     return (
         <Container maxW="container.lg" pt={6} pb={8}>
             <Toaster />
+            
+            {/* Actions Bar */}
             <Flex
-                minH="60px" bg="rgba(249, 249, 244, 0.85)" backdropFilter="auto" backdropBlur="8px"
-                mb={6} p={4} borderRadius="md" position="sticky" top={0} zIndex="sticky"
-                borderBottomWidth="1px" borderColor="gray.200"
+                direction={'row'}
+                align={'center'}
+                h="80px"
+                gap={4}
+                mt={"45px"}
+                wrap="wrap"
+                minH="60px"
+                bg="white"
+                mb={4}
+                pt={4}
+                pb={4}
+                pl={{ base: "16px", md: "32px", xl: "calc(80px + (100vw - 1512px) / 2)" }} 
+                pr={{ base: "16px", md: "32px", xl: "calc(80px + (100vw - 1512px) / 2)" }} 
+                position="fixed"
+                top={17}
+                left={0}
+                right={0}
+                zIndex={10}
+                borderBottomWidth="1px"
+                borderColor="gray.200"
+                //minH="60px" 
+                //bg="rgba(249, 249, 244, 0.85)" 
+                //backdropFilter="auto" 
+                //backdropBlur="8px"
+                //mb={6} 
+                //p={4} 
+                //borderRadius="md" 
+                //position="sticky" 
+                //top={0} 
+                //zIndex="sticky"
+                //borderBottomWidth="1px" 
+                //borderColor="gray.200"
             >
-                <Steps.Root step={step} count={items.length} width={{ base: "100%", md: "50%" }} mb={{ base: 4, md: 0 }}>
+                <Steps.Root 
+                    step={step} 
+                    size={"sm"} 
+                    count={items.length} 
+                    //width={{ base: "100%", md: "50%" }} 
+                    maxW={"300px"}
+                    mb={{ base: 4, md: 0 }}
+                    variant={"solid"}
+                    colorPalette={"gray"}
+                >
                      <Steps.List>
                         {items.map((item, index) => (
                             <Steps.Item key={index} index={index} title={item.title}>
@@ -467,13 +505,28 @@ export default function ImportTransactions({ }) {
                         ))}
                     </Steps.List>
                 </Steps.Root>
+
                 <Spacer display={{ base: "none", md: "block" }} />
+
                 <Flex gap={2} width={{ base: "100%", md: "auto"}} justifyContent={{ base: "space-between", md: "flex-end"}}>
-                    <Button size="sm" colorScheme="gray" variant="outline" rounded="sm" minW="80px" onClick={prevStep} disabled={isFirstStep || isLoading || isCheckingDuplicates}>
+                    <Button 
+                        size="xs" 
+                        colorScheme="gray" 
+                        variant="subtle" 
+                        rounded="sm" 
+                        width={20}
+                        onClick={prevStep} 
+                        disabled={isFirstStep || isLoading || isCheckingDuplicates}
+                    >
                         Prev
                     </Button>
+                    
                     <Button
-                        size="sm" colorScheme="cyan" variant="solid" rounded="sm" minW="80px"
+                        size="xs" 
+                        colorScheme="black" 
+                        variant="solid" 
+                        rounded="sm" 
+                        width={20}
                         onClick={mainButtonAction}
                         disabled={isMainButtonDisabled}
                         isLoading={(isLoading && (isFirstStep || step === 2)) || (isCheckingDuplicates && step >= 1)} // Show loading for actual import too
@@ -484,10 +537,12 @@ export default function ImportTransactions({ }) {
                             mainButtonLabel
                         }
                     >
-                        {mainButtonLabel}
+                        Next
                     </Button>
                 </Flex>
             </Flex>
+            {/* End of Actions Bar */}
+
 
             {parsingError && (
                  <Alert.Root status="error" mb={4}>
@@ -498,6 +553,7 @@ export default function ImportTransactions({ }) {
                     <CloseButton pos="relative" top="-2" insetEnd="-2" onClick={() => setParsingError(null)} />
                 </Alert.Root>
             )}
+
 
             <Box>
                 {step === 0 && (

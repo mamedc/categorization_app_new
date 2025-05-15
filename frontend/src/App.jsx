@@ -46,7 +46,7 @@ export default function App() {
                  </Container>
             )}
             {activeView === 'import' && (
-                 <Container maxW="container.lg" pt={6} pb={8}>
+                 <Container maxW="container.lg" pt={"90px"} pb={8}>
                     <ImportTransactions />
                  </Container>
             )}

@@ -48,6 +48,11 @@ export default function ConfirmImportDialog({
         return finalBalanceData.data + importAmountTotal;
     }, [finalBalanceData.state, finalBalanceData.data, importAmountTotal]);
 
+    const balanceDif = useMemo(() => {
+        if (finalBalanceData.state !== 'hasData' || projectedBalanceAfterImport === null) return null;
+        return projectedBalanceAfterImport - finalBalanceData.data;
+    }, [finalBalanceData.state, finalBalanceData.data, projectedBalanceAfterImport]);
+
     return (
         <Dialog.Root open={isOpen} onOpenChange={(e) => { if (!e.open) onClose(); }}>
             <Dialog.Backdrop />
@@ -76,17 +81,23 @@ export default function ConfirmImportDialog({
                                      <Box borderWidth="1px" borderRadius="md" p={3} bg="gray.50">
                                          <Stack direction={{ base: "column", sm: "row" }} spacing={4} justify="space-around" align="center">
                                              <Box textAlign="center">
-                                                 <Text fontSize="xs" color="gray.500" mb={1}>Current Final Balance</Text>
-                                                 <Text fontSize="lg" fontWeight="bold" color="teal.600">
+                                                 <Text fontSize="xs" color="gray.500" mb={1}>Current Final Balance:</Text>
+                                                 <Text fontSize="md" fontWeight="bold" color="teal.600">
                                                      {formatCurrency(finalBalanceData.data ?? 0)}
                                                  </Text>
                                              </Box>
                                              <Box textAlign="center">
-                                                 <Text fontSize="xs" color="gray.500" mb={1}>Projected Balance After Import</Text>
-                                                 <Text fontSize="lg" fontWeight="bold" color={projectedBalanceAfterImport >= 0 ? "green.600" : "red.600"}>
+                                                 <Text fontSize="xs" color="gray.500" mb={1}>Projected Balance After Import:</Text>
+                                                 <Text fontSize="md" fontWeight="bold" color={projectedBalanceAfterImport >= 0 ? "green.600" : "red.600"}>
                                                      {formatCurrency(projectedBalanceAfterImport ?? 0)}
                                                  </Text>
                                              </Box>
+                                             <Box textAlign="center">
+                                                <Text fontSize="xs" color="gray.500" mb={1}>Difference:</Text>
+                                                <Text fontSize="md" fontWeight="bold" color={balanceDif >= 0 ? "green.600" : "red.600"}>
+                                                    {formatCurrency(balanceDif ?? 0)}
+                                                </Text> 
+                                            </Box>
                                          </Stack>
                                      </Box>
                                 )}
@@ -94,7 +105,7 @@ export default function ConfirmImportDialog({
                                 {hasDataToImport ? (
                                     <>
                                         <Text>
-                                            Are you sure you want to import the following <Text as="b">{transactionsToImport.length}</Text> transactions?
+                                            Import the following <Text as="b">{transactionsToImport.length}</Text> transactions?
                                             {duplicateCount > 0 && (
                                                 <Text as="span" fontSize="sm" color="gray.500"> ({duplicateCount} duplicate(s) will be skipped).</Text>
                                             )}
@@ -153,10 +164,22 @@ export default function ConfirmImportDialog({
                             </Stack>
                         </Dialog.Body>
                         <Dialog.Footer gap={3}>
-                            <Dialog.CloseTrigger asChild>
-                                <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancel</Button>
+                            
+                            <Dialog.CloseTrigger asChild position="absolute" top="2" right="2">
+                                <CloseButton size="sm" onClick={onClose} disabled={isLoading} />
                             </Dialog.CloseTrigger>
+                            
                             <Button
+                                size="xs"
+                                variant="outline"
+                                onClick={onClose}
+                                disabled={isLoading}
+                            >
+                                Cancel
+                            </Button>
+                            
+                            <Button
+                                size="xs"
                                 colorScheme="cyan"
                                 onClick={onImport}
                                 disabled={!hasDataToImport || isLoading || isLoadingBalance || hasBalanceError}
@@ -166,7 +189,6 @@ export default function ConfirmImportDialog({
                                 Import
                             </Button>
                         </Dialog.Footer>
-                         {/* Close Trigger removed from Header and positioned above */}
                     </Dialog.Content>
                 </Dialog.Positioner>
             </Portal>
