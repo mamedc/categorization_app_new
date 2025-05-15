@@ -124,7 +124,7 @@ export default function ImportTransactionsStep2({
             {fileName && (
                  <Text fontSize="sm" bg="#f4f4ec" color="gray.600" textAlign="center">
                     File: <Code fontWeight="semibold">{fileName}</Code>
-                    -> <Badge fontWeight="semibold" colorScheme="green">{headers.length}</Badge> columns
+                    -- <Badge fontWeight="semibold" colorScheme="green">{headers.length}</Badge> columns
                     and <Badge fontWeight="semibold" colorScheme="blue">{numParsedRows}</Badge> rows.
                  </Text>
             )}

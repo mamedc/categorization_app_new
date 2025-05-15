@@ -302,7 +302,6 @@ export default function EditTransactionTagsModal ({
                             variant="outline" // Changed variant
                             onClick={handleClose}
                             disabled={isSaving}
-                            size="sm" // Standardized size
                         >
                             Cancel
                         </Button>
@@ -312,7 +311,6 @@ export default function EditTransactionTagsModal ({
                             isLoading={isSaving} // Use isLoading prop
                             loadingText="Saving..."
                             colorPalette="cyan" // Consistent palette
-                            size="sm" // Standardized size
                         >
                             Ok {/* More specific text */}
                         </Button>

@@ -19,8 +19,8 @@ export default function TagCard ({
                 variant="solid" 
                 size="xs"
                 bg={tag.color}
-                w={50}
-                h={3}
+                w={55}
+                //h={"8px"}
                 alignItems="center"    // Vertically centers the content
                 justifyContent="center" // Horizontally centers the content
             >

@@ -439,7 +439,7 @@ export default function TransactionGrid ({
                                             {formatDateHeader(group.date)}
                                         </Text>
                                         {" "}
-                                        <Text as="span" fontWeight={500}>
+                                        <Text as="span" fontWeight={500} size="xs">
                                             (bal. {formatCurrency(group.groupBalance)})
                                         </Text>
                                     </Box>
