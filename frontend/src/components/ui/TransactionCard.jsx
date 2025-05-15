@@ -77,7 +77,7 @@ export default function TransactionCard ({
                             variant="outline"
                             size="sm"
                             colorPalette="gray"
-                            isChecked={isSelected} // Correct prop for Ark UI Checkbox
+                            checked={isSelected} // Correct prop for Ark UI Checkbox
                             onCheckedChange={onSelect}
                         >
                             <Checkbox.Control />
