@@ -434,16 +434,24 @@ export default function TransactionGrid ({
                              >
                                 {/* Balance */}
                                 <Flex justify="space-between" align="center">
-                                    <Box>{formatDateHeader(group.date)}</Box>
+                                    <Box>
+                                        <Text as="span" fontWeight="bold">
+                                            {formatDateHeader(group.date)}
+                                        </Text>
+                                        {" "}
+                                        <Text as="span" fontWeight={500}>
+                                            (bal. {formatCurrency(group.groupBalance)})
+                                        </Text>
+                                    </Box>
                                     <Spacer />
                                      
                                      {/* Display the running balance calculated for the end of this day */}
-                                     <Box
+                                     {/* <Box
                                         fontSize="xs"
                                         marginRight={4}
                                     >
                                         <HStack gap={1}>
-                                            <Text color="gray.600" >Balance:</Text>
+                                            <Text color="gray.600" >bal.</Text>
                                             <Text
                                                 fontWeight="bold"
                                                 color={group.groupBalance >= 0 ? 'green.600' : 'red.600'}
@@ -451,7 +459,7 @@ export default function TransactionGrid ({
                                                 {formatCurrency(group.groupBalance)}
                                             </Text>
                                         </HStack>
-                                    </Box>
+                                    </Box> */}
                                 </Flex>
                             </Box>
                             <VStack spacing={4} align="stretch" gap={"2px"}>
