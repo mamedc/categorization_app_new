@@ -79,10 +79,8 @@ export default function TransactionsManagement({
     const selectedTransacAtomValue = useAtomValue(selectedTransactionAtom); // <-- Read selected transaction object from atom
 
     // --- Sorting State ---
-    const [sortOrder, setSortOrder] = useState('desc');
-    const toggleSortOrder = () => {
-        setSortOrder(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
-    };
+    const [sortOrder, setSortOrder] = useState('asc');
+    const toggleSortOrder = () => { setSortOrder(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc')); };
     const sortIcon = sortOrder === 'desc' ? <LuArrowUp /> : <LuArrowDown />;
     const sortTooltipLabel = sortOrder === 'desc' ? "Sort Descending (Newest First)" : "Sort Ascending (Oldest First)";
 
