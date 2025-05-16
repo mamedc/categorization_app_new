@@ -1,7 +1,8 @@
 // ./frontend/src/components/ui/TransactionCard.jsx
 
 import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Grid, Portal, HoverCard, GridItem, IconButton } from '@chakra-ui/react' // Changed Spacer to Grid
-import { Fragment } from "react";
+// import { Fragment } from "react";
+
 import TagCard from "./TagCard";
 import { SlPencil } from "react-icons/sl";
 import { TiFlowChildren } from "react-icons/ti";
@@ -46,7 +47,7 @@ export default function TransactionCard ({
         <Box
             bg={isParent ? "gray.100" : "white"} //#f1eee5
             borderRadius="sm"
-            p={4}
+            p={3}
             ml={isChild ? 2 : 0}
             borderLeftWidth={4}
             borderLeftColor={isSelected ? "gray.500" : (isParent ? "red.300" : "gray.300")} //"#bcdbdb"
@@ -230,7 +231,9 @@ export default function TransactionCard ({
                                     h="100%"
                                 >
                                 {transaction.tags.map((tag) => (
-                                    <Fragment key={tag.id}><TagCard tag={tag} /></Fragment>
+                                    // <Fragment key={tag.id}>
+                                        <TagCard tag={tag} />
+                                    // </Fragment>
                                 ))}
                                 </Flex>
                             </GridItem>
