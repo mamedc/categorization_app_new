@@ -1,6 +1,6 @@
 // ./frontend/src/components/ui/TransactionsManagement.jsx
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useAtomValue } from "jotai"; // Import useAtomValue directly
 import {
     Container, Flex, Button, Spacer, IconButton, Tooltip, Portal,
@@ -98,13 +98,88 @@ export default function TransactionsManagement({
     const [currentTransactionToSplit, setCurrentTransactionToSplit] = useState(null);
 
     // --- Dynamic Year Options (now returns collection) ---
-     const availableYearsCollection = useMemo(() => {
-         if (transactionState === 'hasData' && transactionsData) { // Check transactionsData exists
-             // getUniqueYears now returns the correct format [{label, value}, ...]
-             return createListCollection({ items: getUniqueYears(transactionsData) });
-         }
-         return createListCollection({ items: [] }); // Return empty collection
-     }, [transactionState, transactionsData]);
+    const availableYearsCollection = useMemo(() => {
+        if (transactionState === 'hasData' && transactionsData) { // Check transactionsData exists
+            // getUniqueYears now returns the correct format [{label, value}, ...]
+            return createListCollection({ items: getUniqueYears(transactionsData) });
+        }
+        return createListCollection({ items: [] }); // Return empty collection
+    }, [transactionState, transactionsData]);
+
+
+
+
+
+    // --- START: Scroll Preservation Logic ---
+    // Ref to continuously store the latest scroll Y position
+    const lastScrollYRef = useRef(window.scrollY);
+    // Ref to store the scroll Y position just before a data refresh
+    const scrollPositionToRestoreRef = useRef(0);
+    // Ref to track the previous state of data loading
+    const previousTransactionStateRef = useRef(transactionState);
+
+
+    useEffect(() => {
+        const handleScroll = () => {
+            lastScrollYRef.current = window.scrollY;
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        // console.log('[ScrollListener] Added. Initial scrollY:', lastScrollYRef.current); // Debug log
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            // console.log('[ScrollListener] Removed.'); // Debug log
+        };
+    }, []);
+
+    useEffect(() => {
+        // Log current and previous states at the START of this effect run
+        console.log(
+            `[ScrollEffect] Current transactionState: "${transactionState}", Previous transactionState was: "${previousTransactionStateRef.current}"`
+        );
+
+        // Condition 1: Store scroll position when a refresh starts
+        // This means current state is 'loading' AND the previous state was NOT 'loading'.
+        if (transactionState === 'loading' && previousTransactionStateRef.current !== 'loading') {
+            scrollPositionToRestoreRef.current = lastScrollYRef.current;
+            console.log(
+                `%c[ScrollEffect] Refresh DETECTED (Store). Storing scrollY: ${scrollPositionToRestoreRef.current}`,
+                'color: orange; font-weight: bold;'
+            );
+        } else if (transactionState === 'loading' && previousTransactionStateRef.current === 'loading') {
+            // This means it was already loading, and it's still loading (or re-rendered while loading).
+            // We typically only want to store the scroll position on the initial transition to 'loading'.
+            console.log(
+                `[ScrollEffect] Still in 'loading' state. Scroll position to restore is: ${scrollPositionToRestoreRef.current}`
+            );
+        }
+
+        // Condition 2: Restore scroll position after data has loaded
+        // This means current state is 'hasData' AND the previous state WAS 'loading'.
+        if (transactionState === 'hasData' && previousTransactionStateRef.current === 'loading') {
+            console.log(
+                `%c[ScrollEffect] Refresh COMPLETE (Restore). Restoring scrollY to: ${scrollPositionToRestoreRef.current}`,
+                'color: green; font-weight: bold;'
+            );
+            requestAnimationFrame(() => {
+                window.scrollTo(0, scrollPositionToRestoreRef.current);
+            });
+        }
+
+        // IMPORTANT: Update previousTransactionStateRef.current for the *next* execution of this effect.
+        // This should happen only if the state has actually changed to avoid an infinite loop
+        // if the ref itself was part of the dependency array (which it isn't, and shouldn't be).
+        if (previousTransactionStateRef.current !== transactionState) {
+             // console.log(`[ScrollEffect] Updating previousTransactionStateRef from "${previousTransactionStateRef.current}" to "${transactionState}"`); // Deeper debug
+            previousTransactionStateRef.current = transactionState;
+        }
+
+    }, [transactionState]); // This effect depends ONLY on transactionState
+    // --- END: Scroll Preservation Logic ---
+
+
+
+
 
     // Set default year
     useEffect(() => {
