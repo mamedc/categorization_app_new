@@ -87,6 +87,8 @@ export const ldbTransactionsAtom = loadable(transactionsAtom);
 export const selectedTransaction = atom(null);
 export const isSelectedTransaction = atom((get) => get(selectedTransaction) !== null);
 
+// Atom to track the recently edited transaction ID
+export const recentlyEditedTransactionIdAtom = atom(null);
 
 
 

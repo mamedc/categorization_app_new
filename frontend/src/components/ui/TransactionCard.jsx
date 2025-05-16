@@ -1,7 +1,9 @@
 // ./frontend/src/components/ui/TransactionCard.jsx
 
-import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Grid, Portal, HoverCard, GridItem, IconButton } from '@chakra-ui/react' // Changed Spacer to Grid
-// import { Fragment } from "react";
+import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Grid, Portal, HoverCard, GridItem, IconButton } from '@chakra-ui/react';
+import { useAtom } from 'jotai';
+import { useEffect, useState } from 'react';
+import { recentlyEditedTransactionIdAtom } from '../../context/atoms';
 
 import TagCard from "./TagCard";
 import { SlPencil } from "react-icons/sl";
@@ -25,6 +27,12 @@ const formatBrazilianCurrency = (value) => {
   };
 
 
+// const spin = keyframes`
+//     from {transform: rotate(0deg);}
+//     to {transform: rotate(360deg)} 
+// `;
+
+
 export default function TransactionCard ({
     transaction,
     isSelected,
@@ -32,6 +40,31 @@ export default function TransactionCard ({
     isParent,
     isChild
 }) {
+
+    const [recentlyEditedId, setRecentlyEditedId] = useAtom(recentlyEditedTransactionIdAtom);
+    const [isHighlighted, setIsHighlighted] = useState(false);
+
+    const highlightBgColor = "yellow.100"; // Highlight color
+    const highlightShadowColor = "yellow.400"; // Shadow color for highlight
+
+    useEffect(() => {
+        //console.log('-*-', transaction.id, recentlyEditedId)
+        if (transaction.id === recentlyEditedId) {
+            console.log('--- transaction.id === recentlyEditedId')
+            setIsHighlighted(true);
+            const timer = setTimeout(() => {
+                setIsHighlighted(false);
+                // Reset the global atom only if it's still this transaction's ID
+                // to prevent clearing it if another transaction was edited quickly.
+                if (recentlyEditedId === transaction.id) {
+                    setRecentlyEditedId(null);
+                }
+            }, 1500); // Duration of the highlight animation in ms
+
+            return () => clearTimeout(timer);
+        }
+    }, [recentlyEditedId, transaction.id, setRecentlyEditedId]);
+
 
     const baseColor = parseFloat(transaction.amount) >= 0 ? 'green.600' : 'red.600';
     let finalColor;
@@ -54,6 +87,7 @@ export default function TransactionCard ({
             _hover={{ outline: '1px solid', outlineColor: 'gray.300' }} //#bcdbdb
             outline={isSelected ? '1px solid' : 'none'}
             outlineColor={isSelected ? 'gray.500' : 'transparent'}
+            animation={isHighlighted ? `fade-in 2s ease-out` : 'none'}
         >
             <Grid
                 templateColumns={{
@@ -232,8 +266,9 @@ export default function TransactionCard ({
                                 >
                                 {transaction.tags.map((tag) => (
                                     // <Fragment key={tag.id}>
-                                        <TagCard tag={tag} />
+                                        // <TagCard tag={tag} />
                                     // </Fragment>
+                                    <TagCard key={tag.id} tag={tag} /> 
                                 ))}
                                 </Flex>
                             </GridItem>

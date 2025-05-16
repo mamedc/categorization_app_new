@@ -11,7 +11,7 @@ import {
 import { Fragment } from "react";
 import { Toaster, toaster } from "@/components/ui/toaster";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { selectedTransaction, refreshTransactionsAtom, ldbTransactionsAtom } from "../../context/atoms";
+import { selectedTransaction, refreshTransactionsAtom, ldbTransactionsAtom, recentlyEditedTransactionIdAtom } from "../../context/atoms";
 import EditTransactionTagsModal from "./EditTransactionTagsModal";
 import TagCard from "./TagCard";
 import { BASE_URL } from "../../App";
@@ -57,6 +57,7 @@ export default function EditTransactionModal ({
     const refreshTransactions = useSetAtom(refreshTransactionsAtom);
     const [selectedTransacAtomValue, setSelectedTransacAtom] = useAtom(selectedTransaction);
     const { state: transactionState, data: allTransactionsData } = useAtomValue(ldbTransactionsAtom);
+    const setRecentlyEditedId = useSetAtom(recentlyEditedTransactionIdAtom);
     
     const [open, setOpen] = useState(false);
     const initialFormState = {
@@ -260,6 +261,7 @@ export default function EditTransactionModal ({
             // Fetch the updated transaction to ensure UI consistency
             const newSelectedTx = await fetch(`${BASE_URL}/transactions/view/${transactionIdToUpdate}`).then(res => res.json());
             setSelectedTransacAtom(newSelectedTx); // Update the global atom
+            setRecentlyEditedId(transactionIdToUpdate); // Set the ID of the edited transaction for animation
             handleClose();
 
         } catch (error) {
@@ -272,7 +274,7 @@ export default function EditTransactionModal ({
             // --- 6. Cleanup ---
             setIsSaving(false);
         }
-    }, [formData, addedTags, removedTags, refreshTransactions, handleClose]); // Dependencies kept minimal
+    }, [formData, addedTags, removedTags, refreshTransactions, setSelectedTransacAtom, setRecentlyEditedId, handleClose]); // Dependencies kept minimal
 
 
     const handleFileUpload = async (fileDetails) => {
