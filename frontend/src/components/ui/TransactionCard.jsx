@@ -1,6 +1,6 @@
 // ./frontend/src/components/ui/TransactionCard.jsx
 
-import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Grid, Portal, HoverCard, GridItem, IconButton } from '@chakra-ui/react';
+import { Box, Flex, Text, HStack, Badge, Checkbox, VStack, Grid, Portal, HoverCard, GridItem, IconButton, Theme } from '@chakra-ui/react';
 import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { recentlyEditedTransactionIdAtom } from '../../context/atoms';
@@ -241,12 +241,14 @@ export default function TransactionCard ({
                                             </IconButton>
                                         </HoverCard.Trigger>
                                         <Portal>
-                                            <HoverCard.Positioner>
-                                                <HoverCard.Content maxWidth="240px">
-                                                    <HoverCard.Arrow />
-                                                    <Box p={2} fontSize="xs">{transaction.note}</Box>
-                                                </HoverCard.Content>
-                                            </HoverCard.Positioner>
+                                            <Theme appearance="light">
+                                                <HoverCard.Positioner>
+                                                    <HoverCard.Content maxWidth="240px">
+                                                        <HoverCard.Arrow />
+                                                        <Box p={2} fontSize="xs">{transaction.note}</Box>
+                                                    </HoverCard.Content>
+                                                </HoverCard.Positioner>
+                                            </Theme>
                                         </Portal>
                                     </HoverCard.Root>
                                 )}
