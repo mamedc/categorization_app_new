@@ -232,8 +232,14 @@ export default function EditTransactionTagsModal ({
 
                                                     {/* Tags within the group */}
                                                     <VStack pl={2} pt={1} spacing={2} align="stretch" width="100%">
-                                                        {tGroup.tags && Array.isArray(tGroup.tags) && tGroup.tags
+                                                        {tGroup.tags && Array.isArray(tGroup.tags) && [...tGroup.tags]
                                                             .filter(tag => tag != null) // Add this filter
+                                                            .sort((tagA, tagB) => {
+                                                                // Handle cases where name might be null or undefined
+                                                                const nameA = tagA.name || '';
+                                                                const nameB = tagB.name || '';
+                                                                return nameA.localeCompare(nameB); // Alphabetical sort
+                                                            })
                                                             .map((tag) => {
                                                             
                                                             // Check if this tag is currently selected in the modal's state
