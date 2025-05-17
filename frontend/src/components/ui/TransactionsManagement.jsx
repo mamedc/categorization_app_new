@@ -6,7 +6,7 @@ import {
     Container, Flex, Button, Spacer, IconButton, Tooltip, Portal, CloseButton,
     Select, Input, HStack, VStack, Box, Field,
     createListCollection,
-    InputGroup
+    InputGroup, Theme
 } from "@chakra-ui/react";
 import { LuArrowDown, LuArrowUp, LuCheck, LuChevronsUpDown, LuSearch, LuX } from "react-icons/lu"; // Added LuSearch
 
@@ -71,6 +71,7 @@ const monthsCollection = createListCollection({ items: monthsData });
 
 
 export default function TransactionsManagement({
+    children
     // Props received from App.jsx, potentially unused if using atom directly
     // We'll rely on the selectedTransactionAtom instead
     // selectedTransactionId,
@@ -188,9 +189,6 @@ export default function TransactionsManagement({
 
     }, [transactionState]); // This effect depends ONLY on transactionState
     // --- END: Scroll Preservation Logic ---
-
-
-
 
 
     // Set default year
@@ -375,7 +373,8 @@ export default function TransactionsManagement({
                 borderBottomWidth="1px"
                 borderColor="gray.200"
             >
-                                    
+
+
                 {/* Sorting Control */}
                 <IconButton
                     size="xs"
@@ -388,150 +387,156 @@ export default function TransactionsManagement({
                     {sortIcon}
                 </IconButton>
                 
+
+
                 {/* --- Filter Controls --- */}
-                <Flex 
-                    direction={'row'} 
-                    wrap={{ base: 'wrap', md: 'wrap', xl: 'nowrap' }}
-                    gap={4} 
-                    align="center" 
-                    flexGrow={{ base: 1, md: 0 }} // Allow filters to grow on small screens
-                >
-
-                    {/* Filter Type Select - Using Collection */}
-                    <Field.Root id="filterTypeSelect" w="140px" flexShrink={0}>
-                        <Field.Label srOnly>Filter by</Field.Label>
-                        <Select.Root
-                            collection={filterOptionsCollection}
-                            value={[filterType]}
-                            onValueChange={(details) => setFilterType(details.value[0] || 'all')}
-                            size="xs"
-                            positioning={{ sameWidth: true, gutter: 2 }}
-                            variant="outline"
-                        >
-                            <Select.HiddenSelect />
-                            <Select.Control>
-                                <Select.Trigger bg="white">
-                                    <Select.ValueText placeholder="Filter by..." />
-                                    <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
-                                </Select.Trigger>
-                            </Select.Control>
-                            <Portal>
-                                <Select.Positioner>
-                                    <Select.Content>
-                                        {filterOptionsCollection.items.map((option) => (
-                                            <Select.Item item={option} key={option.value}>
-                                                {option.label}
-                                                <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
-                                            </Select.Item>
-                                        ))}
-                                    </Select.Content>
-                                </Select.Positioner>
-                            </Portal>
-                        </Select.Root>
-                    </Field.Root>
-
-                    {/* Date Range Inputs (Conditional) */}
-                    {filterType === 'dateRange' && (
-                        <HStack spacing={2}>
-                            <Field.Root id="startDate">
-                                <Field.Label srOnly>Start Date</Field.Label>
-                                <Input size="xs" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} w="110px" bg="white" />
-                            </Field.Root>
-                            <Field.Root id="endDate">
-                                <Field.Label srOnly>End Date</Field.Label>
-                                <Input size="xs" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} w="110px" bg="white" min={startDate} />
-                            </Field.Root>
-                        </HStack>
-                    )}
-
-                    {/* Month/Year Selects (Conditional) - Using Collections */}
-                    {filterType === 'monthYear' && (
-                        <HStack spacing={2}>
-                            <Field.Root id="selectMonth"  w="110px">
-                                <Field.Label srOnly>Month</Field.Label>
-                                <Select.Root
-                                    collection={monthsCollection}
-                                    value={[selectedMonth]}
-                                    onValueChange={(details) => setSelectedMonth(details.value[0] || '')}
-                                    size="xs" positioning={{ sameWidth: true, gutter: 2 }}
-                                >
-                                    <Select.HiddenSelect />
-                                    <Select.Control>
-                                        <Select.Trigger bg="white" variant="outline">
-                                            <Select.ValueText placeholder="Month" />
-                                            <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
-                                        </Select.Trigger>
-                                    </Select.Control>
-                                    <Portal>
-                                        <Select.Positioner>
-                                            <Select.Content>
-                                                {monthsCollection.items.map((m) => (
-                                                    <Select.Item item={m} key={m.value}>
-                                                        {m.label}
-                                                        <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
-                                                    </Select.Item>
-                                                ))}
-                                            </Select.Content>
-                                        </Select.Positioner>
-                                    </Portal>
-                                </Select.Root>
-                            </Field.Root>
-                            <Field.Root id="selectYear"  w="110px">
-                                <Field.Label srOnly>Year</Field.Label>
-                                <Select.Root
-                                    collection={availableYearsCollection}
-                                    value={[selectedYear]}
-                                    onValueChange={(details) => setSelectedYear(details.value[0] || '')}
-                                    size="xs" positioning={{ sameWidth: true, gutter: 2 }}
-                                    disabled={availableYearsCollection.items.length === 0}
-                                >
-                                    <Select.HiddenSelect />
-                                    <Select.Control>
-                                        <Select.Trigger bg="white" variant="outline">
-                                            <Select.ValueText placeholder="Year" />
-                                            <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
-                                        </Select.Trigger>
-                                    </Select.Control>
-                                    <Portal>
-                                        <Select.Positioner>
-                                            <Select.Content>
-                                                {availableYearsCollection.items.map((y) => (
-                                                    <Select.Item item={y} key={y.value}>
-                                                        {y.label}
-                                                        <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
-                                                    </Select.Item>
-                                                ))}
-                                            </Select.Content>
-                                        </Select.Positioner>
-                                    </Portal>
-                                </Select.Root>
-                            </Field.Root>
-                        </HStack>
-                    )}
-                    
-
-                    {/* Search Input - Corrected */}
-                    <InputGroup 
-                        size="xs"
-                        w={{ base: "100%", sm: "140px", md: "140px"}}
-                        flexShrink={{base: 1, md:0}}
-                        startElement={<LuSearch />}
-                        endElement={endSearchElement}
+                    <Flex 
+                        direction={'row'} 
+                        wrap={{ base: 'wrap', md: 'wrap', xl: 'nowrap' }}
+                        gap={4} 
+                        align="center" 
+                        flexGrow={{ base: 1, md: 0 }} // Allow filters to grow on small screens
                     >
-                        <Input
-                            placeholder="Search..."
+
+                        {/* Filter Type Select - Using Collection */}
+                        <Field.Root id="filterTypeSelect" w="140px" flexShrink={0}>
+                            <Field.Label srOnly>Filter by</Field.Label>
+                            <Select.Root
+                                collection={filterOptionsCollection}
+                                value={[filterType]}
+                                onValueChange={(details) => setFilterType(details.value[0] || 'all')}
+                                size="xs"
+                                positioning={{ sameWidth: true, gutter: 2 }}
+                                variant="outline"
+                            >
+                                <Select.HiddenSelect />
+                                <Select.Control>
+                                    <Select.Trigger bg="white">
+                                        <Select.ValueText placeholder="Filter by..." />
+                                        <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
+                                    </Select.Trigger>
+                                </Select.Control>
+
+                                <Portal>
+                                    <Theme hasBackground={true} appearance="light">
+                                        <Select.Positioner>
+                                            <Select.Content>
+                                                {filterOptionsCollection.items.map((option) => (
+                                                    <Select.Item item={option} key={option.value}>
+                                                        {option.label}
+                                                        <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
+                                                    </Select.Item>
+                                                ))}
+                                            </Select.Content>
+                                        </Select.Positioner>
+                                    </Theme>
+                                </Portal>
+                            </Select.Root>
+                        </Field.Root>
+                        
+                        {/* Date Range Inputs (Conditional) */}
+                        {filterType === 'dateRange' && (
+                            <HStack spacing={2}>
+                                <Field.Root id="startDate">
+                                    <Field.Label srOnly>Start Date</Field.Label>
+                                    <Input size="xs" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} w="110px" bg="white" />
+                                </Field.Root>
+                                <Field.Root id="endDate">
+                                    <Field.Label srOnly>End Date</Field.Label>
+                                    <Input size="xs" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} w="110px" bg="white" min={startDate} />
+                                </Field.Root>
+                            </HStack>
+                        )}
+
+                        {/* Month/Year Selects (Conditional) - Using Collections */}
+                        {filterType === 'monthYear' && (
+                            <HStack spacing={2}>
+                                <Field.Root id="selectMonth"  w="110px">
+                                    <Field.Label srOnly>Month</Field.Label>
+                                    <Select.Root
+                                        collection={monthsCollection}
+                                        value={[selectedMonth]}
+                                        onValueChange={(details) => setSelectedMonth(details.value[0] || '')}
+                                        size="xs" positioning={{ sameWidth: true, gutter: 2 }}
+                                    >
+                                        <Select.HiddenSelect />
+                                        <Select.Control>
+                                            <Select.Trigger bg="white" variant="outline">
+                                                <Select.ValueText placeholder="Month" />
+                                                <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
+                                            </Select.Trigger>
+                                        </Select.Control>
+                                        <Portal>
+                                            <Select.Positioner>
+                                                <Select.Content>
+                                                    {monthsCollection.items.map((m) => (
+                                                        <Select.Item item={m} key={m.value}>
+                                                            {m.label}
+                                                            <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
+                                                        </Select.Item>
+                                                    ))}
+                                                </Select.Content>
+                                            </Select.Positioner>
+                                        </Portal>
+                                    </Select.Root>
+                                </Field.Root>
+                                <Field.Root id="selectYear"  w="110px">
+                                    <Field.Label srOnly>Year</Field.Label>
+                                    <Select.Root
+                                        collection={availableYearsCollection}
+                                        value={[selectedYear]}
+                                        onValueChange={(details) => setSelectedYear(details.value[0] || '')}
+                                        size="xs" positioning={{ sameWidth: true, gutter: 2 }}
+                                        disabled={availableYearsCollection.items.length === 0}
+                                    >
+                                        <Select.HiddenSelect />
+                                        <Select.Control>
+                                            <Select.Trigger bg="white" variant="outline">
+                                                <Select.ValueText placeholder="Year" />
+                                                <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
+                                            </Select.Trigger>
+                                        </Select.Control>
+                                        <Portal>
+                                            <Select.Positioner>
+                                                <Select.Content>
+                                                    {availableYearsCollection.items.map((y) => (
+                                                        <Select.Item item={y} key={y.value}>
+                                                            {y.label}
+                                                            <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
+                                                        </Select.Item>
+                                                    ))}
+                                                </Select.Content>
+                                            </Select.Positioner>
+                                        </Portal>
+                                    </Select.Root>
+                                </Field.Root>
+                            </HStack>
+                        )}
+                        
+
+                        {/* Search Input - Corrected */}
+                        <InputGroup 
                             size="xs"
-                            variant="outline"
-                            bg="white"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            pl="4"
-                            
-                        />
-                    </InputGroup>
+                            w={{ base: "100%", sm: "140px", md: "140px"}}
+                            flexShrink={{base: 1, md:0}}
+                            startElement={<LuSearch />}
+                            endElement={endSearchElement}
+                        >
+                            <Input
+                                placeholder="Search..."
+                                size="xs"
+                                variant="outline"
+                                bg="white"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                pl="4"
+                                
+                            />
+                        </InputGroup>
 
 
-                </Flex>
+                    </Flex>
+                
 
                 <Spacer display={{ base: 'none', md: 'block' }}/>
 
@@ -578,5 +583,7 @@ export default function TransactionsManagement({
             )}
 
         </Container>
+        
+                        
     );
 };
