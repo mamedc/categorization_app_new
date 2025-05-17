@@ -348,6 +348,7 @@ export default function TransactionsManagement({
             pb={6}
             maxW={{ base: "100%", md: "100%", xl: "1400px" }} // Controls Transaction Card width behaviour
             mx="auto"
+            mt={0}
         >
             
             {/* --- Actions Bar - Sticky --- */}

@@ -13,7 +13,8 @@ import {
     Field,
     Input,
     Spinner,
-    IconButton
+    IconButton,
+    Theme
 } from "@chakra-ui/react";
 import { initialBalanceAtom, ldbInitialBalanceAtom } from '../../context/atoms';
 import { Toaster, toaster } from "@/components/ui/toaster"
@@ -120,6 +121,7 @@ export default function Settings() {
             </Dialog.Trigger>
 
             <Portal>
+                <Theme appearance="light">
                 <Toaster />
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -170,6 +172,7 @@ export default function Settings() {
                         </Dialog.CloseTrigger>
                     </Dialog.Content>
                 </Dialog.Positioner>
+                </Theme>
             </Portal>
         </Dialog.Root>
     );

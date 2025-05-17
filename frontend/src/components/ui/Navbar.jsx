@@ -1,6 +1,6 @@
 // File path: src/components/ui/Navbar.jsx
 import React from "react";
-import { Box, Flex, Button, Spacer, Link as ChakraLink, IconButton } from "@chakra-ui/react";
+import { Box, Flex, Button, Spacer, Link as ChakraLink, IconButton, Theme, Portal } from "@chakra-ui/react";
 import { NavLink as RouterNavLink, useNavigate, useMatch, useResolvedPath } from 'react-router-dom';
 import Settings from './Settings';
 import { useAuth } from '../../context/AuthContext';
@@ -11,15 +11,16 @@ const NavItem = ({ to, children, end = false, ...rest }) => {
     const resolved = useResolvedPath(to);
     const match = useMatch({ path: resolved.pathname, end: end });
 
-    const activeColor = useColorModeValue("teal.600", "teal.300");
+    const activeColor = useColorModeValue("teal.600", "teal.600");
     const activeBorderColor = useColorModeValue("teal.500", "teal.300");
-    const inactiveColor = useColorModeValue("gray.700", "gray.300");
-    const hoverColor = useColorModeValue("teal.600", "teal.300");
+    const inactiveColor = useColorModeValue("gray.500", "gray.500");
+    const hoverColor = useColorModeValue("teal.600", "teal.600");
     const hoverBorderColor = useColorModeValue("teal.200", "teal.100");
 
     const isActive = !!match;
 
     return (
+        //<Theme appearance="light">
         <ChakraLink
             as={RouterNavLink}
             to={to}
@@ -27,14 +28,14 @@ const NavItem = ({ to, children, end = false, ...rest }) => {
             fontSize="sm"
             fontWeight="medium"
             pb={1}
-            borderBottomWidth="2px"
-            borderBottomStyle="solid"
+            //borderBottomWidth="2px"
+            //borderBottomStyle="solid"
             color={isActive ? activeColor : inactiveColor}
-            borderColor={isActive ? activeBorderColor : "transparent"}
+            //borderColor={isActive ? activeBorderColor : "transparent"}
             transition="all 0.2s"
             _hover={{
                 color: hoverColor,
-                borderColor: hoverBorderColor,
+                //borderColor: hoverBorderColor,
                 textDecoration: 'none',
             }}
             // Remove default focus outline/boxShadow for these NavItems
@@ -50,6 +51,7 @@ const NavItem = ({ to, children, end = false, ...rest }) => {
         >
             {children}
         </ChakraLink>
+        //</Theme>
     );
 };
 
@@ -63,23 +65,28 @@ export default function Navbar() {
     };
 
     return (
+        
+        // <Theme appearance="light">
         <Box
             bg={useColorModeValue("white", "gray.800")}
-            px={4}
-            py={2}
+            px={0}
+            py={0}
             position="fixed"
             top={0}
             left={0}
             right={0}
             as="nav"
             zIndex="1100" 
+            mb={0}
+            h={"65px"}
             //borderBottomWidth="1px"
-            //borderColor={useColorModeValue("gray.200", "gray.700")}
+            //borderColor={useColorModeValue("gray.500", "gray.700")}
             //boxShadow="sm"
         >
-            <Flex h="56px" alignItems="center" justifyContent="space-between" maxW="container.xl" mx="auto">
+            <Theme appearance="light">
+            <Flex h="65px" alignItems="center" justifyContent="space-between" maxW="container.xl" mx="auto">
                 <Flex align="center" gap={6}>
-                    <NavItem to="/transactions" end={true} data-cy="nav-transactions">
+                    <NavItem to="/transactions" end={true} data-cy="nav-transactions" ml={4}>
                         Transactions
                     </NavItem>
                     <NavItem to="/tags" end={true} data-cy="nav-tags">
@@ -95,22 +102,15 @@ export default function Navbar() {
                 <Flex alignItems="center" gap={0}>
                     <Settings data-cy="nav-settings" />
                     {user && (
-                        // <Button
-                        //     size="sm"
-                        //     variant="ghost"
-                        //     colorScheme="teal"
-                        //     onClick={handleLogout}
-                        //     data-cy="nav-logout"
-                        // >
-                        //     Logout
-                        // </Button>
-
-                        <IconButton size="md" variant="ghost" onClick={handleLogout}>
+                        <IconButton size="md" variant="ghost" onClick={handleLogout} mr={4}>
                             <CiLogout />
                         </IconButton>
                     )}
                 </Flex>
             </Flex>
+            </Theme>
         </Box>
+        // </Theme>
+        
     );
 }

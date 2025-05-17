@@ -1,6 +1,6 @@
 // File path: src/App.jsx
 import React from "react"; // Removed useState as it's no longer needed here for activeView
-import { Container, Stack, Spinner, Center, Box } from "@chakra-ui/react";
+import { Container, Stack, Spinner, Center, Box, Theme } from "@chakra-ui/react";
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Navbar from "./components/ui/Navbar";
 import TransactionsManagement from "./components/ui/TransactionsManagement";
@@ -19,6 +19,7 @@ const ProtectedLayout = () => {
     // Navbar is self-contained for its logic now.
     // It uses useAuth internally if needed for user display or logout.
     return (
+        <Theme appearance="light">
         <Stack minH="100vh" bg="#f4f4ec" spacing={0}>
             <Navbar />
             {/* Outlet will render the matched child route component (Transactions, Tags, Import) */}
@@ -27,6 +28,7 @@ const ProtectedLayout = () => {
                 <Outlet />
             </Box>
         </Stack>
+        </Theme>
     );
 };
 
@@ -60,7 +62,7 @@ const AppRoutes = () => {
                     path="transactions" 
                     element={
                         // Container for consistent padding and max-width
-                        <Container maxW="container.xl" py={6} px={{ base: 2, md: 4 }}>
+                        <Container maxW="container.xl" py={6} px={{ base: 2, md: 4 }} mt={0}>
                             <TransactionsManagement />
                         </Container>
                     } 
@@ -88,6 +90,7 @@ const AppRoutes = () => {
             </Route>
             {/* Fallback for any other route */}
             <Route path="*" element={<Navigate to="/" replace />} />
+            
         </Routes>
     );
 };
