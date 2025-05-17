@@ -8,7 +8,7 @@ import { recentlyEditedTransactionIdAtom } from '../../context/atoms';
 import TagCard from "./TagCard";
 import { SlPencil } from "react-icons/sl";
 import { TiFlowChildren } from "react-icons/ti";
-import { FaChildDress } from "react-icons/fa6";
+import { MdOutlineChildFriendly } from "react-icons/md";
 import { IoIosAttach } from "react-icons/io";
 // Removed useState as hoverOpen was not used in the final return for HoverCard logic
 
@@ -87,7 +87,7 @@ export default function TransactionCard ({
             _hover={{ outline: '1px solid', outlineColor: 'gray.300' }} //#bcdbdb
             outline={isSelected ? '1px solid' : 'none'}
             outlineColor={isSelected ? 'gray.500' : 'transparent'}
-            animation={isHighlighted ? `fade-in 2s ease-out` : 'none'}
+            animation={isHighlighted ? `bounce 1s` : 'none'}
         >
             <Grid
                 templateColumns={{
@@ -191,7 +191,7 @@ export default function TransactionCard ({
                                                 colorPalette="gray"
                                                 variant={"ghost"}
                                             >
-                                                <FaChildDress />
+                                                <MdOutlineChildFriendly />
                                             </IconButton>
                                         </HoverCard.Trigger>
                                         <Portal>

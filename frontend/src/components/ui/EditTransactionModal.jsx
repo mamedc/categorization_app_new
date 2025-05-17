@@ -255,7 +255,7 @@ export default function EditTransactionModal ({
             }
 
             // --- 4. Success Handling ---
-            toaster.create({ title: "Success!", description: successMessage, type: "success", duration: 2000, placement: "top-center" });
+            toaster.create({ title: "Success!", description: successMessage, type: "success", duration: 3000, placement: "top-center" });
             setSaveError('');
             refreshTransactions((prev) => prev + 1);
             // Fetch the updated transaction to ensure UI consistency
