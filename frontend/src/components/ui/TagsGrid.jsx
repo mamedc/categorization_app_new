@@ -58,7 +58,7 @@ export default function TagsGroupsGrid ({
             )}
 
             {!isLoading && groupTags.length > 0 && (
-                <HStack spacing={6} align="stretch" > {/* Add spacing between date groups */}
+                <HStack spacing={6} align="stretch" wrap="wrap" > {/* Add spacing between date groups */}
                     {groupTags.map((tag) => (
                         <TagCard 
                             key={tag.id}
