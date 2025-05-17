@@ -105,7 +105,7 @@ export default function ConfirmImportDialog({
 
                                 {hasDataToImport ? (
                                     <>
-                                        <Text>
+                                        <Text mt={"20px"} mb={"20px"}>
                                             Import the following <Text as="b">{transactionsToImport.length}</Text> transactions?
                                             {duplicateCount > 0 && (
                                                 <Text as="span" fontSize="sm" color="gray.500"> ({duplicateCount} duplicate(s) will be skipped).</Text>

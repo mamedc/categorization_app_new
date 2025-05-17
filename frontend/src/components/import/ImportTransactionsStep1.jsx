@@ -10,7 +10,7 @@ export default function ImportTransactionsStep1({
     isLoading // Receive loading state (optional)
 }) {
     return (
-        <Stack direction="column" spacing={6} gap={4}>
+        <Stack direction="column" spacing={6} gap={4} mt={"50px"}>
             <Text fontSize="md" fontWeight="semibold" textAlign="center">
                 {items[step].title}: {items[step].description}
             </Text>

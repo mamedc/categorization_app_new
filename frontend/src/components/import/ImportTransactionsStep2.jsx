@@ -113,7 +113,7 @@ export default function ImportTransactionsStep2({
     };
 
     return (
-        <Stack direction="column" spacing={6} gap={4}>
+        <Stack direction="column" spacing={6} gap={4} mt={"50px"}>
 
             {/* Step Title */}
             <Text fontSize="md" fontWeight="semibold" textAlign="center">

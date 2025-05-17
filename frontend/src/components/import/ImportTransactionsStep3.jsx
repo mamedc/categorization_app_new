@@ -56,7 +56,7 @@ export default function ImportTransactionsStep3({
     const hasBalanceError = finalBalanceData.state === 'hasError';
 
     return (
-        <Stack direction="column" spacing={6} gap={4}>
+        <Stack direction="column" spacing={6} gap={4} mt={"50px"}>
             
             {/* Title */}
             <Text fontSize="md" fontWeight="semibold" textAlign="center">
