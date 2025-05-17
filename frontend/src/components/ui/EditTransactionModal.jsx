@@ -5,7 +5,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { 
     Button, CloseButton, Dialog, Portal, Text, VStack, Stack, Field, Input, FileUpload, 
-    Flex, Textarea, HStack, Box, Spinner, Link, IconButton, Heading, 
+    Flex, Textarea, HStack, Box, Spinner, Link, IconButton, Heading, Theme
 } from "@chakra-ui/react";
 // import { Tooltip } from "@/components/ui/tooltip";
 import { Fragment } from "react";
@@ -362,6 +362,7 @@ export default function EditTransactionModal ({
             </Dialog.Trigger>
 
             <Portal>
+            <Theme appearance="light">
                 <Toaster />
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -607,6 +608,7 @@ export default function EditTransactionModal ({
                         </Dialog.CloseTrigger>
                     </Dialog.Content>
                 </Dialog.Positioner>
+            </Theme>
             </Portal>
         </Dialog.Root>
     );

@@ -3,7 +3,7 @@
 
 import { useMemo } from "react";
 import {
-    Button, Dialog, Portal, Stack, Text, Table, CloseButton, Box, Spinner, Flex
+    Button, Dialog, Portal, Stack, Text, Table, CloseButton, Box, Spinner, Flex, Theme
 } from "@chakra-ui/react";
 import { useAtom } from "jotai";
 import { ldbFinalRunningBalanceAtom } from "../../context/atoms";
@@ -57,6 +57,7 @@ export default function ConfirmImportDialog({
         <Dialog.Root open={isOpen} onOpenChange={(e) => { if (!e.open) onClose(); }}>
             <Dialog.Backdrop />
             <Portal>
+            <Theme appearance="light">
                 <Dialog.Positioner>
                     <Dialog.Content maxW={{ base: "sm", md: "2xl", lg: "4xl" }} width="full">
                         <Dialog.Header>
@@ -191,6 +192,7 @@ export default function ConfirmImportDialog({
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>
+            </Theme>
             </Portal>
         </Dialog.Root>
     );

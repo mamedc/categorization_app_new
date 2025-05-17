@@ -1,7 +1,7 @@
 // File path: C:\Users\mamed\Meu Drive\Code\categorization_app_new\frontend\src\components\ui\DeleteTransactionModal.jsx
 import { useState, useMemo } from "react"; // Added useMemo
 import { BASE_URL } from "../../App";
-import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack, Field, Input, Icon, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
+import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack, Field, Input, Icon, RadioGroup, HStack, Textarea, Theme } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster";
 import { FiAlertTriangle } from 'react-icons/fi';
 import { useAtom, useAtomValue, useSetAtom } from "jotai"; // Added useAtomValue
@@ -128,6 +128,7 @@ export default function DeleteTransactionModal() {
             </Dialog.Trigger>
 
             <Portal>
+            <Theme appearance="light">
                 <Toaster />
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -172,6 +173,7 @@ export default function DeleteTransactionModal() {
                         </Dialog.CloseTrigger>
                     </Dialog.Content>
                 </Dialog.Positioner>
+            </Theme>
             </Portal>
         </Dialog.Root>
     );

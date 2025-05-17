@@ -418,7 +418,7 @@ export default function TransactionsManagement({
                                 </Select.Control>
 
                                 <Portal>
-                                    <Theme hasBackground={true} appearance="light">
+                                    <Theme appearance="light">
                                         <Select.Positioner>
                                             <Select.Content>
                                                 {filterOptionsCollection.items.map((option) => (

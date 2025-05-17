@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BASE_URL } from "../../App"
-import { Button, CloseButton, Dialog, Portal, Text, HStack, Stack,Field, Input, ColorPicker, Box } from "@chakra-ui/react";
+import { Button, CloseButton, Dialog, Portal, Text, HStack, Stack,Field, Input, ColorPicker, Box, Theme } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { useAtom, useSetAtom } from "jotai";
 import { ldbTagGroupsAtom, selectedTagGroupId, selectedTagId, refreshTagGroupsAtom } from "../../context/atoms";
@@ -158,6 +158,7 @@ export default function CreateTagModal ({}) {
             </Dialog.Trigger>
 
             <Portal>
+            <Theme appearance="light">
                 <Toaster />
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -222,6 +223,7 @@ export default function CreateTagModal ({}) {
                     </Dialog.CloseTrigger>  
                 </Dialog.Content>
                 </Dialog.Positioner>
+            </Theme>
             </Portal>
     </Dialog.Root>
     );

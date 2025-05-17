@@ -11,6 +11,7 @@ import {
     Stack,
     Spinner,
     Alert,
+    Theme
 } from "@chakra-ui/react";
 import { useAtom, useSetAtom } from "jotai";
 import { Toaster, toaster } from "@/components/ui/toaster"; // Assuming toaster setup exists globally or via Portal
@@ -109,6 +110,7 @@ export default function SplitTransactionModal({ isOpen, onClose, transactionToSp
         // Use onOpenChange to handle closing via overlay click or Esc key
         <Dialog.Root open={isOpen} onOpenChange={(e) => { if (!e.open) handleClose(); }}>
             <Portal>
+            <Theme appearance="light">
                 <Toaster /> {/* Render toaster within the modal's portal context */}
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -165,6 +167,7 @@ export default function SplitTransactionModal({ isOpen, onClose, transactionToSp
                         </Dialog.CloseTrigger>
                     </Dialog.Content>
                 </Dialog.Positioner>
+            </Theme>
             </Portal>
         </Dialog.Root>
     );

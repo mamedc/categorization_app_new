@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BASE_URL } from "../../App"
-import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
+import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, RadioGroup, HStack, Textarea, Theme } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { useAtom, useSetAtom } from "jotai";
 import { selectedTransaction, refreshTransactionsAtom } from "../../context/atoms";
@@ -90,6 +90,7 @@ export default function CreateTransactionModal ({
             </Dialog.Trigger>
 
             <Portal>
+            <Theme appearance="light">
                 <Toaster />
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -182,6 +183,7 @@ export default function CreateTransactionModal ({
                     </Dialog.CloseTrigger>  
                 </Dialog.Content>
                 </Dialog.Positioner>
+            </Theme>
             </Portal>
     </Dialog.Root>
     );

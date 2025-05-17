@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BASE_URL } from "../../App"
-import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, Icon, RadioGroup, HStack, Textarea } from "@chakra-ui/react";
+import { Button, CloseButton, Dialog, Portal, Text, Flex, Stack,Field, Input, Icon, RadioGroup, HStack, Textarea, Theme } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { FiAlertTriangle } from 'react-icons/fi';
 import { useAtom, useSetAtom } from "jotai";
@@ -80,6 +80,7 @@ export default function DeleteTagsGroupsModal ({
             </Dialog.Trigger>
 
             <Portal>
+            <Theme appearance="light">
                 <Toaster />
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -121,6 +122,7 @@ export default function DeleteTagsGroupsModal ({
                     
                 </Dialog.Content>
                 </Dialog.Positioner>
+            </Theme>
             </Portal>
     </Dialog.Root>
     );

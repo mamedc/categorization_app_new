@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"; // Added useEffect
 import { BASE_URL } from "../../App"
-import { Button, CloseButton, Dialog, Portal, Text, HStack, Stack, Flex, Spinner, VStack, Box, Checkbox, IconButton, ColorSwatch } from "@chakra-ui/react";
+import { Button, CloseButton, Dialog, Portal, Text, HStack, Stack, Flex, Spinner, VStack, Box, Checkbox, IconButton, ColorSwatch, Theme } from "@chakra-ui/react";
 import { Toaster, toaster } from "@/components/ui/toaster"
 import { useAtom, useSetAtom } from "jotai";
 import { CiEdit } from "react-icons/ci";
@@ -194,6 +194,7 @@ export default function EditTransactionTagsModal ({
             </Dialog.Trigger>
 
             <Portal>
+            <Theme appearance="light">
                 <Toaster />
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
@@ -327,6 +328,7 @@ export default function EditTransactionTagsModal ({
                     </Dialog.CloseTrigger>
                 </Dialog.Content>
                 </Dialog.Positioner>
+            </Theme>
             </Portal>
         </Dialog.Root>
     );

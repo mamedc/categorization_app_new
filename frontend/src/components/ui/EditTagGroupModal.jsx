@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"; // Import useMemo
 import { BASE_URL } from "../../App"
-import { Button, Dialog, Field, ColorSwatch , Portal, Flex, Checkbox, CloseButton, Spinner, VStack, HStack, Text } from "@chakra-ui/react"
+import { Button, Dialog, Field, ColorSwatch , Portal, Flex, Checkbox, CloseButton, Spinner, VStack, HStack, Text, Theme } from "@chakra-ui/react"
 import { Toaster, toaster } from "@/components/ui/toaster"
 import CreateTagModal from "./CreateTagModal";
 import DeleteTagModal from "./DeleteTagModal";
@@ -70,6 +70,7 @@ export default function EditTagGroupModal ({}) {
                     Edit
                 </Button>
                 <Portal>
+                <Theme appearance="light">
                     <Dialog.Backdrop />
                     <Dialog.Positioner>
                         <Dialog.Content>
@@ -166,6 +167,7 @@ export default function EditTagGroupModal ({}) {
 
                         </Dialog.Content>
                     </Dialog.Positioner>
+                </Theme>
                 </Portal>
             </Dialog.Root>
         </>
