@@ -1,13 +1,15 @@
-// ./frontend/src/components/ui/TransactionsManagement.jsx
+// .\frontend\src\components\ui\TransactionsManagement.jsx
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useAtomValue } from "jotai"; // Import useAtomValue directly
 import {
-    Container, Flex, Button, Spacer, IconButton, Tooltip, Portal,
+    Container, Flex, Button, Spacer, IconButton, Tooltip, Portal, CloseButton,
     Select, Input, HStack, VStack, Box, Field,
-    createListCollection // Import createListCollection
+    createListCollection,
+    InputGroup
 } from "@chakra-ui/react";
-import { LuArrowDown, LuArrowUp, LuCheck, LuChevronsUpDown } from "react-icons/lu";
+import { LuArrowDown, LuArrowUp, LuCheck, LuChevronsUpDown, LuSearch, LuX } from "react-icons/lu"; // Added LuSearch
+
 import TransactionGrid from "./TransactionGrid";
 import CreateTransactionModal from "./CreateTransactionModal";
 import DeleteTransactionModal from "./DeleteTransactionModal";
@@ -91,6 +93,9 @@ export default function TransactionsManagement({
     const [selectedMonth, setSelectedMonth] = useState('');
     const [selectedYear, setSelectedYear] = useState('');
 
+    // --- Search State ---
+    const [searchQuery, setSearchQuery] = useState('');
+
     // --- Split Transaction State ---
     const [isSplitModalOpen, setIsSplitModalOpen] = useState(false);
     const [currentTransactionToSplit, setCurrentTransactionToSplit] = useState(null);
@@ -105,9 +110,17 @@ export default function TransactionsManagement({
     }, [transactionState, transactionsData]);
 
 
+    const endSearchElement = searchQuery ? (
+        <CloseButton
+            size="2xs"
+            onClick={() => setSearchQuery('')}
+            me="-2"
+            variant="ghost"
 
+        />
+    ) : null
 
-
+    
     // --- START: Scroll Preservation Logic ---
     // Ref to continuously store the latest scroll Y position
     const lastScrollYRef = useRef(window.scrollY);
@@ -132,33 +145,34 @@ export default function TransactionsManagement({
 
     useEffect(() => {
         // Log current and previous states at the START of this effect run
-        console.log(
-            `[ScrollEffect] Current transactionState: "${transactionState}", Previous transactionState was: "${previousTransactionStateRef.current}"`
-        );
+        // console.log(
+        //     `[ScrollEffect] Current transactionState: "${transactionState}", Previous transactionState was: "${previousTransactionStateRef.current}"`
+        // );
 
         // Condition 1: Store scroll position when a refresh starts
         // This means current state is 'loading' AND the previous state was NOT 'loading'.
         if (transactionState === 'loading' && previousTransactionStateRef.current !== 'loading') {
             scrollPositionToRestoreRef.current = lastScrollYRef.current;
-            console.log(
-                `%c[ScrollEffect] Refresh DETECTED (Store). Storing scrollY: ${scrollPositionToRestoreRef.current}`,
-                'color: orange; font-weight: bold;'
-            );
-        } else if (transactionState === 'loading' && previousTransactionStateRef.current === 'loading') {
+            // console.log(
+            //     `%c[ScrollEffect] Refresh DETECTED (Store). Storing scrollY: ${scrollPositionToRestoreRef.current}`,
+            //     'color: orange; font-weight: bold;'
+            // );
+        } 
+        // else if (transactionState === 'loading' && previousTransactionStateRef.current === 'loading') {
             // This means it was already loading, and it's still loading (or re-rendered while loading).
             // We typically only want to store the scroll position on the initial transition to 'loading'.
-            console.log(
-                `[ScrollEffect] Still in 'loading' state. Scroll position to restore is: ${scrollPositionToRestoreRef.current}`
-            );
-        }
+            // console.log(
+            //     `[ScrollEffect] Still in 'loading' state. Scroll position to restore is: ${scrollPositionToRestoreRef.current}`
+            // );
+        // }
 
         // Condition 2: Restore scroll position after data has loaded
         // This means current state is 'hasData' AND the previous state WAS 'loading'.
         if (transactionState === 'hasData' && previousTransactionStateRef.current === 'loading') {
-            console.log(
-                `%c[ScrollEffect] Refresh COMPLETE (Restore). Restoring scrollY to: ${scrollPositionToRestoreRef.current}`,
-                'color: green; font-weight: bold;'
-            );
+            // console.log(
+            //     `%c[ScrollEffect] Refresh COMPLETE (Restore). Restoring scrollY to: ${scrollPositionToRestoreRef.current}`,
+            //     'color: green; font-weight: bold;'
+            // );
             requestAnimationFrame(() => {
                 window.scrollTo(0, scrollPositionToRestoreRef.current);
             });
@@ -190,66 +204,118 @@ export default function TransactionsManagement({
         }
     }, [availableYearsCollection, selectedYear]);
 
-    // --- Filtering Logic (remains the same) ---
+    // --- Filtering Logic (now includes search) ---
      const filteredTransactions = useMemo(() => {
          if (transactionState !== 'hasData' || !transactionsData) {
              return [];
          }
          const originalTransactions = [...transactionsData]; // Use raw data from atom
+         
+         // --- 1. Date Filtering ---
+         let dateFilteredList;
          switch (filterType) {
              case 'dateRange':
-                 if (!startDate || !endDate) return originalTransactions;
-                 try {
-                     // Ensure dates are parsed correctly for comparison
-                     const start = new Date(startDate + 'T00:00:00Z').getTime();
-                     const end = new Date(endDate + 'T23:59:59Z').getTime();
-                     if (isNaN(start) || isNaN(end)) return originalTransactions;
-                     return originalTransactions.filter(tx => {
-                         if (!tx.date) return false;
-                         try {
-                             const txDate = new Date(tx.date + 'T00:00:00Z').getTime();
-                             if (isNaN(txDate)) return false;
-                             return txDate >= start && txDate <= end;
-                         } catch { return false; }
-                     });
-                 } catch {
-                     return originalTransactions;
+                 if (!startDate || !endDate) {
+                     dateFilteredList = originalTransactions;
+                 } else {
+                     try {
+                         const start = new Date(startDate + 'T00:00:00Z').getTime();
+                         const end = new Date(endDate + 'T23:59:59Z').getTime();
+                         if (isNaN(start) || isNaN(end)) {
+                             dateFilteredList = originalTransactions;
+                         } else {
+                             dateFilteredList = originalTransactions.filter(tx => {
+                                 if (!tx.date) return false;
+                                 try {
+                                     const txDate = new Date(tx.date + 'T00:00:00Z').getTime();
+                                     if (isNaN(txDate)) return false;
+                                     return txDate >= start && txDate <= end;
+                                 } catch { return false; }
+                             });
+                         }
+                     } catch {
+                         dateFilteredList = originalTransactions;
+                     }
                  }
+                 break;
              case 'last30Days':
                  try {
                      const thirtyDaysAgo = new Date(getDateNDaysAgoString(30) + 'T00:00:00Z').getTime();
                      const todayEnd = new Date(getTodayDateString() + 'T23:59:59Z').getTime();
-                     if (isNaN(thirtyDaysAgo) || isNaN(todayEnd)) return originalTransactions;
-                     return originalTransactions.filter(tx => {
-                         if (!tx.date) return false;
-                         try {
-                             const txDate = new Date(tx.date + 'T00:00:00Z').getTime();
-                              if (isNaN(txDate)) return false;
-                             return txDate >= thirtyDaysAgo && txDate <= todayEnd;
-                         } catch { return false; }
-                     });
+                     if (isNaN(thirtyDaysAgo) || isNaN(todayEnd)) {
+                         dateFilteredList = originalTransactions;
+                     } else {
+                         dateFilteredList = originalTransactions.filter(tx => {
+                             if (!tx.date) return false;
+                             try {
+                                 const txDate = new Date(tx.date + 'T00:00:00Z').getTime();
+                                  if (isNaN(txDate)) return false;
+                                 return txDate >= thirtyDaysAgo && txDate <= todayEnd;
+                             } catch { return false; }
+                         });
+                     }
                  } catch {
-                     return originalTransactions;
+                     dateFilteredList = originalTransactions;
                  }
+                 break;
              case 'monthYear':
-                 if (!selectedMonth || !selectedYear) return originalTransactions;
-                 const monthNum = parseInt(selectedMonth);
-                 const yearNum = parseInt(selectedYear);
-                  if (isNaN(monthNum) || isNaN(yearNum)) return originalTransactions;
-                 return originalTransactions.filter(tx => {
-                     if (!tx.date) return false;
-                     try {
-                         const txDate = new Date(tx.date + 'T00:00:00Z');
-                          if (isNaN(txDate.getTime())) return false;
-                         // Use UTC methods for comparison consistency
-                         return txDate.getUTCFullYear() === yearNum && (txDate.getUTCMonth() + 1) === monthNum;
-                     } catch { return false; }
-                 });
+                 if (!selectedMonth || !selectedYear) {
+                     dateFilteredList = originalTransactions;
+                 } else {
+                     const monthNum = parseInt(selectedMonth);
+                     const yearNum = parseInt(selectedYear);
+                      if (isNaN(monthNum) || isNaN(yearNum)) {
+                         dateFilteredList = originalTransactions;
+                      } else {
+                         dateFilteredList = originalTransactions.filter(tx => {
+                             if (!tx.date) return false;
+                             try {
+                                 const txDate = new Date(tx.date + 'T00:00:00Z');
+                                  if (isNaN(txDate.getTime())) return false;
+                                 return txDate.getUTCFullYear() === yearNum && (txDate.getUTCMonth() + 1) === monthNum;
+                             } catch { return false; }
+                         });
+                      }
+                 }
+                 break;
              case 'all':
              default:
-                 return originalTransactions;
+                 dateFilteredList = originalTransactions;
+                 break;
          }
-     }, [transactionState, transactionsData, filterType, startDate, endDate, selectedMonth, selectedYear]);
+
+         // --- 2. Search Filtering ---
+         if (searchQuery.trim() === '') {
+            return dateFilteredList;
+         }
+
+         const lowercasedQuery = searchQuery.toLowerCase();
+
+         return dateFilteredList.filter(transaction => {
+            // Check description
+            if (transaction.description && transaction.description.toLowerCase().includes(lowercasedQuery)) {
+                return true;
+            }
+            // Check note
+            if (transaction.note && transaction.note.toLowerCase().includes(lowercasedQuery)) {
+                return true;
+            }
+            // Check tags
+            if (transaction.tags && Array.isArray(transaction.tags)) {
+                if (transaction.tags.some(tag => tag.name && tag.name.toLowerCase().includes(lowercasedQuery))) {
+                    return true;
+                }
+            }
+            // Check document names
+            if (transaction.documents && Array.isArray(transaction.documents)) {
+                if (transaction.documents.some(doc => doc.original_filename && doc.original_filename.toLowerCase().includes(lowercasedQuery))) {
+                    return true;
+                }
+            }
+            return false;
+         });
+
+     }, [transactionState, transactionsData, filterType, startDate, endDate, selectedMonth, selectedYear, searchQuery]); // Added searchQuery to dependencies
 
 
      // --- Handler for opening the Split Modal ---
@@ -325,39 +391,33 @@ export default function TransactionsManagement({
                 {/* --- Filter Controls --- */}
                 <Flex 
                     direction={'row'} 
-                    //wrap="wrap" 
                     wrap={{ base: 'wrap', md: 'wrap', xl: 'nowrap' }}
                     gap={4} 
                     align="center" 
-                    flexGrow={{ base: 1, md: 0 }}
+                    flexGrow={{ base: 1, md: 0 }} // Allow filters to grow on small screens
                 >
 
                     {/* Filter Type Select - Using Collection */}
                     <Field.Root id="filterTypeSelect" w="140px" flexShrink={0}>
                         <Field.Label srOnly>Filter by</Field.Label>
                         <Select.Root
-                            // Use the collection prop with the created collection
                             collection={filterOptionsCollection}
                             value={[filterType]}
                             onValueChange={(details) => setFilterType(details.value[0] || 'all')}
                             size="xs"
                             positioning={{ sameWidth: true, gutter: 2 }}
-                            variant="outline" // "subtle"
+                            variant="outline"
                         >
                             <Select.HiddenSelect />
-                            
                             <Select.Control>
                                 <Select.Trigger bg="white">
-                                    {/* ValueText will now display the label of the selected item */}
                                     <Select.ValueText placeholder="Filter by..." />
                                     <Select.IndicatorGroup><Select.Indicator><LuChevronsUpDown /></Select.Indicator></Select.IndicatorGroup>
                                 </Select.Trigger>
                             </Select.Control>
-                            
                             <Portal>
                                 <Select.Positioner>
                                     <Select.Content>
-                                        {/* Iterate over collection items */}
                                         {filterOptionsCollection.items.map((option) => (
                                             <Select.Item item={option} key={option.value}>
                                                 {option.label}
@@ -367,7 +427,6 @@ export default function TransactionsManagement({
                                     </Select.Content>
                                 </Select.Positioner>
                             </Portal>
-
                         </Select.Root>
                     </Field.Root>
 
@@ -378,7 +437,6 @@ export default function TransactionsManagement({
                                 <Field.Label srOnly>Start Date</Field.Label>
                                 <Input size="xs" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} w="110px" bg="white" />
                             </Field.Root>
-                            
                             <Field.Root id="endDate">
                                 <Field.Label srOnly>End Date</Field.Label>
                                 <Input size="xs" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} w="110px" bg="white" min={startDate} />
@@ -389,12 +447,10 @@ export default function TransactionsManagement({
                     {/* Month/Year Selects (Conditional) - Using Collections */}
                     {filterType === 'monthYear' && (
                         <HStack spacing={2}>
-                            
-                            {/* Month Select */}
                             <Field.Root id="selectMonth"  w="110px">
                                 <Field.Label srOnly>Month</Field.Label>
                                 <Select.Root
-                                    collection={monthsCollection} // Use month collection
+                                    collection={monthsCollection}
                                     value={[selectedMonth]}
                                     onValueChange={(details) => setSelectedMonth(details.value[0] || '')}
                                     size="xs" positioning={{ sameWidth: true, gutter: 2 }}
@@ -409,7 +465,7 @@ export default function TransactionsManagement({
                                     <Portal>
                                         <Select.Positioner>
                                             <Select.Content>
-                                                {monthsCollection.items.map((m) => ( // Iterate collection
+                                                {monthsCollection.items.map((m) => (
                                                     <Select.Item item={m} key={m.value}>
                                                         {m.label}
                                                         <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
@@ -420,12 +476,10 @@ export default function TransactionsManagement({
                                     </Portal>
                                 </Select.Root>
                             </Field.Root>
-
-                            {/* Year Select */}
                             <Field.Root id="selectYear"  w="110px">
                                 <Field.Label srOnly>Year</Field.Label>
                                 <Select.Root
-                                    collection={availableYearsCollection} // Use year collection
+                                    collection={availableYearsCollection}
                                     value={[selectedYear]}
                                     onValueChange={(details) => setSelectedYear(details.value[0] || '')}
                                     size="xs" positioning={{ sameWidth: true, gutter: 2 }}
@@ -441,7 +495,7 @@ export default function TransactionsManagement({
                                     <Portal>
                                         <Select.Positioner>
                                             <Select.Content>
-                                                {availableYearsCollection.items.map((y) => ( // Iterate collection
+                                                {availableYearsCollection.items.map((y) => (
                                                     <Select.Item item={y} key={y.value}>
                                                         {y.label}
                                                         <Select.ItemIndicator><LuCheck /></Select.ItemIndicator>
@@ -454,6 +508,29 @@ export default function TransactionsManagement({
                             </Field.Root>
                         </HStack>
                     )}
+                    
+
+                    {/* Search Input - Corrected */}
+                    <InputGroup 
+                        size="xs"
+                        w={{ base: "100%", sm: "140px", md: "140px"}}
+                        flexShrink={{base: 1, md:0}}
+                        startElement={<LuSearch />}
+                        endElement={endSearchElement}
+                    >
+                        <Input
+                            placeholder="Search..."
+                            size="xs"
+                            variant="outline"
+                            bg="white"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            pl="4"
+                            
+                        />
+                    </InputGroup>
+
+
                 </Flex>
 
                 <Spacer display={{ base: 'none', md: 'block' }}/>
