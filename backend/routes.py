@@ -1,7 +1,7 @@
 # File path: backend/routes.py
 
 from app import app, db
-from flask import request, jsonify, abort, send_from_directory
+from flask import request, jsonify, abort, send_from_directory, current_app, send_file
 from models import Transaction, Tag, TagGroup, Setting, Document
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -11,6 +11,9 @@ import os
 import traceback
 from werkzeug.utils import secure_filename # For sanitizing filenames
 import uuid # For generating unique filenames
+import io # For in-memory file handling
+import zipfile # For creating ZIP archives
+import json # Standard json library, ensure it's imported if not already
 
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx', 'xls', 'xlsx', 'csv'}
@@ -777,7 +780,85 @@ def set_setting(setting_key):
         db.session.rollback()
         app.logger.error(f"Unexpected error saving setting '{setting_key}': {e}", exc_info=True)
         abort(500, description=f"Could not save setting '{setting_key}'.")
-    
+
+
+# --- Backup Route ---
+@app.route('/api/backup/all', methods=['GET'])
+def backup_all_data():
+    try:
+        # 1. Fetch all transactions
+        transactions = Transaction.query.order_by(Transaction.date.asc(), Transaction.id.asc()).all()
+        # We need to modify how document filenames are stored in the JSON if we change them in the ZIP
+        # For simplicity, let's assume the JSON will still refer to original_filename,
+        # and the restore process would need to map backed-up names if they change.
+        # Or, we can add a 'backup_filename' field to the document's JSON representation for backup.
+
+        transactions_list_for_json = []
+        for tx in transactions:
+            tx_json = tx.to_json(include_tags=True, include_documents=False) # Exclude documents initially
+            tx_json['documents'] = []
+            for doc in tx.documents:
+                doc_json = doc.to_json()
+                # Create a unique filename for the backup archive
+                # This will be the name used *inside* the ZIP's Documents folder
+                doc_json['backup_filename'] = f"{doc.id}_{doc.original_filename.replace('/', '_').replace(' ', '_')}"
+                tx_json['documents'].append(doc_json)
+            transactions_list_for_json.append(tx_json)
+        
+        transactions_json_string = json.dumps(transactions_list_for_json, indent=4, default=str)
+
+        # 3. Prepare to collect document files (already implicitly done by fetching transactions with documents)
+        all_documents = Document.query.all() # Or iterate through transactions.documents
+
+        # 4. Create a ZIP archive in memory
+        memory_file = io.BytesIO()
+        with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
+            # Add transactions.json
+            zip_archive.writestr('transactions.json', transactions_json_string)
+
+            upload_folder = current_app.config['UPLOAD_FOLDER']
+            if not os.path.isdir(upload_folder): 
+                current_app.logger.error(f"Upload folder {upload_folder} not found or is not a directory during backup.")
+            else:
+                documents_folder_in_zip = "Documents/" # Root folder for documents in ZIP
+                
+                # Keep track of filenames to ensure uniqueness within the ZIP's Documents folder.
+                # This is an alternative to just using doc.id if we want to preserve original_filename as much as possible.
+                # However, simply prefixing with doc.id is more robust and simpler.
+                # Let's stick to the doc.id prefix method for guaranteed uniqueness directly.
+
+                for doc in all_documents: # Iterate through all documents directly
+                    # Use the unique backup_filename created earlier (or generate it here)
+                    unique_backup_filename = f"{doc.id}_{doc.original_filename.replace('/', '_').replace(' ', '_')}"
+                    # Sanitize further if needed, but doc.id prefix helps a lot.
+                    # Example: remove characters not allowed in filenames on some OS
+                    # safe_original_part = secure_filename(doc.original_filename) might be too aggressive
+                    # For backup, often better to be more permissive with original name and rely on ID for uniqueness.
+                    
+                    zip_entry_name = f"{documents_folder_in_zip}{unique_backup_filename}"
+                    
+                    doc_file_path = os.path.join(upload_folder, doc.stored_filename)
+                    
+                    if os.path.exists(doc_file_path) and os.path.isfile(doc_file_path):
+                        zip_archive.write(doc_file_path, arcname=zip_entry_name)
+                    else:
+                        current_app.logger.warning(f"Document file not found or is not a file: {doc_file_path} for document ID {doc.id} (original: {doc.original_filename}). Skipping.")
+        
+        memory_file.seek(0)
+
+        # 5. Send the ZIP file
+        backup_filename = f"categorization_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.zip"
+        
+        return send_file(
+            memory_file,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=backup_filename
+        )
+
+    except Exception as e:
+        current_app.logger.error(f"Error during backup: {e}", exc_info=True)
+        return jsonify({"error": "Failed to create backup.", "details": str(e)}), 500
 
 
 
